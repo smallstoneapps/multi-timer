@@ -1,0 +1,32 @@
+
+{
+  "friendlyVersion": "VERSION",
+  "versionDefName": "APP_RESOURCES",
+  "media": [
+    {
+      "defName": "MENU_ICON",
+      "type": "png",
+      "file": "images/menu.png"
+    },
+    {
+      "defName": "ICON_TIMER_RUNNING",
+      "type": "png",
+      "file": "images/icon_timer_running.png"
+    },
+    {
+      "defName": "ICON_TIMER_PAUSED",
+      "type": "png",
+      "file": "images/icon_timer_paused.png"
+    },
+    {
+      "defName": "ICON_TIMER_STOPPED",
+      "type": "png",
+      "file": "images/icon_timer_stopped.png"
+    },
+    {
+      "defName": "ICON_TIMER_FINISHED",
+      "type": "png",
+      "file": "images/icon_timer_finished.png"
+    }
+  ]
+}
