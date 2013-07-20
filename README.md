@@ -4,7 +4,7 @@ This is an app for the [Pebble Smartwatch][1].
 
 The app was commission by user *eyeis* on the [Pebble forums][2].
 
-The app allows you to create multiple (currently maximum 3), independent countdown timers.
+The app allows you to create multiple, independent countdown timers.
 
 #### Install
 
