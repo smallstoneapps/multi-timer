@@ -36,34 +36,34 @@ PBL_APP_INFO(MY_UUID, "Multi Timer", "Small Stone Apps", 1, 0, RESOURCE_ID_MENU_
 
 #define COOKIE_TIMER 1
 
-void handle_init(AppContextRef ctx);
-void window_load(Window *me);
-void window_unload(Window *me);
-void load_bitmaps();
-void unload_bitmaps();
-void set_timer(AppContextRef ctx);
-void handle_timer(AppContextRef ctx, AppTimerHandle handle, uint32_t cookie);
+void     handle_init(AppContextRef ctx);
+void     window_load(Window *me);
+void     window_unload(Window *me);
+void     load_bitmaps();
+void     unload_bitmaps();
+void     set_timer(AppContextRef ctx);
+void     handle_timer(AppContextRef ctx, AppTimerHandle handle, uint32_t cookie);
 uint16_t menu_get_num_sections_callback(MenuLayer *me, void *data);
 uint16_t menu_get_num_rows_callback(MenuLayer *me, uint16_t section_index, void *data);
-int16_t menu_get_header_height_callback(MenuLayer *me, uint16_t section_index, void *data);
-void menu_draw_header_callback(GContext* ctx, const Layer *cell_layer, uint16_t section_index, void *data);
-void menu_select_click_callback(MenuLayer *menu_layer, MenuIndex *cell_index, void *callback_context);
-void menu_select_long_click_callback(MenuLayer *menu_layer, MenuIndex *cell_index, void *callback_context);
-void menu_draw_row_callback(GContext* ctx, const Layer *cell_layer, MenuIndex *cell_index, void *data);
-void menu_draw_header_row(GContext* ctx, const Layer *cell_layer, MenuIndex *cell_index, void *data);
-void menu_draw_footer_row(GContext* ctx, const Layer *cell_layer, MenuIndex *cell_index, void *data);
-void menu_draw_timer_row(GContext* ctx, const Layer *cell_layer, MenuIndex *cell_index, void *data);
-void jump_to_timer(int t);
+int16_t  menu_get_header_height_callback(MenuLayer *me, uint16_t section_index, void *data);
+void     menu_draw_header_callback(GContext* ctx, const Layer *cell_layer, uint16_t section_index, void *data);
+void     menu_select_click_callback(MenuLayer *menu_layer, MenuIndex *cell_index, void *callback_context);
+void     menu_select_long_click_callback(MenuLayer *menu_layer, MenuIndex *cell_index, void *callback_context);
+void     menu_draw_row_callback(GContext* ctx, const Layer *cell_layer, MenuIndex *cell_index, void *data);
+void     menu_draw_header_row(GContext* ctx, const Layer *cell_layer, MenuIndex *cell_index, void *data);
+void     menu_draw_footer_row(GContext* ctx, const Layer *cell_layer, MenuIndex *cell_index, void *data);
+void     menu_draw_timer_row(GContext* ctx, const Layer *cell_layer, MenuIndex *cell_index, void *data);
+void     jump_to_timer(int t);
 
-void show_help();
-void show_add_timer();
+void     show_help();
+void     show_add_timer();
 
-Window window;
-Window window_add_timer;
-MenuLayer layer_menu;
-AppContextRef app_ctx;
+Window         window;
+Window         window_add_timer;
+MenuLayer      layer_menu;
+AppContextRef  app_ctx;
 AppTimerHandle timer_handle;
-HeapBitmap timer_icons[4];
+HeapBitmap     timer_icons[4];
 
 void pbl_main(void *params) {
   PebbleAppHandlers handlers = {
@@ -74,6 +74,8 @@ void pbl_main(void *params) {
 }
 
 void handle_init(AppContextRef ctx) {
+  app_ctx = ctx;
+
   resource_init_current_app(&APP_RESOURCES);
 
   window_init(&window, "Multi Timer Main Window");
@@ -84,8 +86,6 @@ void handle_init(AppContextRef ctx) {
   });
 
   init_add_window(&window_add_timer);
-
-  app_ctx = ctx;
 }
 
 void window_load(Window *me) {
