@@ -1,77 +1,85 @@
 #include "add-window.h"
 #include "timers.h"
 
+<<<<<<< Updated upstream
 #define MENU_ROW_MINUTES 0
 #define MENU_ROW_SECONDS 1
 #define MENU_ROW_VIBRATE 2
 #define MENU_ROW_SAVE 3
 #define MENU_ROW_RESET 4
+=======
+#define TL_MINUTE_NUMBER 0 
+#define TL_MINUTE_LABEL 1
+#define TL_SECOND_NUMBER 2
+#define TL_SECOND_LABEL 3
+#define TL_VIBRATION 4
+>>>>>>> Stashed changes
 
 void add_window_load(Window *me);
 void add_window_unload(Window *me);
 void add_window_appear(Window *me);
 
-uint16_t addwin_menu_get_num_sections_callback(MenuLayer *me, void *data);
-uint16_t addwin_menu_get_num_rows_callback(MenuLayer *me, uint16_t section_index, void *data);
-int16_t addwin_menu_get_header_height_callback(MenuLayer *me, uint16_t section_index, void *data);
-void addwin_menu_draw_header_callback(GContext* ctx, const Layer *cell_layer, uint16_t section_index, void *data);
-void addwin_menu_draw_row_callback(GContext* ctx, const Layer *cell_layer, MenuIndex *cell_index, void *data);
-void addwin_menu_select_click_callback(MenuLayer *menu_layer, MenuIndex *cell_index, void *callback_context);
-
-MenuLayer addwin_layer_menu;
+TextLayer addwin_text_layers[5];
+TextLayer addwin_layer_text_seconds;
+ActionBarLayer addwin_action_bar;
 int minutes = 0;
 int seconds = 0;
+<<<<<<< Updated upstream
 bool first_time = true;
 bool vibrate = true;
+=======
+>>>>>>> Stashed changes
 
-void init_add_window(Window* wnd) {
-  window_init(wnd, "Multi Timer Add Timer Window");
-  window_set_window_handlers(wnd, (WindowHandlers){
+// PUBLIC FUNCTIONS
+
+void init_add_window(Window* me) {
+  window_init(me, "Multi Timer Add Timer Window");
+  window_set_window_handlers(me, (WindowHandlers){
     .load = add_window_load,
-    .unload = add_window_unload
+    .unload = add_window_unload,
+    .appear = add_window_appear,
   });
+
+  text_layer_init(&addwin_text_layers[TL_MINUTE_NUMBER], GRect(8, 8, 144 - ACTION_BAR_WIDTH - 8, 42));
+  text_layer_set_text_color(&addwin_text_layers[TL_MINUTE_NUMBER], GColorBlack);
+  text_layer_set_background_color(&addwin_text_layers[TL_MINUTE_NUMBER], GColorClear);
+  text_layer_set_font(&addwin_text_layers[TL_MINUTE_NUMBER], fonts_get_system_font(FONT_KEY_BITHAM_42_BOLD));
+  text_layer_set_text_alignment(&addwin_text_layers[TL_MINUTE_NUMBER], GTextAlignmentLeft);
+  text_layer_set_text(&addwin_text_layers[TL_MINUTE_NUMBER], "00");
+  layer_add_child(&me->layer, &addwin_text_layers[TL_MINUTE_NUMBER].layer);
+
+  text_layer_init(&addwin_text_layers[TL_MINUTE_LABEL], GRect(8, 46, 144 - ACTION_BAR_WIDTH - 8, 18));
+  text_layer_set_text_color(&addwin_text_layers[TL_MINUTE_LABEL], GColorBlack);
+  text_layer_set_background_color(&addwin_text_layers[TL_MINUTE_LABEL], GColorClear);
+  text_layer_set_font(&addwin_text_layers[TL_MINUTE_LABEL], fonts_get_system_font(FONT_KEY_GOTHIC_18));
+  text_layer_set_text_alignment(&addwin_text_layers[TL_MINUTE_LABEL], GTextAlignmentLeft);
+  text_layer_set_text(&addwin_text_layers[TL_MINUTE_LABEL], "minutes");
+  layer_add_child(&me->layer, &addwin_text_layers[TL_MINUTE_LABEL].layer);
+
+  action_bar_layer_init(&addwin_action_bar);
 }
 
-void show_add_window(Window* wnd) {
-  window_stack_push(wnd, true);
+void show_add_window(Window* me) {
+  window_stack_push(me, true);
 }
 
-void add_window_load(Window *me) {
-  if (! first_time) { return; }
-  menu_layer_init(&addwin_layer_menu, me->layer.bounds);
-  menu_layer_set_callbacks(&addwin_layer_menu, NULL, (MenuLayerCallbacks){
-    .get_num_sections = addwin_menu_get_num_sections_callback,
-    .get_num_rows = addwin_menu_get_num_rows_callback,
-    .get_header_height = addwin_menu_get_header_height_callback,
-    .draw_header = addwin_menu_draw_header_callback,
-    .draw_row = addwin_menu_draw_row_callback,
-    .select_click = addwin_menu_select_click_callback,
-  });
-  menu_layer_set_click_config_onto_window(&addwin_layer_menu, me);
-  layer_add_child(&me->layer, menu_layer_get_layer(&addwin_layer_menu));
-  first_time = false;
-}
-
-void add_window_unload(Window *me) {
-
-}
-
-uint16_t addwin_menu_get_num_sections_callback(MenuLayer *me, void *data) {
-  return 1;
-}
-
+<<<<<<< Updated upstream
 uint16_t addwin_menu_get_num_rows_callback(MenuLayer *me, uint16_t section_index, void *data) {
   return 5;
+=======
+void reset_add_window(Window* me) {
+  minutes = 0;
+  seconds = 0;
+>>>>>>> Stashed changes
 }
 
-int16_t addwin_menu_get_header_height_callback(MenuLayer *me, uint16_t section_index, void *data) {
-  return MENU_CELL_BASIC_HEADER_HEIGHT;
+// PRIVATE FUNCTIONS
+
+void add_window_load(Window *me) {
+  action_bar_layer_add_to_window(&addwin_action_bar, me);
 }
 
-void addwin_menu_draw_header_callback(GContext* ctx, const Layer *cell_layer, uint16_t section_index, void *data) {
-  menu_cell_basic_header_draw(ctx, cell_layer, "Add New Timer");
-}
-
+<<<<<<< Updated upstream
 void addwin_menu_select_click_callback(MenuLayer *menu_layer, MenuIndex *cell_index, void *callback_context) {
   switch (cell_index->row) {
     case MENU_ROW_MINUTES: {
@@ -146,3 +154,11 @@ void addwin_menu_draw_row_callback(GContext* ctx, const Layer *cell_layer, MenuI
     break;
   }
 }
+=======
+void add_window_unload(Window *me) {
+}
+
+void add_window_appear(Window *me) {
+
+}
+>>>>>>> Stashed changes
