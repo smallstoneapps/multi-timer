@@ -1,3 +1,4 @@
+#include "pebble_app.h"
 #include "timer.h"
 
 void timer_start(Timer* timer) {
@@ -28,5 +29,8 @@ void timer_tick(Timer* timer) {
   timer->time_left -= 1;
   if (timer->time_left <= 0) {
     timer->status = TIMER_FINISHED;
+    if (timer->vibrate) {
+      vibes_long_pulse();
+    }
   }
 }

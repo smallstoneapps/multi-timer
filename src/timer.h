@@ -12,6 +12,7 @@ typedef struct {
   int length;
   int time_left;
   TimerStatus status;
+  bool vibrate;
 } Timer;
 
 void timer_start(Timer* timer);

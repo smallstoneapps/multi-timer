@@ -19,7 +19,7 @@ void clear_timers() {
   num_timers = 0;
 }
 
-bool add_timer(int duration) {
+bool add_timer(int duration, bool vibrate) {
   if (duration <= 0) {
     return false;
   }
@@ -30,6 +30,7 @@ bool add_timer(int duration) {
   t.length = duration;
   t.time_left = duration;
   t.status = TIMER_STOPPED;
+  t.vibrate = vibrate;
   timers[num_timers] = t;
   num_timers += 1;
   return true;

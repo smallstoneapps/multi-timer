@@ -3,8 +3,9 @@
 
 #define MENU_ROW_MINUTES 0
 #define MENU_ROW_SECONDS 1
-#define MENU_ROW_SAVE 2
-#define MENU_ROW_RESET 3
+#define MENU_ROW_VIBRATE 2
+#define MENU_ROW_SAVE 3
+#define MENU_ROW_RESET 4
 
 void add_window_load(Window *me);
 void add_window_unload(Window *me);
@@ -21,6 +22,7 @@ MenuLayer addwin_layer_menu;
 int minutes = 0;
 int seconds = 0;
 bool first_time = true;
+bool vibrate = true;
 
 void init_add_window(Window* wnd) {
   window_init(wnd, "Multi Timer Add Timer Window");
@@ -59,7 +61,7 @@ uint16_t addwin_menu_get_num_sections_callback(MenuLayer *me, void *data) {
 }
 
 uint16_t addwin_menu_get_num_rows_callback(MenuLayer *me, uint16_t section_index, void *data) {
-  return 4;
+  return 5;
 }
 
 int16_t addwin_menu_get_header_height_callback(MenuLayer *me, uint16_t section_index, void *data) {
@@ -88,12 +90,17 @@ void addwin_menu_select_click_callback(MenuLayer *menu_layer, MenuIndex *cell_in
       menu_layer_reload_data(&addwin_layer_menu);
     }
     break;
+    case MENU_ROW_VIBRATE: {
+      vibrate = ! vibrate;
+      menu_layer_reload_data(&addwin_layer_menu);
+    }
+    break;
     case MENU_ROW_SAVE: {
       int length = (minutes * 60 + seconds);
       if (length <= 0) {
         return;
       }
-      add_timer(length);
+      add_timer(length, vibrate);
       minutes = 0;
       seconds = 0;
       window_stack_pop(true);
@@ -120,6 +127,15 @@ void addwin_menu_draw_row_callback(GContext* ctx, const Layer *cell_layer, MenuI
       char seconds_str[20];
       snprintf(seconds_str, sizeof(seconds_str), "%d seconds", seconds);
       menu_cell_basic_draw(ctx, cell_layer, seconds_str, "Click to increment.", NULL);
+    }
+    break;
+    case MENU_ROW_VIBRATE: {
+      if (vibrate) {
+        menu_cell_basic_draw(ctx, cell_layer, "Vibrate Enabled", "Click to disable vibration.", NULL);
+      }
+      else {
+        menu_cell_basic_draw(ctx, cell_layer, "Vibrate Disabled", "Click to enable vibration.", NULL);
+      }
     }
     break;
     case MENU_ROW_SAVE:
