@@ -7,6 +7,5 @@
 
 void init_add_window(Window* window);
 void show_add_window(Window* window);
-void reset_add_window(Window* window);
 
 #endif // ADD_WINDOW_H

@@ -1,70 +1,148 @@
 #include "add-window.h"
 #include "timers.h"
 
-#define TL_MINUTE_NUMBER 0
-#define TL_MINUTE_LABEL 1
-#define TL_SECOND_NUMBER 2
-#define TL_SECOND_LABEL 3
-#define TL_VIBRATION 4
+#define MENU_ROW_MINUTES 0
+#define MENU_ROW_SECONDS 1
+#define MENU_ROW_VIBRATE 2
+#define MENU_ROW_SAVE 3
+#define MENU_ROW_RESET 4
 
 void add_window_load(Window *me);
 void add_window_unload(Window *me);
 void add_window_appear(Window *me);
 
-TextLayer addwin_text_layers[5];
-TextLayer addwin_layer_text_seconds;
-ActionBarLayer addwin_action_bar;
+uint16_t addwin_menu_get_num_sections_callback(MenuLayer *me, void *data);
+uint16_t addwin_menu_get_num_rows_callback(MenuLayer *me, uint16_t section_index, void *data);
+int16_t addwin_menu_get_header_height_callback(MenuLayer *me, uint16_t section_index, void *data);
+void addwin_menu_draw_header_callback(GContext* ctx, const Layer *cell_layer, uint16_t section_index, void *data);
+void addwin_menu_draw_row_callback(GContext* ctx, const Layer *cell_layer, MenuIndex *cell_index, void *data);
+void addwin_menu_select_click_callback(MenuLayer *menu_layer, MenuIndex *cell_index, void *callback_context);
+
+MenuLayer addwin_layer_menu;
 int minutes = 0;
 int seconds = 0;
+bool first_time = true;
 bool vibrate = true;
 
-// PUBLIC FUNCTIONS
-
-void init_add_window(Window* me) {
-  window_init(me, "Multi Timer Add Timer Window");
-  window_set_window_handlers(me, (WindowHandlers){
+void init_add_window(Window* wnd) {
+  window_init(wnd, "Multi Timer Add Timer Window");
+  window_set_window_handlers(wnd, (WindowHandlers){
     .load = add_window_load,
-    .unload = add_window_unload,
-    .appear = add_window_appear,
+    .unload = add_window_unload
   });
-
-  text_layer_init(&addwin_text_layers[TL_MINUTE_NUMBER], GRect(8, 8, 144 - ACTION_BAR_WIDTH - 8, 42));
-  text_layer_set_text_color(&addwin_text_layers[TL_MINUTE_NUMBER], GColorBlack);
-  text_layer_set_background_color(&addwin_text_layers[TL_MINUTE_NUMBER], GColorClear);
-  text_layer_set_font(&addwin_text_layers[TL_MINUTE_NUMBER], fonts_get_system_font(FONT_KEY_BITHAM_42_BOLD));
-  text_layer_set_text_alignment(&addwin_text_layers[TL_MINUTE_NUMBER], GTextAlignmentLeft);
-  text_layer_set_text(&addwin_text_layers[TL_MINUTE_NUMBER], "00");
-  layer_add_child(&me->layer, &addwin_text_layers[TL_MINUTE_NUMBER].layer);
-
-  text_layer_init(&addwin_text_layers[TL_MINUTE_LABEL], GRect(8, 46, 144 - ACTION_BAR_WIDTH - 8, 18));
-  text_layer_set_text_color(&addwin_text_layers[TL_MINUTE_LABEL], GColorBlack);
-  text_layer_set_background_color(&addwin_text_layers[TL_MINUTE_LABEL], GColorClear);
-  text_layer_set_font(&addwin_text_layers[TL_MINUTE_LABEL], fonts_get_system_font(FONT_KEY_GOTHIC_18));
-  text_layer_set_text_alignment(&addwin_text_layers[TL_MINUTE_LABEL], GTextAlignmentLeft);
-  text_layer_set_text(&addwin_text_layers[TL_MINUTE_LABEL], "minutes");
-  layer_add_child(&me->layer, &addwin_text_layers[TL_MINUTE_LABEL].layer);
-
-  action_bar_layer_init(&addwin_action_bar);
 }
 
-void show_add_window(Window* me) {
-  window_stack_push(me, true);
+void show_add_window(Window* wnd) {
+  window_stack_push(wnd, true);
 }
-
-void reset_add_window(Window* me) {
-  minutes = 0;
-  seconds = 0;
-}
-
-// PRIVATE FUNCTIONS
 
 void add_window_load(Window *me) {
-  action_bar_layer_add_to_window(&addwin_action_bar, me);
+  if (! first_time) { return; }
+  menu_layer_init(&addwin_layer_menu, me->layer.bounds);
+  menu_layer_set_callbacks(&addwin_layer_menu, NULL, (MenuLayerCallbacks){
+    .get_num_sections = addwin_menu_get_num_sections_callback,
+    .get_num_rows = addwin_menu_get_num_rows_callback,
+    .get_header_height = addwin_menu_get_header_height_callback,
+    .draw_header = addwin_menu_draw_header_callback,
+    .draw_row = addwin_menu_draw_row_callback,
+    .select_click = addwin_menu_select_click_callback,
+  });
+  menu_layer_set_click_config_onto_window(&addwin_layer_menu, me);
+  layer_add_child(&me->layer, menu_layer_get_layer(&addwin_layer_menu));
+  first_time = false;
 }
 
 void add_window_unload(Window *me) {
+
 }
 
-void add_window_appear(Window *me) {
+uint16_t addwin_menu_get_num_sections_callback(MenuLayer *me, void *data) {
+  return 1;
+}
 
+uint16_t addwin_menu_get_num_rows_callback(MenuLayer *me, uint16_t section_index, void *data) {
+  return 5;
+}
+
+int16_t addwin_menu_get_header_height_callback(MenuLayer *me, uint16_t section_index, void *data) {
+  return MENU_CELL_BASIC_HEADER_HEIGHT;
+}
+
+void addwin_menu_draw_header_callback(GContext* ctx, const Layer *cell_layer, uint16_t section_index, void *data) {
+  menu_cell_basic_header_draw(ctx, cell_layer, "Add New Timer");
+}
+
+void addwin_menu_select_click_callback(MenuLayer *menu_layer, MenuIndex *cell_index, void *callback_context) {
+  switch (cell_index->row) {
+    case MENU_ROW_MINUTES: {
+      minutes += 1;
+      if (minutes > 60) {
+        minutes = 0;
+      }
+      menu_layer_reload_data(&addwin_layer_menu);
+    }
+    break;
+    case MENU_ROW_SECONDS: {
+      seconds += 1;
+      if (seconds >= 60) {
+        seconds = 0;
+      }
+      menu_layer_reload_data(&addwin_layer_menu);
+    }
+    break;
+    case MENU_ROW_VIBRATE: {
+      vibrate = ! vibrate;
+      menu_layer_reload_data(&addwin_layer_menu);
+    }
+    break;
+    case MENU_ROW_SAVE: {
+      int length = (minutes * 60 + seconds);
+      if (length <= 0) {
+        return;
+      }
+      add_timer(length, vibrate);
+      minutes = 0;
+      seconds = 0;
+      window_stack_pop(true);
+    }
+    break;
+    case MENU_ROW_RESET: {
+      minutes = 0;
+      seconds = 0;
+      menu_layer_reload_data(&addwin_layer_menu);
+    }
+    break;
+  }
+}
+
+void addwin_menu_draw_row_callback(GContext* ctx, const Layer *cell_layer, MenuIndex *cell_index, void *data) {
+  switch (cell_index->row) {
+    case MENU_ROW_MINUTES: {
+      char minutes_str[20];
+      snprintf(minutes_str, sizeof(minutes_str), "%d minutes", minutes);
+      menu_cell_basic_draw(ctx, cell_layer, minutes_str, "Click to increment.", NULL);
+    }
+    break;
+    case MENU_ROW_SECONDS: {
+      char seconds_str[20];
+      snprintf(seconds_str, sizeof(seconds_str), "%d seconds", seconds);
+      menu_cell_basic_draw(ctx, cell_layer, seconds_str, "Click to increment.", NULL);
+    }
+    break;
+    case MENU_ROW_VIBRATE: {
+      if (vibrate) {
+        menu_cell_basic_draw(ctx, cell_layer, "Vibrate Enabled", "Click to disable vibration.", NULL);
+      }
+      else {
+        menu_cell_basic_draw(ctx, cell_layer, "Vibrate Disabled", "Click to enable vibration.", NULL);
+      }
+    }
+    break;
+    case MENU_ROW_SAVE:
+      menu_cell_basic_draw(ctx, cell_layer, "Save Timer", "Click to save the timer.", NULL);
+    break;
+    case MENU_ROW_RESET:
+      menu_cell_basic_draw(ctx, cell_layer, "Reset", "Reset numbers to 0.", NULL);
+    break;
+  }
 }
