@@ -7,7 +7,7 @@
 
 #define MY_UUID { 0xBD, 0xB6, 0xA5, 0x5E, 0xB3, 0x2A, 0x4B, 0x03, 0xB0, 0x37, 0x95, 0x63, 0x7B, 0xF3, 0x06, 0xFF }
 
-PBL_APP_INFO(MY_UUID, "Multi Timer", "Small Stone Apps", 1, 0, RESOURCE_ID_MENU_ICON, APP_INFO_STANDARD_APP);
+PBL_APP_INFO(MY_UUID, "Multi Timer", "Small Stone Apps", 1, 1, RESOURCE_ID_MENU_ICON, APP_INFO_STANDARD_APP);
 
 #define MENU_SECTIONS 3
 #define MENSEC_HEADER 0
