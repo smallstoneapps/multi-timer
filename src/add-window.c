@@ -1,148 +1,323 @@
+#include "pebble_fonts.h"
+#include "pebble_app.h"
 #include "add-window.h"
 #include "timers.h"
 
-#define MENU_ROW_MINUTES 0
-#define MENU_ROW_SECONDS 1
-#define MENU_ROW_VIBRATE 2
-#define MENU_ROW_SAVE 3
-#define MENU_ROW_RESET 4
+#define AW_TL_HEIGHT 48
 
-void add_window_load(Window *me);
-void add_window_unload(Window *me);
-void add_window_appear(Window *me);
+#define AW_MODE_MINUTES 0
+#define AW_MODE_SECONDS 1
+#define AW_MODE_VIBE 2
+#define AW_MODE_SAVE 3
 
-uint16_t addwin_menu_get_num_sections_callback(MenuLayer *me, void *data);
-uint16_t addwin_menu_get_num_rows_callback(MenuLayer *me, uint16_t section_index, void *data);
-int16_t addwin_menu_get_header_height_callback(MenuLayer *me, uint16_t section_index, void *data);
-void addwin_menu_draw_header_callback(GContext* ctx, const Layer *cell_layer, uint16_t section_index, void *data);
-void addwin_menu_draw_row_callback(GContext* ctx, const Layer *cell_layer, MenuIndex *cell_index, void *data);
-void addwin_menu_select_click_callback(MenuLayer *menu_layer, MenuIndex *cell_index, void *callback_context);
+#define AW_MENU_ICON_NEXT 0
+#define AW_MENU_ICON_PLUS 1
+#define AW_MENU_ICON_MINUS 2
+#define AW_MENU_ICON_SAVE 3
+#define AW_MENU_ICON_TOGGLE 4
 
-MenuLayer addwin_layer_menu;
+void add_window_load(Window* me);
+void add_window_unload(Window* me);
+void add_window_appear(Window* me);
+void add_window_disappear(Window* me);
+void aw_load_bitmaps();
+void aw_unload_bitmaps();
+void aw_update_actionbar_icons();
+void aw_click_config_provider(ClickConfig **config, Window *window);
+void aw_up_clicked(ClickRecognizerRef recognizer, Window* window);
+void aw_down_clicked(ClickRecognizerRef recognizer, Window* window);
+void aw_select_clicked(ClickRecognizerRef recognizer, Window* window);
+void aw_update_text();
+void aw_set_tick();
+void aw_cancel_tick();
+void aw_create_timer();
+void aw_reset();
+
+TextLayer aw_tl_minutes;
+TextLayer aw_tl_colon;
+TextLayer aw_tl_seconds;
+TextLayer aw_tl_vibrate;
+TextLayer aw_tl_hint;
+ActionBarLayer aw_actionbar;
+AppTimerHandle aw_timer_handle;
+AppContextRef aw_app_ctx;
+HeapBitmap aw_menu_icons[5];
+bool aw_loaded = false;
+
 int minutes = 0;
 int seconds = 0;
-bool first_time = true;
 bool vibrate = true;
 
-void init_add_window(Window* wnd) {
-  window_init(wnd, "Multi Timer Add Timer Window");
-  window_set_window_handlers(wnd, (WindowHandlers){
+int mode = AW_MODE_MINUTES;
+
+void init_add_window(Window* me, AppContextRef ctx) {
+  window_init(me, "Multi Timer Add Timer Window");
+  window_set_window_handlers(me, (WindowHandlers){
     .load = add_window_load,
-    .unload = add_window_unload
+    .unload = add_window_unload,
+    .appear = add_window_appear,
+    .disappear = add_window_disappear,
   });
+
+  aw_app_ctx = ctx;
+  action_bar_layer_init(&aw_actionbar);
+
+  aw_load_bitmaps();
 }
 
-void show_add_window(Window* wnd) {
-  window_stack_push(wnd, true);
+void show_add_window(Window* me) {
+  window_stack_push(me, true);
+  aw_reset();
 }
 
-void add_window_load(Window *me) {
-  if (! first_time) { return; }
-  menu_layer_init(&addwin_layer_menu, me->layer.bounds);
-  menu_layer_set_callbacks(&addwin_layer_menu, NULL, (MenuLayerCallbacks){
-    .get_num_sections = addwin_menu_get_num_sections_callback,
-    .get_num_rows = addwin_menu_get_num_rows_callback,
-    .get_header_height = addwin_menu_get_header_height_callback,
-    .draw_header = addwin_menu_draw_header_callback,
-    .draw_row = addwin_menu_draw_row_callback,
-    .select_click = addwin_menu_select_click_callback,
-  });
-  menu_layer_set_click_config_onto_window(&addwin_layer_menu, me);
-  layer_add_child(&me->layer, menu_layer_get_layer(&addwin_layer_menu));
-  first_time = false;
+void add_window_load(Window* me) {
+  if (aw_loaded) {
+    return;
+  }
+  aw_loaded = true;
+
+  action_bar_layer_add_to_window(&aw_actionbar, me);
+
+  text_layer_init(&aw_tl_minutes, GRect(0, 16, (144 - ACTION_BAR_WIDTH) / 2 - 6, AW_TL_HEIGHT));
+  text_layer_set_text_color(&aw_tl_minutes, GColorBlack);
+  text_layer_set_background_color(&aw_tl_minutes, GColorClear);
+  text_layer_set_font(&aw_tl_minutes, fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_MONO_BOLD_48)));
+  text_layer_set_text_alignment(&aw_tl_minutes, GTextAlignmentRight);
+  layer_add_child(&me->layer, &aw_tl_minutes.layer);
+
+  text_layer_init(&aw_tl_colon, GRect((144 - ACTION_BAR_WIDTH) / 2 - 16, 14, 32, AW_TL_HEIGHT));
+  text_layer_set_text_color(&aw_tl_colon, GColorBlack);
+  text_layer_set_background_color(&aw_tl_colon, GColorClear);
+  text_layer_set_font(&aw_tl_colon, fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_MONO_BOLD_48)));
+  text_layer_set_text_alignment(&aw_tl_colon, GTextAlignmentCenter);
+  layer_add_child(&me->layer, &aw_tl_colon.layer);
+  text_layer_set_text(&aw_tl_colon, ":");
+
+  text_layer_init(&aw_tl_seconds, GRect((144 - ACTION_BAR_WIDTH) / 2 + 6, 16, (144 - ACTION_BAR_WIDTH) / 2 - 4, AW_TL_HEIGHT));
+  text_layer_set_text_color(&aw_tl_seconds, GColorBlack);
+  text_layer_set_background_color(&aw_tl_seconds, GColorClear);
+  text_layer_set_font(&aw_tl_seconds, fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_MONO_BOLD_48)));
+  text_layer_set_text_alignment(&aw_tl_seconds, GTextAlignmentLeft);
+  layer_add_child(&me->layer, &aw_tl_seconds.layer);
+
+  text_layer_init(&aw_tl_vibrate, GRect(8, 20 + AW_TL_HEIGHT, 144 - ACTION_BAR_WIDTH - 16, 26));
+  text_layer_set_text_color(&aw_tl_vibrate, GColorBlack);
+  text_layer_set_background_color(&aw_tl_vibrate, GColorClear);
+  text_layer_set_font(&aw_tl_vibrate, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD));
+  text_layer_set_text_alignment(&aw_tl_vibrate, GTextAlignmentCenter);
+  layer_add_child(&me->layer, &aw_tl_vibrate.layer);
+
+  text_layer_init(&aw_tl_hint, GRect(4, 111, 144 - ACTION_BAR_WIDTH - 8, 22));
+  text_layer_set_text_color(&aw_tl_hint, GColorBlack);
+  text_layer_set_background_color(&aw_tl_hint, GColorClear);
+  text_layer_set_font(&aw_tl_hint, fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD));
+  text_layer_set_text_alignment(&aw_tl_hint, GTextAlignmentRight);
+  layer_add_child(&me->layer, &aw_tl_hint.layer);
 }
 
-void add_window_unload(Window *me) {
+void add_window_unload(Window* me) {
+  // aw_unload_bitmaps();
+}
+
+void add_window_appear(Window* me) {
+  aw_update_text();
+  aw_update_actionbar_icons();
+  aw_set_tick(aw_app_ctx);
+}
+
+void add_window_disappear(Window* me) {
+  aw_cancel_tick(aw_app_ctx);
+}
+
+void aw_load_bitmaps() {
+  heap_bitmap_init(&aw_menu_icons[AW_MENU_ICON_NEXT], RESOURCE_ID_MENU_ICON_NEXT);
+  heap_bitmap_init(&aw_menu_icons[AW_MENU_ICON_PLUS], RESOURCE_ID_MENU_ICON_PLUS);
+  heap_bitmap_init(&aw_menu_icons[AW_MENU_ICON_MINUS], RESOURCE_ID_MENU_ICON_MINUS);
+  heap_bitmap_init(&aw_menu_icons[AW_MENU_ICON_SAVE], RESOURCE_ID_MENU_ICON_SAVE);
+  heap_bitmap_init(&aw_menu_icons[AW_MENU_ICON_TOGGLE], RESOURCE_ID_MENU_ICON_TOGGLE);
 
 }
 
-uint16_t addwin_menu_get_num_sections_callback(MenuLayer *me, void *data) {
-  return 1;
+void aw_unload_bitmaps() {
+  heap_bitmap_deinit(&aw_menu_icons[AW_MENU_ICON_NEXT]);
+  heap_bitmap_deinit(&aw_menu_icons[AW_MENU_ICON_PLUS]);
+  heap_bitmap_deinit(&aw_menu_icons[AW_MENU_ICON_MINUS]);
+  heap_bitmap_deinit(&aw_menu_icons[AW_MENU_ICON_SAVE]);
+  heap_bitmap_deinit(&aw_menu_icons[AW_MENU_ICON_TOGGLE]);
 }
 
-uint16_t addwin_menu_get_num_rows_callback(MenuLayer *me, uint16_t section_index, void *data) {
-  return 5;
-}
+void aw_update_text() {
+  static char aw_text_min[] = "00";
+  snprintf(aw_text_min, sizeof(aw_text_min), "%02d", minutes);
+  text_layer_set_text(&aw_tl_minutes, aw_text_min);
 
-int16_t addwin_menu_get_header_height_callback(MenuLayer *me, uint16_t section_index, void *data) {
-  return MENU_CELL_BASIC_HEADER_HEIGHT;
-}
+  static char aw_text_sec[] = "00";
+  snprintf(aw_text_sec, sizeof(aw_text_sec), "%02d", seconds);
+  text_layer_set_text(&aw_tl_seconds, aw_text_sec);
 
-void addwin_menu_draw_header_callback(GContext* ctx, const Layer *cell_layer, uint16_t section_index, void *data) {
-  menu_cell_basic_header_draw(ctx, cell_layer, "Add New Timer");
-}
+  static char aw_text_vibrate[50];
+  if (vibrate) {
+    strcpy(aw_text_vibrate, "Vibrate");
+  }
+  else {
+    strcpy(aw_text_vibrate, "Don't Vibrate");
+  }
+  text_layer_set_text(&aw_tl_vibrate, aw_text_vibrate);
 
-void addwin_menu_select_click_callback(MenuLayer *menu_layer, MenuIndex *cell_index, void *callback_context) {
-  switch (cell_index->row) {
-    case MENU_ROW_MINUTES: {
-      minutes += 1;
-      if (minutes > 60) {
-        minutes = 0;
-      }
-      menu_layer_reload_data(&addwin_layer_menu);
-    }
+  switch (mode) {
+    case AW_MODE_MINUTES:
+    case AW_MODE_SECONDS:
+      text_layer_set_text(&aw_tl_hint, "");
     break;
-    case MENU_ROW_SECONDS: {
-      seconds += 1;
-      if (seconds >= 60) {
-        seconds = 0;
-      }
-      menu_layer_reload_data(&addwin_layer_menu);
-    }
+    case AW_MODE_VIBE:
+      text_layer_set_text(&aw_tl_hint, "Toggle vibrate ->");
     break;
-    case MENU_ROW_VIBRATE: {
-      vibrate = ! vibrate;
-      menu_layer_reload_data(&addwin_layer_menu);
-    }
-    break;
-    case MENU_ROW_SAVE: {
-      int length = (minutes * 60 + seconds);
-      if (length <= 0) {
-        return;
-      }
-      add_timer(length, vibrate);
-      minutes = 0;
-      seconds = 0;
-      window_stack_pop(true);
-    }
-    break;
-    case MENU_ROW_RESET: {
-      minutes = 0;
-      seconds = 0;
-      menu_layer_reload_data(&addwin_layer_menu);
-    }
+    case AW_MODE_SAVE:
+      text_layer_set_text(&aw_tl_hint, "Add timer ->");
     break;
   }
 }
 
-void addwin_menu_draw_row_callback(GContext* ctx, const Layer *cell_layer, MenuIndex *cell_index, void *data) {
-  switch (cell_index->row) {
-    case MENU_ROW_MINUTES: {
-      char minutes_str[20];
-      snprintf(minutes_str, sizeof(minutes_str), "%d minutes", minutes);
-      menu_cell_basic_draw(ctx, cell_layer, minutes_str, "Click to increment.", NULL);
+void aw_update_actionbar_icons() {
+  switch (mode) {
+    case AW_MODE_MINUTES:
+    case AW_MODE_SECONDS:
+      action_bar_layer_set_icon(&aw_actionbar, BUTTON_ID_UP, &aw_menu_icons[AW_MENU_ICON_PLUS].bmp);
+      action_bar_layer_set_icon(&aw_actionbar, BUTTON_ID_DOWN, &aw_menu_icons[AW_MENU_ICON_MINUS].bmp);
+    break;
+    case AW_MODE_VIBE:
+      action_bar_layer_clear_icon(&aw_actionbar, BUTTON_ID_UP);
+      action_bar_layer_set_icon(&aw_actionbar, BUTTON_ID_DOWN, &aw_menu_icons[AW_MENU_ICON_TOGGLE].bmp);
+    break;
+    case AW_MODE_SAVE:
+      action_bar_layer_clear_icon(&aw_actionbar, BUTTON_ID_UP);
+      action_bar_layer_set_icon(&aw_actionbar, BUTTON_ID_DOWN, &aw_menu_icons[AW_MENU_ICON_SAVE].bmp);
+    break;
+  }
+  action_bar_layer_set_icon(&aw_actionbar, BUTTON_ID_SELECT, &aw_menu_icons[AW_MENU_ICON_NEXT].bmp);
+  action_bar_layer_set_click_config_provider(&aw_actionbar, (ClickConfigProvider) aw_click_config_provider);
+}
+
+void aw_click_config_provider(ClickConfig **config, Window *window) {
+  if (mode == AW_MODE_MINUTES || mode == AW_MODE_SECONDS) {
+    config[BUTTON_ID_UP]->click.handler = (ClickHandler) aw_up_clicked;
+  }
+  config[BUTTON_ID_DOWN]->click.handler = (ClickHandler) aw_down_clicked;
+  config[BUTTON_ID_SELECT]->click.handler = (ClickHandler) aw_select_clicked;
+}
+
+
+void aw_set_tick(AppContextRef ctx) {
+  aw_timer_handle = app_timer_send_event(ctx, 600, COOKIE_AW_FLICKER);
+}
+
+void aw_cancel_tick(AppContextRef ctx) {
+  app_timer_cancel_event(ctx, aw_timer_handle);
+}
+
+void add_window_timer() {
+  switch (mode) {
+    case AW_MODE_MINUTES:
+      layer_set_hidden(&aw_tl_minutes.layer, ! layer_get_hidden(&aw_tl_minutes.layer));
+    break;
+    case AW_MODE_SECONDS:
+      layer_set_hidden(&aw_tl_seconds.layer, ! layer_get_hidden(&aw_tl_seconds.layer));
+    break;
+    case AW_MODE_VIBE:
+      layer_set_hidden(&aw_tl_vibrate.layer, ! layer_get_hidden(&aw_tl_vibrate.layer));
+    break;
+  }
+  aw_set_tick(aw_app_ctx);
+}
+
+void aw_up_clicked(ClickRecognizerRef recognizer, Window* window) {
+  switch (mode) {
+    case AW_MODE_MINUTES:
+      minutes += 1;
+    break;
+    case AW_MODE_SECONDS:
+      seconds += 1;
+    break;
+  }
+  aw_update_text();
+}
+
+
+void aw_down_clicked(ClickRecognizerRef recognizer, Window* window) {
+  switch (mode) {
+    case AW_MODE_MINUTES:
+      minutes -= 1;
+    break;
+    case AW_MODE_SECONDS:
+      seconds -= 1;
+    break;
+    case AW_MODE_VIBE:
+      vibrate = ! vibrate;
+    break;
+    case AW_MODE_SAVE: {
+      aw_create_timer();
+      return;
     }
     break;
-    case MENU_ROW_SECONDS: {
-      char seconds_str[20];
-      snprintf(seconds_str, sizeof(seconds_str), "%d seconds", seconds);
-      menu_cell_basic_draw(ctx, cell_layer, seconds_str, "Click to increment.", NULL);
+  }
+
+  if (seconds < 0) {
+    seconds += 60;
+    minutes -= 1;
+  }
+  if (seconds >= 60) {
+    seconds -= 60;
+    minutes += 1;
+  }
+  if (minutes < 0) {
+    minutes = 0;
+  }
+
+  aw_update_text();
+}
+
+void aw_select_clicked(ClickRecognizerRef recognizer, Window* window) {
+  switch (mode) {
+    case AW_MODE_MINUTES: {
+      layer_set_hidden(&aw_tl_minutes.layer, false);
+      mode = AW_MODE_SECONDS;
     }
     break;
-    case MENU_ROW_VIBRATE: {
-      if (vibrate) {
-        menu_cell_basic_draw(ctx, cell_layer, "Vibrate Enabled", "Click to disable vibration.", NULL);
-      }
-      else {
-        menu_cell_basic_draw(ctx, cell_layer, "Vibrate Disabled", "Click to enable vibration.", NULL);
-      }
+    case AW_MODE_SECONDS: {
+      layer_set_hidden(&aw_tl_seconds.layer, false);
+      mode = AW_MODE_VIBE;
     }
     break;
-    case MENU_ROW_SAVE:
-      menu_cell_basic_draw(ctx, cell_layer, "Save Timer", "Click to save the timer.", NULL);
+    case AW_MODE_VIBE:
+      mode = AW_MODE_SAVE;
     break;
-    case MENU_ROW_RESET:
-      menu_cell_basic_draw(ctx, cell_layer, "Reset", "Reset numbers to 0.", NULL);
+    case AW_MODE_SAVE:
+      mode = AW_MODE_MINUTES;
     break;
+  }
+  aw_update_actionbar_icons();
+  aw_update_text();
+}
+
+void aw_reset() {
+  mode = AW_MODE_MINUTES;
+  minutes = 0;
+  seconds = 0;
+  vibrate = true;
+  aw_update_actionbar_icons();
+  aw_update_text();
+}
+
+void aw_create_timer() {
+  int duration = minutes * 60 + seconds;
+  if (duration == 0) {
+    vibes_long_pulse();
+    mode = AW_MODE_MINUTES;
+    aw_update_actionbar_icons();
+    aw_update_text();
+  }
+  else {
+    add_timer(duration, vibrate);
+    window_stack_pop(true);
   }
 }

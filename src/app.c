@@ -83,7 +83,7 @@ void handle_init(AppContextRef ctx) {
     .unload = window_unload,
   });
 
-  init_add_window(&window_add_timer);
+  init_add_window(&window_add_timer, ctx);
 }
 
 void window_load(Window *me) {
@@ -241,6 +241,10 @@ void handle_timer(AppContextRef ctx, AppTimerHandle handle, uint32_t cookie) {
       }
       set_timer(ctx);
       menu_layer_reload_data(&layer_menu);
+    }
+    break;
+    case COOKIE_AW_FLICKER: {
+      add_window_timer();
     }
     break;
   }

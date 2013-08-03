@@ -27,6 +27,37 @@
       "defName": "ICON_TIMER_FINISHED",
       "type": "png",
       "file": "images/icon_timer_finished.png"
+    },
+    {
+      "defName": "MENU_ICON_NEXT",
+      "type": "png",
+      "file": "images/menu_next.png"
+    },
+    {
+      "defName": "MENU_ICON_PLUS",
+      "type": "png",
+      "file": "images/menu_plus.png"
+    },
+    {
+      "defName": "MENU_ICON_MINUS",
+      "type": "png",
+      "file": "images/menu_minus.png"
+    },
+    {
+      "defName": "MENU_ICON_SAVE",
+      "type": "png",
+      "file": "images/menu_save.png"
+    },
+    {
+      "defName": "MENU_ICON_TOGGLE",
+      "type": "png",
+      "file": "images/menu_toggle.png"
+    },
+    {
+      "defName": "FONT_MONO_BOLD_48",
+      "type": "font",
+      "file": "fonts/AUDIMB__.TTF",
+      "characterRegex": "[0-9:]"
     }
   ]
 }
