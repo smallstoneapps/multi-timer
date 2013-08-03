@@ -12,4 +12,4 @@ You can install this watchface by clicking [this link][3] on the Android or iOS 
 
 [1]: http://getpebble.com
 [2]: http://forums.getpebble.com/discussion/6475/multiple-timer-app
-[3]: http://builder.pblweb.com.s3.amazonaws.com/a708fca2-7877-43c1-a4db-b1f5c44c53f6/build.pbw
+[3]: http://builder.pblweb.com.s3.amazonaws.com/cf042982-acfc-4636-abfc-a66275417f0d/build.pbw
