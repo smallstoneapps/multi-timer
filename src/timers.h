@@ -3,7 +3,7 @@
 
 #include "timer.h"
 
-#define MAX_TIMERS 3
+#define MAX_TIMERS 8
 
 Timer* get_timer(int pos);
 int get_timer_count();
