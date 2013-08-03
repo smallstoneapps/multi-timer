@@ -62,7 +62,6 @@ void init_add_window(Window* me, AppContextRef ctx) {
   aw_app_ctx = ctx;
   action_bar_layer_init(&aw_actionbar);
 
-  aw_load_bitmaps();
 }
 
 void show_add_window(Window* me) {
@@ -71,6 +70,9 @@ void show_add_window(Window* me) {
 }
 
 void add_window_load(Window* me) {
+
+  aw_load_bitmaps();
+
   if (aw_loaded) {
     return;
   }
@@ -116,7 +118,7 @@ void add_window_load(Window* me) {
 }
 
 void add_window_unload(Window* me) {
-  // aw_unload_bitmaps();
+  aw_unload_bitmaps();
 }
 
 void add_window_appear(Window* me) {
