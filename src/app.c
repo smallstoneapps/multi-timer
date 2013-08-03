@@ -15,15 +15,15 @@ PBL_APP_INFO(MY_UUID, "Multi Timer", "Small Stone Apps", 1, 0, RESOURCE_ID_MENU_
 #define MENSEC_FOOTER 2
 
 #define MENROWS_HEADER 3
-#define MENROWS_FOOTER 2
+#define MENROWS_FOOTER 3
 
 #define MENROW_HEADER_START_ALL 0
 #define MENROW_HEADER_PAUSE_ALL 1
 #define MENROW_HEADER_RESET_ALL 2
 
-#define MENROW_FOOTER_ADD 0
-#define MENROW_FOOTER_CLEAR 1
-#define MENROW_FOOTER_HELP 2
+#define MENROW_FOOTER_ADD_TIMER 0
+#define MENROW_FOOTER_ADD_STOPWATCH 1
+#define MENROW_FOOTER_CLEAR 2
 
 #define MENU_ICON_OK 0
 #define MENU_ICON_PROBLEM 1
@@ -53,9 +53,7 @@ void     menu_draw_row_callback(GContext* ctx, const Layer *cell_layer, MenuInde
 void     menu_draw_header_row(GContext* ctx, const Layer *cell_layer, MenuIndex *cell_index, void *data);
 void     menu_draw_footer_row(GContext* ctx, const Layer *cell_layer, MenuIndex *cell_index, void *data);
 void     menu_draw_timer_row(GContext* ctx, const Layer *cell_layer, MenuIndex *cell_index, void *data);
-void     jump_to_timer(int t);
-
-void     show_help();
+void     jump_to_timer(int t, bool animate);
 void     show_add_timer();
 
 Window         window;
@@ -102,7 +100,7 @@ void window_load(Window *me) {
   });
   menu_layer_set_click_config_onto_window(&layer_menu, me);
   layer_add_child(&me->layer, menu_layer_get_layer(&layer_menu));
-  jump_to_timer(0);
+  jump_to_timer(0, false);
   set_timer(app_ctx);
 }
 
@@ -184,14 +182,14 @@ void menu_draw_header_row(GContext* ctx, const Layer *cell_layer, MenuIndex *cel
 
 void menu_draw_footer_row(GContext* ctx, const Layer *cell_layer, MenuIndex *cell_index, void *data) {
   switch (cell_index->row) {
-    case MENROW_FOOTER_ADD:
+    case MENROW_FOOTER_ADD_TIMER:
       menu_cell_basic_draw(ctx, cell_layer, "Add Timer", "Adds a new timer.", NULL);
+    break;
+    case MENROW_FOOTER_ADD_STOPWATCH:
+      menu_cell_basic_draw(ctx, cell_layer, "Add Stopwatch", "Adds a stopwatch.", NULL);
     break;
     case MENROW_FOOTER_CLEAR:
       menu_cell_basic_draw(ctx, cell_layer, "Clear Timers", "Removes all timers.", NULL);
-    break;
-    case MENROW_FOOTER_HELP:
-      menu_cell_basic_draw(ctx, cell_layer, "Help", "View the help page.", NULL);
     break;
   }
 }
@@ -270,7 +268,7 @@ void menu_select_click_callback(MenuLayer *menu_layer, MenuIndex *cell_index, vo
           for (int t = 0; t < get_timer_count(); t += 1) {
             timer_resume(get_timer(t));
           }
-          jump_to_timer(0);
+          jump_to_timer(0, true);
         }
         break;
         case MENROW_HEADER_PAUSE_ALL: {
@@ -279,14 +277,14 @@ void menu_select_click_callback(MenuLayer *menu_layer, MenuIndex *cell_index, vo
               timer_pause(get_timer(t));
             }
           }
-          jump_to_timer(0);
+          jump_to_timer(0, true);
         }
         break;
         case MENROW_HEADER_RESET_ALL: {
           for (int t = 0; t < get_timer_count(); t += 1) {
             timer_reset(get_timer(t));
           }
-          jump_to_timer(0);
+          jump_to_timer(0, true);
         }
         break;
       }
@@ -294,17 +292,19 @@ void menu_select_click_callback(MenuLayer *menu_layer, MenuIndex *cell_index, vo
     break;
     case MENSEC_FOOTER: {
       switch (cell_index->row) {
-        case MENROW_FOOTER_ADD:
+        case MENROW_FOOTER_ADD_TIMER:
           show_add_timer();
           return;
         break;
+        case MENROW_FOOTER_ADD_STOPWATCH: {
+          add_stopwatch();
+          menu_layer_reload_data(&layer_menu);
+          jump_to_timer(get_timer_count() - 1, true);
+        }
+        break;
         case MENROW_FOOTER_CLEAR:
          clear_timers();
-         jump_to_timer(0);
-        break;
-        case MENROW_FOOTER_HELP:
-          show_help();
-          return;
+         jump_to_timer(0, true);
         break;
       }
     }
@@ -360,15 +360,11 @@ void menu_select_long_click_callback(MenuLayer *menu_layer, MenuIndex *cell_inde
   menu_layer_reload_data(&layer_menu);
 }
 
-void show_help() {
-
-}
-
 void show_add_timer() {
   show_add_window(&window_add_timer);
 }
 
-void jump_to_timer(int t) {
+void jump_to_timer(int t, bool animate) {
   MenuIndex index =  { MENSEC_TIMERS, t };
-  menu_layer_set_selected_index(&layer_menu, index, MenuRowAlignCenter, false);
+  menu_layer_set_selected_index(&layer_menu, index, MenuRowAlignCenter, animate);
 }

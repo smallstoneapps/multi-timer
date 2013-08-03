@@ -31,6 +31,20 @@ bool add_timer(int duration, bool vibrate) {
   t.time_left = duration;
   t.status = TIMER_STOPPED;
   t.vibrate = vibrate;
+  t.direction = TIMER_DOWN;
+  timers[num_timers] = t;
+  num_timers += 1;
+  return true;
+}
+
+bool add_stopwatch() {
+  if (num_timers >= MAX_TIMERS) {
+    return false;
+  }
+  Timer t;
+  t.time_left = 0;
+  t.status = TIMER_STOPPED;
+  t.direction = TIMER_UP;
   timers[num_timers] = t;
   num_timers += 1;
   return true;

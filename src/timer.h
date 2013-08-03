@@ -8,10 +8,16 @@ typedef enum {
   TIMER_FINISHED = 3
 } TimerStatus;
 
+typedef enum {
+  TIMER_UP = 0,
+  TIMER_DOWN = 1
+} TimerDirection;
+
 typedef struct {
   int length;
   int time_left;
   TimerStatus status;
+  TimerDirection direction;
   bool vibrate;
 } Timer;
 
