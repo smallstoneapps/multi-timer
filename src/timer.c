@@ -31,7 +31,12 @@ void timer_tick(Timer* timer) {
     if (timer->time_left <= 0) {
       timer->status = TIMER_FINISHED;
       if (timer->vibrate) {
-        vibes_long_pulse();
+        const uint32_t seg[] = { 600, 200, 600, 200, 600 };
+        VibePattern pattern = {
+          .durations =  seg,
+          .num_segments = ARRAY_LENGTH(seg)
+        };
+        vibes_enqueue_custom_pattern(pattern);
       }
     }
   }
