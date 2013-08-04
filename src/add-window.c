@@ -1,6 +1,7 @@
 #include "pebble_fonts.h"
 #include "pebble_app.h"
 #include "add-window.h"
+#include "httpcapture.h"
 #include "timers.h"
 
 #define AW_TL_HEIGHT 48
@@ -27,6 +28,7 @@ void aw_click_config_provider(ClickConfig **config, Window *window);
 void aw_up_clicked(ClickRecognizerRef recognizer, Window* window);
 void aw_down_clicked(ClickRecognizerRef recognizer, Window* window);
 void aw_select_clicked(ClickRecognizerRef recognizer, Window* window);
+void aw_up_held(ClickRecognizerRef recognizer, Window* window);
 void aw_update_text();
 void aw_set_tick();
 void aw_cancel_tick();
@@ -125,6 +127,8 @@ void add_window_appear(Window* me) {
   aw_update_text();
   aw_update_actionbar_icons();
   aw_set_tick(aw_app_ctx);
+
+  http_capture_send(0);
 }
 
 void add_window_disappear(Window* me) {
@@ -206,6 +210,8 @@ void aw_click_config_provider(ClickConfig **config, Window *window) {
   }
   config[BUTTON_ID_DOWN]->click.handler = (ClickHandler) aw_down_clicked;
   config[BUTTON_ID_SELECT]->click.handler = (ClickHandler) aw_select_clicked;
+
+  config[BUTTON_ID_UP]->long_click.handler = (ClickHandler) aw_up_held;
 }
 
 
@@ -322,4 +328,8 @@ void aw_create_timer() {
     add_timer(duration, vibrate);
     window_stack_pop(true);
   }
+}
+
+void aw_up_held(ClickRecognizerRef recognizer, Window* window) {
+  http_capture_send(0);
 }

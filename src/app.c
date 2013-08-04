@@ -3,6 +3,8 @@
 #include "pebble_fonts.h"
 #include "timer.h"
 #include "timers.h"
+#include "http.h"
+#include "httpcapture.h"
 #include "add-window.h"
 
 #define MY_UUID { 0xBD, 0xB6, 0xA5, 0x5E, 0xB3, 0x2A, 0x4B, 0x03, 0xB0, 0x37, 0x95, 0x63, 0x7B, 0xF3, 0x06, 0xFF }
@@ -56,6 +58,8 @@ void     menu_draw_timer_row(GContext* ctx, const Layer *cell_layer, MenuIndex *
 void     jump_to_timer(int t, bool animate);
 void     show_add_timer();
 
+void     http_success(int32_t cookie, int http_status, DictionaryIterator *dict, void *ctx);
+
 Window         window;
 Window         window_add_timer;
 MenuLayer      layer_menu;
@@ -66,8 +70,15 @@ HeapBitmap     timer_icons[4];
 void pbl_main(void *params) {
   PebbleAppHandlers handlers = {
     .init_handler = &handle_init,
-    .timer_handler = &handle_timer
+    .timer_handler = &handle_timer,
+    .messaging_info = {
+      .buffer_sizes = {
+        .inbound = 124,
+        .outbound = 124,
+      },
+    }
   };
+  http_capture_main(&handlers);
   app_event_loop(params, &handlers);
 }
 
@@ -75,6 +86,16 @@ void handle_init(AppContextRef ctx) {
   app_ctx = ctx;
 
   resource_init_current_app(&APP_RESOURCES);
+
+  http_set_app_id(15);
+
+  if (! http_register_callbacks((HTTPCallbacks){
+    .success = http_success
+  }, NULL)) {
+    vibes_short_pulse();
+  }
+
+  http_capture_init(ctx);
 
   window_init(&window, "Multi Timer Main Window");
   window_stack_push(&window, true);
@@ -101,7 +122,9 @@ void window_load(Window *me) {
   menu_layer_set_click_config_onto_window(&layer_menu, me);
   layer_add_child(&me->layer, menu_layer_get_layer(&layer_menu));
   jump_to_timer(0, false);
-  set_timer(app_ctx);
+  // set_timer(app_ctx);
+
+  http_capture_send(0);
 }
 
 void window_unload(Window *me) {
@@ -371,4 +394,8 @@ void show_add_timer() {
 void jump_to_timer(int t, bool animate) {
   MenuIndex index =  { MENSEC_TIMERS, t };
   menu_layer_set_selected_index(&layer_menu, index, MenuRowAlignCenter, animate);
+}
+
+void     http_success(int32_t cookie, int http_status, DictionaryIterator *dict, void *ctx) {
+
 }
