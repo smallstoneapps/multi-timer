@@ -1,11 +1,16 @@
 #include "pebble_os.h"
 #include "pebble_app.h"
 #include "pebble_fonts.h"
+
+#include "config.h"
 #include "timer.h"
 #include "timers.h"
+#include "add-window.h"
+
+#if ROCKSHOT
 #include "http.h"
 #include "httpcapture.h"
-#include "add-window.h"
+#endif
 
 #define MY_UUID { 0xBD, 0xB6, 0xA5, 0x5E, 0xB3, 0x2A, 0x4B, 0x03, 0xB0, 0x37, 0x95, 0x63, 0x7B, 0xF3, 0x06, 0xFF }
 
@@ -41,6 +46,7 @@ PBL_APP_INFO(MY_UUID, "Multi Timer", "Small Stone Apps", 1, 1, RESOURCE_ID_MENU_
 void     handle_init(AppContextRef ctx);
 void     window_load(Window *me);
 void     window_unload(Window *me);
+void     window_appear(Window* me);
 void     load_bitmaps();
 void     unload_bitmaps();
 void     set_timer(AppContextRef ctx);
@@ -58,7 +64,9 @@ void     menu_draw_timer_row(GContext* ctx, const Layer *cell_layer, MenuIndex *
 void     jump_to_timer(int t, bool animate);
 void     show_add_timer();
 
+#if ROCKSHOT
 void     http_success(int32_t cookie, int http_status, DictionaryIterator *dict, void *ctx);
+#endif
 
 Window         window;
 Window         window_add_timer;
@@ -70,15 +78,19 @@ HeapBitmap     timer_icons[4];
 void pbl_main(void *params) {
   PebbleAppHandlers handlers = {
     .init_handler = &handle_init,
-    .timer_handler = &handle_timer,
-    .messaging_info = {
-      .buffer_sizes = {
-        .inbound = 124,
-        .outbound = 124,
-      },
-    }
+    .timer_handler = &handle_timer
+  };
+
+  #if ROCKSHOT
+  handlers.messaging_info = (PebbleAppMessagingInfo) {
+    .buffer_sizes = {
+      .inbound = 124,
+      .outbound = 124,
+    },
   };
   http_capture_main(&handlers);
+  #endif
+
   app_event_loop(params, &handlers);
 }
 
@@ -87,20 +99,19 @@ void handle_init(AppContextRef ctx) {
 
   resource_init_current_app(&APP_RESOURCES);
 
+  #if ROCKSHOT
   http_set_app_id(15);
-
-  if (! http_register_callbacks((HTTPCallbacks){
+  http_register_callbacks((HTTPCallbacks) {
     .success = http_success
-  }, NULL)) {
-    vibes_short_pulse();
-  }
-
+  }, NULL);
   http_capture_init(ctx);
+  #endif
 
   window_init(&window, "Multi Timer Main Window");
   window_stack_push(&window, true);
   window_set_window_handlers(&window, (WindowHandlers){
     .load = window_load,
+    .appear = window_appear,
     .unload = window_unload,
   });
 
@@ -122,13 +133,15 @@ void window_load(Window *me) {
   menu_layer_set_click_config_onto_window(&layer_menu, me);
   layer_add_child(&me->layer, menu_layer_get_layer(&layer_menu));
   jump_to_timer(0, false);
-  // set_timer(app_ctx);
-
-  http_capture_send(0);
+  set_timer(app_ctx);
 }
 
 void window_unload(Window *me) {
   unload_bitmaps();
+}
+
+void window_appear(Window* me) {
+  menu_layer_reload_data(&layer_menu);
 }
 
 uint16_t menu_get_num_sections_callback(MenuLayer *me, void *data) {
@@ -396,6 +409,8 @@ void jump_to_timer(int t, bool animate) {
   menu_layer_set_selected_index(&layer_menu, index, MenuRowAlignCenter, animate);
 }
 
-void     http_success(int32_t cookie, int http_status, DictionaryIterator *dict, void *ctx) {
+#if ROCKSHOT
+void http_success(int32_t cookie, int http_status, DictionaryIterator *dict, void *ctx) {
 
 }
+#endif

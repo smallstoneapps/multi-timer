@@ -63,7 +63,6 @@ static void http_capture_send_buffer() {
 }
 
 void http_capture_out_sent(DictionaryIterator *sent, void *context) {
-	vibes_short_pulse();
 	if (http_capture_sending && http_capture_sentLen < 18*168)
 		app_timer_send_event(http_capture_app_context_ref, 10, http_capture_COOKIE_send);
 	else
