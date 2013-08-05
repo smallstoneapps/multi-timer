@@ -19,7 +19,7 @@ void clear_timers() {
   num_timers = 0;
 }
 
-bool add_timer(int duration, bool vibrate) {
+bool add_timer(int duration, TimerVibration vibrate) {
   if (duration <= 0) {
     return false;
   }

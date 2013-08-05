@@ -13,12 +13,23 @@ typedef enum {
   TIMER_DOWN = 1
 } TimerDirection;
 
+#define TIMER_VIBE_COUNT 6
+
+typedef enum {
+  TIMER_VIBE_OFF = 0,
+  TIMER_VIBE_SHORT = 1,
+  TIMER_VIBE_LONG = 2,
+  TIMER_VIBE_DOUBLE = 3,
+  TIMER_VIBE_TRIPLE = 4,
+  TIMER_VIBE_CONTINUOUS = 5
+} TimerVibration;
+
 typedef struct {
   int length;
   int time_left;
   TimerStatus status;
   TimerDirection direction;
-  bool vibrate;
+  TimerVibration vibrate;
 } Timer;
 
 void timer_start(Timer* timer);

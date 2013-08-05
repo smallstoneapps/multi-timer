@@ -28,6 +28,7 @@
 #include "timer.h"
 #include "timers.h"
 #include "add-window.h"
+#include "vibe-window.h"
 
 #if ROCKSHOT
 #include "http.h"
@@ -138,6 +139,7 @@ void handle_init(AppContextRef ctx) {
   });
 
   init_add_window(&window_add_timer, ctx);
+  init_vibe_window(ctx);
 }
 
 void window_load(Window *me) {
@@ -280,7 +282,7 @@ void menu_draw_timer_row(GContext* ctx, const Layer *cell_layer, MenuIndex *cell
       break;
       case TIMER_FINISHED:
         row_bmp = &timer_icons[ICON_TIMER_FINISHED].bmp;
-        strcpy(sub_message, "Restart // Delete");
+        strcpy(sub_message, "Reset // Delete");
       break;
     }
     menu_cell_basic_draw(ctx, cell_layer, time_left, sub_message, row_bmp);
@@ -303,6 +305,10 @@ void handle_timer(AppContextRef ctx, AppTimerHandle handle, uint32_t cookie) {
     break;
     case COOKIE_AW_FLICKER: {
       add_window_timer();
+    }
+    break;
+    case COOKIE_VW_VIBRATE: {
+      vibe_window_timer();
     }
     break;
   }

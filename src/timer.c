@@ -1,4 +1,5 @@
 #include "pebble_app.h"
+#include "vibe-window.h"
 #include "timer.h"
 
 void timer_start(Timer* timer) {
@@ -30,13 +31,38 @@ void timer_tick(Timer* timer) {
     timer->time_left -= 1;
     if (timer->time_left <= 0) {
       timer->status = TIMER_FINISHED;
-      if (timer->vibrate) {
-        const uint32_t seg[] = { 600, 200, 600, 200, 600 };
-        VibePattern pattern = {
-          .durations =  seg,
-          .num_segments = ARRAY_LENGTH(seg)
-        };
-        vibes_enqueue_custom_pattern(pattern);
+      switch (timer->vibrate) {
+        case TIMER_VIBE_OFF:
+          // Do nothing!
+        break;
+        case TIMER_VIBE_SHORT:
+          vibes_short_pulse();
+        break;
+        case TIMER_VIBE_LONG:
+          vibes_long_pulse();
+        break;
+        case TIMER_VIBE_DOUBLE: {
+          const uint32_t seg[] = { 600, 200, 600 };
+          VibePattern pattern = {
+            .durations =  seg,
+            .num_segments = ARRAY_LENGTH(seg)
+          };
+          vibes_enqueue_custom_pattern(pattern);
+        }
+        break;
+        case TIMER_VIBE_TRIPLE: {
+          const uint32_t seg[] = { 600, 200, 600, 200, 600 };
+          VibePattern pattern = {
+            .durations =  seg,
+            .num_segments = ARRAY_LENGTH(seg)
+          };
+          vibes_enqueue_custom_pattern(pattern);
+        }
+        break;
+        case TIMER_VIBE_CONTINUOUS: {
+          show_vibe_window();
+        }
+        break;
       }
     }
   }
