@@ -34,6 +34,7 @@ void aw_set_tick();
 void aw_cancel_tick();
 void aw_create_timer();
 void aw_reset();
+void aw_fix_time();
 
 TextLayer aw_tl_minutes;
 TextLayer aw_tl_colon;
@@ -205,14 +206,16 @@ void aw_update_actionbar_icons() {
 void aw_click_config_provider(ClickConfig **config, Window *window) {
   if (mode == AW_MODE_MINUTES || mode == AW_MODE_SECONDS) {
     config[BUTTON_ID_UP]->click.handler = (ClickHandler) aw_up_clicked;
+    config[BUTTON_ID_UP]->click.repeat_interval_ms = 100;
   }
   config[BUTTON_ID_DOWN]->click.handler = (ClickHandler) aw_down_clicked;
+  config[BUTTON_ID_DOWN]->click.repeat_interval_ms = 100;
   config[BUTTON_ID_SELECT]->click.handler = (ClickHandler) aw_select_clicked;
 }
 
 
 void aw_set_tick(AppContextRef ctx) {
-  aw_timer_handle = app_timer_send_event(ctx, 600, COOKIE_AW_FLICKER);
+  aw_timer_handle = app_timer_send_event(ctx, 500, COOKIE_AW_FLICKER);
 }
 
 void aw_cancel_tick(AppContextRef ctx) {
@@ -243,6 +246,7 @@ void aw_up_clicked(ClickRecognizerRef recognizer, Window* window) {
       seconds += 1;
     break;
   }
+  aw_fix_time();
   aw_update_text();
 }
 
@@ -264,19 +268,7 @@ void aw_down_clicked(ClickRecognizerRef recognizer, Window* window) {
     }
     break;
   }
-
-  if (seconds < 0) {
-    seconds += 60;
-    minutes -= 1;
-  }
-  if (seconds >= 60) {
-    seconds -= 60;
-    minutes += 1;
-  }
-  if (minutes < 0) {
-    minutes = 0;
-  }
-
+  aw_fix_time();
   aw_update_text();
 }
 
@@ -301,6 +293,20 @@ void aw_select_clicked(ClickRecognizerRef recognizer, Window* window) {
   }
   aw_update_actionbar_icons();
   aw_update_text();
+}
+
+void aw_fix_time() {
+  if (seconds < 0) {
+    seconds += 60;
+    minutes -= 1;
+  }
+  if (seconds >= 60) {
+    seconds -= 60;
+    minutes += 1;
+  }
+  if (minutes < 0) {
+    minutes = 0;
+  }
 }
 
 void aw_reset() {
