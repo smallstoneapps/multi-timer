@@ -10,7 +10,7 @@ The app allows you to create multiple, independent countdown timers with an opti
 
 You can install this watchface by clicking [this link][3] on the Android or iOS device that you have paired to your Pebble watch.
 
-The app is also [available on MyPebbleFace][4].
+The app is also available to [download on MyPebbleFaces][4].
 
 ### Screenshots
 
