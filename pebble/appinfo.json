@@ -1,0 +1,69 @@
+{
+  "uuid": "bdb6a55e-b32a-4b03-b037-95637bf306ff",
+  "shortName": "Multi Timer",
+  "longName": "Multi Timer",
+  "companyName": "Matthew Tole",
+  "versionCode": 2,
+  "versionLabel": "2.0.0",
+  "watchapp": {
+    "watchface": false
+  },
+  "appKeys": {
+  },
+  "resources": {
+    "media": [
+      {
+        "menuIcon": true,
+        "type": "png",
+        "name": "MENU_ICON",
+        "file": "images/menu_icon.png"
+      },
+      {
+        "type": "png",
+        "name": "MENU_ICON_PLAY",
+        "file": "images/menu_icon_play.png"
+      },
+      {
+        "type": "png",
+        "name": "MENU_ICON_PAUSE",
+        "file": "images/menu_icon_pause.png"
+      },
+      {
+        "type": "png",
+        "name": "MENU_ICON_STOP",
+        "file": "images/menu_icon_stop.png"
+      },
+      {
+        "type": "png",
+        "name": "MENU_ICON_DONE",
+        "file": "images/menu_icon_done.png"
+      },
+      {
+        "type": "png",
+        "name": "MENU_ICON_ADD",
+        "file": "images/menu_icon_add.png"
+      },
+      {
+        "type": "png",
+        "name": "MENU_ICON_CONTROLS",
+        "file": "images/menu_icon_controls.png"
+      },
+      {
+        "type": "png",
+        "name": "MENU_ICON_SETTINGS",
+        "file": "images/menu_icon_settings.png"
+      },
+      {
+        "type": "png",
+        "name": "MENU_ICON_MED_TICK",
+        "file": "images/menu_icon_med_tick.png"
+      },
+      {
+        "characterRegex": "[0-9:]",
+        "type": "font",
+        "name": "FONT_AUDI_40_BOLD",
+        "file": "fonts/AUDIMB__.ttf"
+      }
+    ]
+  }
+}
