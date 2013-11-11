@@ -26,8 +26,8 @@ int patoi(char* str) {
 
 void timer_duration_str(int duration, bool showHours, char* str, int str_len) {
   int hours = duration / 3600;
-  int minutes = (duration % 3600) / 60;
-  int seconds = (duration % 3600) % 60;
+  int minutes = (showHours ? (duration % 3600) : duration) / 60;
+  int seconds = (showHours ? (duration % 3600) : duration) % 60;
   if (showHours) {
     snprintf(str, str_len, "%02d:%02d:%02d", hours, minutes, seconds);
   }
