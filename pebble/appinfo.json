@@ -3,8 +3,8 @@
   "shortName": "Multi Timer",
   "longName": "Multi Timer",
   "companyName": "Matthew Tole",
-  "versionCode": 2,
-  "versionLabel": "2.1.0",
+  "versionCode": 3,
+  "versionLabel": "2.2.0",
   "watchapp": {
     "watchface": false
   },
@@ -99,9 +99,9 @@
         "file": "images/action_ok.png"
       },
       {
-        "characterRegex": "[0-9:]",
+        "characterRegex": "[0-9]",
         "type": "font",
-        "name": "FONT_AUDI_40_BOLD",
+        "name": "FONT_AUDI_70_BOLD",
         "file": "fonts/AUDIMB__.ttf"
       }
     ]

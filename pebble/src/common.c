@@ -5,6 +5,7 @@
  * common.c
  ***/
 
+#include <pebble.h>
 #include "libs/xprintf.h"
 
 void uppercase(char* str) {
@@ -21,4 +22,16 @@ int patoi(char* str) {
   long num;
   xatoi(&str, &num);
   return (int)num;
+}
+
+void timer_duration_str(int duration, bool showHours, char* str, int str_len) {
+  int hours = duration / 3600;
+  int minutes = (duration % 3600) / 60;
+  int seconds = (duration % 3600) % 60;
+  if (showHours) {
+    snprintf(str, str_len, "%02d:%02d:%02d", hours, minutes, seconds);
+  }
+  else {
+    snprintf(str, str_len, "%02d:%02d", minutes, seconds);
+  }
 }

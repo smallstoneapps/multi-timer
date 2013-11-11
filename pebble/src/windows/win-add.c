@@ -137,7 +137,7 @@ static void menu_draw_row_callback(GContext* ctx, const Layer *cell_layer, MenuI
         break;
         case MENU_ROW_DURATION:
           strcpy(option, "Duration");
-          snprintf(value, sizeof(value), "%02d:%02d", timer->length / 60, timer->length % 60);
+          timer_duration_str(timer->length, settings()->timers_hours, value, sizeof(value));
         break;
         case MENU_ROW_VIBRATION:
           strcpy(option, "Vibration");

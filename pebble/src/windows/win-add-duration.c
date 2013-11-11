@@ -11,26 +11,28 @@
 #include "../libs/pebble-assist.h"
 #include "win-add-duration.h"
 #include "../timer.h"
+#include "../common.h"
+#include "../settings.h"
 
-#define MODE_MINUTES 0
-#define MODE_SECONDS 1
+#define MODE_HOURS 0
+#define MODE_MINUTES 1
+#define MODE_SECONDS 2
 
 static void layer_update(Layer* me, GContext* ctx);
 static void layer_action_bar_click_config_provider(void *context);
 static void action_bar_layer_down_handler(ClickRecognizerRef recognizer, void *context);
 static void action_bar_layer_up_handler(ClickRecognizerRef recognizer, void *context);
 static void action_bar_layer_select_handler(ClickRecognizerRef recognizer, void *context);
-static void blink_timer_callback(void* data);
-static void blink_timer_start(void);
-static void blink_timer_cancel(void);
+static void update_timer_length(void);
 
 static Window* window;
 static Layer* layer;
 static ActionBarLayer* layer_action_bar;
 static Timer* timer = NULL;
-static AppTimer* blink_timer = NULL;
 static int mode = MODE_MINUTES;
-static bool blink = false;
+static int hours = 0;
+static int minutes = 0;
+static int seconds = 0;
 static GFont font_duration;
 
 void win_add_duration_init(void) {
@@ -47,14 +49,17 @@ void win_add_duration_init(void) {
   action_bar_layer_set_icon(layer_action_bar, BUTTON_ID_DOWN, bitmaps_get_bitmap(RESOURCE_ID_ACTION_DEC));
   action_bar_layer_set_icon(layer_action_bar, BUTTON_ID_SELECT, bitmaps_get_bitmap(RESOURCE_ID_ACTION_OK));
 
-  font_duration = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_AUDI_40_BOLD));
+  font_duration = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_AUDI_70_BOLD));
 }
 
 void win_add_duration_show(Timer* tmr) {
   timer = tmr;
   window_stack_push(window, true);
-  mode = MODE_MINUTES;
-  blink_timer_start();
+  mode = settings()->timers_hours ? MODE_HOURS : MODE_MINUTES;
+  hours = timer->length / 3600;
+  minutes = settings()->timers_hours ? ((timer->length % 3600) / 60) : (timer->length / 60);
+  seconds = settings()->timers_hours ? ((timer->length % 3600) % 60) : (timer->length % 60);
+  layer_mark_dirty(layer);
 }
 
 void win_add_duration_destroy(void) {
@@ -70,29 +75,33 @@ static void layer_update(Layer* me, GContext* ctx) {
   if (timer == NULL) {
     return;
   }
+
   graphics_context_set_text_color(ctx, GColorBlack);
   graphics_context_set_stroke_color(ctx, GColorBlack);
 
+  char summary_str[32];
+  timer_duration_str(timer->length, settings()->timers_hours, summary_str, 32);
+  graphics_draw_text(ctx, summary_str, fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD), GRect(0, 0, 144 - 16, 28), GTextOverflowModeFill, GTextAlignmentCenter, NULL);
+
   // Draw Minutes
-  char* min_str = "000";
-  snprintf(min_str, 3, "%02d", timer->length / 60);
-  if (mode != MODE_MINUTES || ! blink) {
-    graphics_draw_text(ctx, min_str, font_duration,
-      GRect(0, 50, 54, 40), GTextOverflowModeTrailingEllipsis, GTextAlignmentRight, NULL);
+  char* time_str = "000";
+  char mode_str[16];
+  switch (mode) {
+    case MODE_HOURS:
+      snprintf(time_str, 3, "%02d", hours);
+      snprintf(mode_str, 16, hours == 1 ? "HOUR" : "HOURS");
+    break;
+    case MODE_MINUTES:
+      snprintf(time_str, 3, "%02d", minutes);
+      snprintf(mode_str, 16, seconds == 1 ? "MINUTE" : "MINUTES");
+    break;
+    case MODE_SECONDS:
+      snprintf(time_str, 3, "%02d", seconds);
+      snprintf(mode_str, 16, seconds == 1 ? "SECOND" : "SECONDS");
+    break;
   }
-
-  // Draw Seconds
-  char* sec_str = "000";
-  snprintf(sec_str, 3, "%02d", timer->length % 60);
-  if (mode != MODE_SECONDS || ! blink) {
-    graphics_draw_text(ctx, sec_str, font_duration,
-      GRect(70, 50, 50, 40), GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, NULL);
-  }
-
-  // Draw Separator
-  graphics_draw_text(ctx, ":", font_duration,
-    GRect(47, 47, 30, 40), GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, NULL);
-
+  graphics_draw_text(ctx, time_str, font_duration, GRect(0, 27, 144 - 16, 70), GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, NULL);
+  graphics_draw_text(ctx, mode_str, fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD), GRect(0, 98, 144 - 16, 18), GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, NULL);
 }
 
 static void layer_action_bar_click_config_provider(void *context) {
@@ -103,64 +112,71 @@ static void layer_action_bar_click_config_provider(void *context) {
 
 static void action_bar_layer_down_handler(ClickRecognizerRef recognizer, void *context) {
   switch (mode) {
+    case MODE_HOURS:
+      hours -= 1;
+      if (hours < 0) {
+        hours = 0;
+      }
+    break;
     case MODE_MINUTES:
-      if (timer->length >= 60) {
-        timer->length -= 60;
-        blink_timer_start();
-        blink = false;
+      minutes -= 1;
+      if (minutes < 0) {
+        minutes += 60;
       }
     break;
     case MODE_SECONDS:
-      if (timer->length > 0) {
-        timer->length -= 1;
-        blink_timer_start();
-        blink = false;
+      seconds -= 1;
+      if (seconds < 0) {
+        seconds += 60;
       }
     break;
   }
+  update_timer_length();
+  layer_mark_dirty(layer);
 }
 
 static void action_bar_layer_up_handler(ClickRecognizerRef recognizer, void *context) {
   switch (mode) {
+    case MODE_HOURS:
+      hours += 1;
+    break;
     case MODE_MINUTES:
-      timer->length += 60;
-      blink_timer_start();
-      blink = false;
+      minutes += 1;
+      if (minutes >= 60 && settings()->timers_hours) {
+        minutes -= 60;
+      }
     break;
     case MODE_SECONDS:
-      timer->length += 1;
-      blink_timer_start();
-      blink = false;
+      seconds += 1;
+      if (seconds >= 60) {
+        seconds -= 60;
+      }
     break;
   }
+  update_timer_length();
+  layer_mark_dirty(layer);
 }
 
 static void action_bar_layer_select_handler(ClickRecognizerRef recognizer, void *context) {
   switch (mode) {
+    case MODE_HOURS:
+      mode = MODE_MINUTES;
+    break;
     case MODE_MINUTES:
       mode = MODE_SECONDS;
     break;
     case MODE_SECONDS:
-      // mode = MODE_MINUTES;
       window_stack_pop(true);
     break;
   }
-}
-
-static void blink_timer_callback(void* data) {
-  blink = ! blink;
-  blink_timer_start();
-}
-
-static void blink_timer_start(void) {
-  blink_timer_cancel();
-  blink_timer = app_timer_register(500, blink_timer_callback, NULL);
   layer_mark_dirty(layer);
 }
 
-static void blink_timer_cancel(void) {
-  if (blink_timer != NULL) {
-    app_timer_cancel(blink_timer);
-    blink_timer = NULL;
+static void update_timer_length(void) {
+  if (settings()->timers_hours) {
+    timer->length = hours * 3600 + minutes * 60 + seconds;
+  }
+  else {
+    timer->length = minutes * 60 + seconds;
   }
 }
