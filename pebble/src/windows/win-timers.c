@@ -9,6 +9,7 @@
 
 #include "../libs/pebble-assist.h"
 #include "../timers.h"
+#include "../settings.h"
 #include "../timer.h"
 #include "../libs/bitmaps.h"
 #include "win-add.h"
@@ -198,7 +199,15 @@ static void menu_draw_timer_row(GContext* ctx, const Layer *cell_layer, MenuInde
   if (timer == NULL) {
     return;
   }
-  snprintf(time_left, 32, "%02d:%02d", timer->time_left / 60, timer->time_left % 60);
+  if (settings()->timers_hours) {
+    int hours = timer->time_left / 3600;
+    int minutes = (timer->time_left % 3600) / 60;
+    int seconds = (timer->time_left % 3600) % 60;
+    snprintf(time_left, 32, "%02d:%02d:%02d", hours, minutes, seconds);
+  }
+  else {
+    snprintf(time_left, 32, "%02d:%02d", timer->time_left / 60, timer->time_left % 60);
+  }
   switch (timer->status) {
     case TIMER_RUNNING:
       row_bmp = bitmaps_get_bitmap(RESOURCE_ID_MENU_ICON_PLAY);

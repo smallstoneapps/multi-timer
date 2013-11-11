@@ -21,7 +21,7 @@
 #define MENU_SECTION_MISC 2
 
 #define MENU_SECTION_ROWS_SAVE 3
-#define MENU_SECTION_ROWS_TIMERS 2
+#define MENU_SECTION_ROWS_TIMERS 3
 #define MENU_SECTION_ROWS_MISC 1
 
 #define MENU_ROW_SAVE_AUTO 0
@@ -29,6 +29,7 @@
 #define MENU_ROW_SAVE_LOAD 2
 #define MENU_ROW_TIMERS_START 0
 #define MENU_ROW_TIMERS_VIBRATE 1
+#define MENU_ROW_TIMERS_HOURS 2
 #define MENU_ROW_MISC_THANK 0
 
 static uint16_t menu_get_num_sections_callback(MenuLayer *me, void *data);
@@ -131,6 +132,10 @@ static void menu_draw_row_callback(GContext* ctx, const Layer *cell_layer, MenuI
           strcpy(value, timer_vibe_str(settings()->timers_vibration, true));
           uppercase(value);
         break;
+        case MENU_ROW_TIMERS_HOURS:
+          strcpy(label, "Hours");
+          strcpy(value, settings()->timers_hours ? "ON": "OFF");
+        break;
       }
     break;
     case MENU_SECTION_MISC:
@@ -186,6 +191,10 @@ static void menu_select_click_callback(MenuLayer *menu_layer, MenuIndex *cell_in
         break;
         case MENU_ROW_TIMERS_VIBRATE:
           win_settings_vibration_show();
+        break;
+        case MENU_ROW_TIMERS_HOURS:
+          settings()->timers_hours = ! settings()->timers_hours;
+          menu_layer_reload_data(layer_menu);
         break;
       }
     break;

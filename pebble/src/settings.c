@@ -14,6 +14,7 @@ Settings _settings = {
   .save_timers_auto = true,
   .timers_start_auto = false,
   .timers_vibration = TIMER_VIBE_OFF,
+  .timers_hours = false
 };
 
 void settings_load(void) {
