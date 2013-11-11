@@ -5,13 +5,14 @@
  * app.c
  ***/
 
-#include <pebble_os.h>
-#include <pebble_app.h>
+#include <pebble.h>
 
-#include "bitmaps.h"
-#include "win-timers.h"
+#include "libs/bitmaps.h"
+#include "windows/win-timers.h"
 #include "settings.h"
 #include "timers.h"
+
+#define BITMAP_COUNT 17
 
 static void handle_init(void);
 static void handle_deinit(void);
@@ -23,7 +24,7 @@ int main(void) {
 }
 
 void handle_init() {
-  bitmaps_init();
+  bitmaps_init(BITMAP_COUNT);
   settings_load();
   if (settings()->save_timers_auto) {
     timers_restore();

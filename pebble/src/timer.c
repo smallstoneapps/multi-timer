@@ -5,8 +5,11 @@
  * timer.c
  ***/
 
-#include <pebble_os.h>
-#include "win-timers.h"
+#include <pebble.h>
+#include "windows/win-timers.h"
+#include "windows/win-vibrate.h"
+#include "libs/pebble-assist.h"
+#include "common.h"
 #include "timer.h"
 
 static void timer_callback(void* data);
@@ -54,10 +57,78 @@ void timer_tick(Timer* timer) {
   }
 }
 
+char* timer_vibe_str(TimerVibration vibe, bool shortStr) {
+  switch (vibe) {
+    case TIMER_VIBE_OFF:
+      return "Off";
+    case TIMER_VIBE_SHORT:
+      return shortStr ? "Short" : "Short Pulse";
+    case TIMER_VIBE_LONG:
+      return shortStr ? "Long" : "Long Pulse";
+    case TIMER_VIBE_DOUBLE:
+      return shortStr ? "Double" : "Double Pulse";
+    case TIMER_VIBE_TRIPLE:
+      return shortStr ? "Triple" : "Triple Pulse";
+    case TIMER_VIBE_CONTINUOUS:
+      return shortStr ? "Solid" : "Continous";
+  }
+  return "";
+}
+
+char* timer_stringify(Timer* timer) {
+  char* str = malloc(sizeof(char) * 32);
+  if (timer->direction == TIMER_UP) {
+    snprintf(str, 32, "%d", timer->direction);
+  }
+  else {
+    snprintf(str, 32, "%d|%d|%d|%d", timer->direction, timer->length, timer->vibrate, timer->repeat);
+  }
+  return str;
+}
+
+Timer* timer_unstringify(char* str) {
+  Timer* timer = malloc(sizeof(Timer));
+  if (strlen(str) == 1) {
+    timer->direction = TIMER_UP;
+    return timer;
+  }
+
+  timer->direction = TIMER_DOWN;
+  char* start = str;
+  start ++; start ++;
+  char* end = start;
+  char substr[8] = "";
+
+  while (*end != '\0' && *end != '|') {
+    end ++;
+  }
+  strncpy(substr, start, (end - start));
+  timer->length = patoi(substr);
+  start ++;
+  end = start;
+
+  while (*end != '\0' && *end != '|') {
+    end ++;
+  }
+  strncpy(substr, start, (end - start));
+  timer->vibrate = patoi(substr);
+  start ++;
+  end = start;
+
+  while (*end != '\0' && *end != '|') {
+    end ++;
+  }
+  strncpy(substr, start, (end - start));
+  timer->repeat = patoi(substr);
+
+  return timer;
+}
+
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - //
 
 static void timer_callback(void* data) {
   Timer* timer = (Timer*)data;
+  timer->app_timer = NULL;
 
   if (timer->status != TIMER_RUNNING) {
     return;
@@ -122,7 +193,9 @@ static void timer_finished(Timer* timer) {
     }
     break;
     case TIMER_VIBE_CONTINUOUS:
-      // TODO: Implement this.
+      if (! win_vibrate_is_visible()) {
+        win_vibrate_show();
+      }
     break;
   }
   if (timer->repeat) {

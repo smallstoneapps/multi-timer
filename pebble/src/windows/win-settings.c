@@ -5,26 +5,30 @@
  * win-settings.c
  ***/
 
-#include <pebble_os.h>
-#include <pebble_fonts.h>
-#include "win-settings.h"
-#include "settings.h"
-#include "timers.h"
+#include <pebble.h>
 
-#define MENU_NUM_SECTIONS 3
+#include "../libs/pebble-assist.h"
+#include "win-settings.h"
+#include "win-settings-vibration.h"
+#include "../settings.h"
+#include "../timers.h"
+#include "../common.h"
+
+#define MENU_NUM_SECTIONS 2
 
 #define MENU_SECTION_SAVE 0
 #define MENU_SECTION_TIMERS 1
 #define MENU_SECTION_MISC 2
 
 #define MENU_SECTION_ROWS_SAVE 3
-#define MENU_SECTION_ROWS_TIMERS 1
+#define MENU_SECTION_ROWS_TIMERS 2
 #define MENU_SECTION_ROWS_MISC 1
 
 #define MENU_ROW_SAVE_AUTO 0
 #define MENU_ROW_SAVE_SAVE 1
 #define MENU_ROW_SAVE_LOAD 2
 #define MENU_ROW_TIMERS_START 0
+#define MENU_ROW_TIMERS_VIBRATE 1
 #define MENU_ROW_MISC_THANK 0
 
 static uint16_t menu_get_num_sections_callback(MenuLayer *me, void *data);
@@ -41,7 +45,7 @@ static MenuLayer* layer_menu;
 void win_settings_init(void) {
   window = window_create();
 
-  layer_menu = menu_layer_create(layer_get_bounds(window_get_root_layer(window)));
+  layer_menu = menu_layer_create_fullscreen(window);
   menu_layer_set_callbacks(layer_menu, NULL, (MenuLayerCallbacks) {
     .get_num_sections = menu_get_num_sections_callback,
     .get_num_rows = menu_get_num_rows_callback,
@@ -52,7 +56,9 @@ void win_settings_init(void) {
     .select_click = menu_select_click_callback,
   });
   menu_layer_set_click_config_onto_window(layer_menu, window);
-  layer_add_child(window_get_root_layer(window), menu_layer_get_layer(layer_menu));
+  menu_layer_add_to_window(layer_menu, window);
+
+  win_settings_vibration_init();
 }
 
 void win_settings_show(void) {
@@ -60,6 +66,7 @@ void win_settings_show(void) {
 }
 
 void win_settings_destroy(void) {
+  win_settings_vibration_destroy();
   layer_remove_from_parent(menu_layer_get_layer(layer_menu));
   menu_layer_destroy(layer_menu);
   window_destroy(window);
@@ -119,6 +126,11 @@ static void menu_draw_row_callback(GContext* ctx, const Layer *cell_layer, MenuI
           strcpy(label, "Auto-Start");
           strcpy(value, settings()->timers_start_auto ? "ON": "OFF");
         break;
+        case MENU_ROW_TIMERS_VIBRATE:
+          strcpy(label, "Vibration");
+          strcpy(value, timer_vibe_str(settings()->timers_vibration, true));
+          uppercase(value);
+        break;
       }
     break;
     case MENU_SECTION_MISC:
@@ -130,9 +142,9 @@ static void menu_draw_row_callback(GContext* ctx, const Layer *cell_layer, MenuI
     break;
   }
   graphics_context_set_text_color(ctx, GColorBlack);
-  graphics_text_draw(ctx, label, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD), GRect(4, 2, 136, 24), GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, NULL);
+  graphics_draw_text(ctx, label, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD), GRect(4, 2, 136, 24), GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, NULL);
   if (strlen(value) > 0) {
-    graphics_text_draw(ctx, value, fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD), GRect(108, 6, 32, 24), GTextOverflowModeTrailingEllipsis, GTextAlignmentRight, NULL);
+    graphics_draw_text(ctx, value, fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD), GRect(4, 6, 136, 24), GTextOverflowModeTrailingEllipsis, GTextAlignmentRight, NULL);
   }
 }
 
@@ -171,6 +183,9 @@ static void menu_select_click_callback(MenuLayer *menu_layer, MenuIndex *cell_in
         case MENU_ROW_TIMERS_START:
           settings()->timers_start_auto = ! settings()->timers_start_auto;
           menu_layer_reload_data(layer_menu);
+        break;
+        case MENU_ROW_TIMERS_VIBRATE:
+          win_settings_vibration_show();
         break;
       }
     break;

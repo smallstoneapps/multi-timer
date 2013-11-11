@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include "timer.h"
+#include "../timer.h"
 
 void win_add_vibration_init(void);
 void win_add_vibration_show(Timer* timer);

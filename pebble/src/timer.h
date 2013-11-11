@@ -7,13 +7,13 @@
 
 #pragma once
 
-#include <pebble_os.h>
+#include <pebble.h>
 
 typedef enum {
-  TIMER_STOPPED = 0,
-  TIMER_RUNNING = 1,
-  TIMER_PAUSED = 2,
-  TIMER_FINISHED = 3
+  TIMER_STOPPED,
+  TIMER_RUNNING,
+  TIMER_PAUSED,
+  TIMER_FINISHED
 } TimerStatus;
 
 typedef enum {
@@ -33,16 +33,20 @@ typedef enum {
 } TimerVibration;
 
 typedef struct {
-  int length;
-  int time_left;
+  uint16_t length;
+  uint16_t time_left;
   TimerStatus status;
-  TimerDirection direction;
   TimerVibration vibrate;
   bool repeat;
   AppTimer* app_timer;
+  TimerDirection direction;
 } Timer;
 
 void timer_start(Timer* timer);
 void timer_pause(Timer* timer);
 void timer_resume(Timer* timer);
 void timer_reset(Timer* timer);
+
+char* timer_vibe_str(TimerVibration vibe, bool shortStr);
+char* timer_stringify(Timer* timer);
+Timer* timer_unstringify(char* str);

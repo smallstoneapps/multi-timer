@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include "timer.h"
+#include "../timer.h"
 
 void win_add_duration_init(void);
 void win_add_duration_show(Timer* timer);

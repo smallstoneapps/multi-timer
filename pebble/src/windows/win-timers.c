@@ -5,15 +5,16 @@
  * win-timers.c
  ***/
 
-#include <pebble_os.h>
-#include <pebble_app.h>
-#include <pebble_fonts.h>
-#include "timers.h"
-#include "timer.h"
-#include "bitmaps.h"
+#include <pebble.h>
+
+#include "../libs/pebble-assist.h"
+#include "../timers.h"
+#include "../timer.h"
+#include "../libs/bitmaps.h"
 #include "win-add.h"
 #include "win-controls.h"
 #include "win-settings.h"
+#include "win-vibrate.h"
 
 #define MENU_SECTIONS 2
 #define MENU_SECTION_TIMERS 0
@@ -39,7 +40,6 @@ static void menu_draw_row_callback(GContext* ctx, const Layer *cell_layer, MenuI
 static void menu_draw_footer_row(GContext* ctx, const Layer *cell_layer, MenuIndex *cell_index, void *data);
 static void menu_draw_timer_row(GContext* ctx, const Layer *cell_layer, MenuIndex *cell_index, void *data);
 static void jump_to_timer(int t, bool animate);
-static void show_add_timer();
 
 static Window* window;
 static MenuLayer* layer_menu;
@@ -50,7 +50,7 @@ void win_timers_init(void) {
     .appear = window_appear
   });
 
-  layer_menu = menu_layer_create(layer_get_bounds(window_get_root_layer(window)));
+  layer_menu = menu_layer_create_fullscreen(window);
   menu_layer_set_callbacks(layer_menu, NULL, (MenuLayerCallbacks) {
     .get_num_sections = menu_get_num_sections_callback,
     .get_num_rows = menu_get_num_rows_callback,
@@ -62,11 +62,12 @@ void win_timers_init(void) {
     .select_long_click = menu_select_long_click_callback,
   });
   menu_layer_set_click_config_onto_window(layer_menu, window);
-  layer_add_child(window_get_root_layer(window), menu_layer_get_layer(layer_menu));
+  menu_layer_add_to_window(layer_menu, window);
 
   win_add_init();
   win_controls_init();
   win_settings_init();
+  win_vibrate_init();
 }
 
 void win_timers_show(void) {
@@ -78,11 +79,16 @@ void win_timers_update(void) {
 }
 
 void win_timers_destroy(void) {
+  win_vibrate_destroy();
   win_add_destroy();
   win_controls_destroy();
   win_settings_destroy();
   window_destroy(window);
   menu_layer_destroy(layer_menu);
+}
+
+void win_timers_jump(int pos) {
+  jump_to_timer(pos, false);
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - //
@@ -126,10 +132,10 @@ static int16_t menu_get_header_height_callback(MenuLayer *me, uint16_t section_i
 static int16_t menu_get_cell_height_callback(MenuLayer* me, MenuIndex* cell_index, void* data) {
   switch (cell_index->section) {
     case MENU_SECTION_TIMERS:
-      return ROW_HEIGHT;
+      return ROW_HEIGHT + 4;
     break;
     case MENU_SECTION_FOOTER:
-      return ROW_HEIGHT + 4;
+      return ROW_HEIGHT;
     break;
   }
   return 0;
@@ -176,15 +182,18 @@ static void menu_draw_footer_row(GContext* ctx, const Layer *cell_layer, MenuInd
 
   graphics_context_set_text_color(ctx, GColorBlack);
   if (row_icon != NULL) {
-    graphics_draw_bitmap_in_rect(ctx, row_icon, GRect(4, 8, 24, 24));
+    graphics_draw_bitmap_in_rect(ctx, row_icon, GRect(4, 6, 24, 24));
   }
-  graphics_text_draw(ctx, row_label, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD), GRect(32, 3, 112, 24), 0, GTextAlignmentLeft, NULL);
+  graphics_draw_text(ctx, row_label, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD), GRect(32, 1, 112, 24), 0, GTextAlignmentLeft, NULL);
+
+  free(row_label);
 }
 
 static void menu_draw_timer_row(GContext* ctx, const Layer *cell_layer, MenuIndex *cell_index, void *data) {
   Timer* timer = get_timer(cell_index->row);
   char* time_left = malloc(32);
   GBitmap* row_bmp = NULL;
+  GBitmap* dir_bmp = NULL;
 
   if (timer == NULL) {
     return;
@@ -205,11 +214,23 @@ static void menu_draw_timer_row(GContext* ctx, const Layer *cell_layer, MenuInde
     break;
   }
 
+  switch (timer->direction) {
+    case TIMER_UP:
+      dir_bmp = bitmaps_get_bitmap(RESOURCE_ID_ARROW_UP);
+    break;
+    case TIMER_DOWN:
+      dir_bmp = bitmaps_get_bitmap(RESOURCE_ID_ARROW_DOWN);
+    break;
+  }
+
   graphics_context_set_text_color(ctx, GColorBlack);
   if (row_bmp != NULL) {
-    graphics_draw_bitmap_in_rect(ctx, row_bmp, GRect(4, 6, 24, 24));
+    graphics_draw_bitmap_in_rect(ctx, row_bmp, GRect(8, 8, 24, 24));
   }
-  graphics_text_draw(ctx, time_left, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD), GRect(32, 2, 110, 24), 0, GTextAlignmentLeft, NULL);
+  graphics_draw_text(ctx, time_left, fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD), GRect(36, 2, 110, 28), 0, GTextAlignmentLeft, NULL);
+  if (dir_bmp != NULL) {
+    graphics_draw_bitmap_in_rect(ctx, dir_bmp, GRect(132, 16, 8, 8));
+  }
 
   free(time_left);
 }

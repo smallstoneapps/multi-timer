@@ -5,12 +5,12 @@
  * timers.c
  ***/
 
-#include <pebble_os.h>
+#include <pebble.h>
 #include "globals.h"
 #include "timers.h"
 
-Timer* timers[MAX_TIMERS];
-int num_timers = 0;
+static Timer* timers[MAX_TIMERS];
+static int num_timers = 0;
 
 Timer* get_timer(int pos) {
   if (pos >= num_timers) {
@@ -25,9 +25,7 @@ int get_timer_count() {
 
 void clear_timers() {
   for (int t = 0; t < num_timers; t += 1) {
-    if (timers[t]->app_timer != NULL) {
-      app_timer_cancel(timers[t]->app_timer);
-    }
+    timer_reset(timers[t]);
     free(timers[t]);
   }
   num_timers = 0;
@@ -79,16 +77,15 @@ void remove_timer(int pos) {
 
 void timers_restore(void) {
   clear_timers();
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "read: %d", persist_exists(STORAGE_TIMER_COUNT));
   if (! persist_exists(STORAGE_TIMER_COUNT)) {
     return;
   }
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "count: %d", persist_read_int(STORAGE_TIMER_COUNT));
   num_timers = persist_read_int(STORAGE_TIMER_COUNT);
   for (int t = 0; t < num_timers; t += 1) {
-    Timer* timer = malloc(sizeof(Timer));
-    persist_read_data(STORAGE_TIMER_START + t, sizeof(timer), timer);
-    timers[t] = timer;
+    int str_size = persist_get_size(STORAGE_TIMER_START + t);
+    char* buffer = malloc(str_size);
+    persist_read_string(STORAGE_TIMER_START + t, str_size, buffer);
+    timers[t] = timer_unstringify(buffer);
     timers[t]->app_timer = NULL;
     timer_reset(timers[t]);
   }
@@ -97,7 +94,7 @@ void timers_restore(void) {
 void timers_save(void) {
   persist_write_int(STORAGE_TIMER_COUNT, num_timers);
   for (int t = 0; t < num_timers; t += 1) {
-    persist_write_data(STORAGE_TIMER_START + t, sizeof(timers[t]), timers[t]);
+    persist_write_string(STORAGE_TIMER_START + t, timer_stringify(timers[t]));
   }
 }
 

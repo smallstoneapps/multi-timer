@@ -5,9 +5,12 @@
 
 #pragma once
 
+#include "timer.h"
+
 typedef struct {
   bool save_timers_auto;
   bool timers_start_auto;
+  TimerVibration timers_vibration;
 } Settings;
 
 void settings_load(void);
