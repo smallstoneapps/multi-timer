@@ -70,7 +70,7 @@ void timers_restore(void) {
   }
   for (int t = 0; t < num_timers; t += 1) {
     timers[t] = malloc(sizeof(Timer));
-    persist_read_data(STORAGE_TIMER_START + t, sizeof(Timer), timers[t]);
+    persist_read_data(STORAGE_TIMER_START + t, timers[t], sizeof(Timer));
     timers[t]->app_timer = NULL;
     if (settings()->resume_timers) {
       if (timers[t]->status == TIMER_STATUS_RUNNING) {
@@ -98,7 +98,7 @@ void timers_restore(void) {
 void timers_save(void) {
   persist_write_int(STORAGE_TIMER_COUNT, num_timers);
   for (int t = 0; t < num_timers; t += 1) {
-    persist_write_data(STORAGE_TIMER_START + t, sizeof(Timer), timers[t]);
+    persist_write_data(STORAGE_TIMER_START + t, timers[t], sizeof(Timer));
   }
   persist_write_int(STORAGE_SAVE_TIME, time(NULL));
 }

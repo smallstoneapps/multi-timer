@@ -21,7 +21,7 @@ Settings _settings = {
 
 void settings_load(void) {
   if (persist_exists(STORAGE_SETTINGS)) {
-    int res = persist_read_data(STORAGE_SETTINGS, sizeof(_settings), &_settings);
+    int res = persist_read_data(STORAGE_SETTINGS, &_settings, sizeof(_settings));
     APP_LOG(APP_LOG_LEVEL_DEBUG, "settings_load: %d", res);
   }
   else {
@@ -34,6 +34,6 @@ Settings* settings() {
 }
 
 void settings_save(void) {
-  int res = persist_write_data(STORAGE_SETTINGS, sizeof(_settings), &_settings);
+  int res = persist_write_data(STORAGE_SETTINGS, &_settings, sizeof(_settings));
   APP_LOG(APP_LOG_LEVEL_DEBUG, "settings_save: %d", res);
 }
