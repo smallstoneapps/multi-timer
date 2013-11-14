@@ -69,16 +69,10 @@ void timers_restore(void) {
     seconds_elapsed = time(NULL) - save_time;
   }
   for (int t = 0; t < num_timers; t += 1) {
-    /*int str_size = persist_get_size(STORAGE_TIMER_START + t);
-    char* buffer = malloc(str_size);
-    persist_read_string(STORAGE_TIMER_START + t, str_size, buffer);
-    timers[t] = timer_unstringify(buffer);*/
     timers[t] = malloc(sizeof(Timer));
-    persist_read_data(STORAGE_TIMER_START + t, sizeof(timers[t]), timers[t]);
-    APP_LOG(APP_LOG_LEVEL_DEBUG, "%d %s", t, timer_describe(timers[t]));
+    persist_read_data(STORAGE_TIMER_START + t, sizeof(Timer), timers[t]);
     timers[t]->app_timer = NULL;
-    APP_LOG(APP_LOG_LEVEL_DEBUG, "%d", seconds_elapsed);
-    /*if (settings()->resume_timers) {
+    if (settings()->resume_timers) {
       if (timers[t]->status == TIMER_STATUS_RUNNING) {
         if (timers[t]->direction == TIMER_DIRECTION_UP) {
           timers[t]->time_left += seconds_elapsed;
@@ -97,16 +91,14 @@ void timers_restore(void) {
     }
     else {
       timer_reset(timers[t]);
-    }*/
+    }
   }
 }
 
 void timers_save(void) {
   persist_write_int(STORAGE_TIMER_COUNT, num_timers);
   for (int t = 0; t < num_timers; t += 1) {
-    //persist_write_string(STORAGE_TIMER_START + t, timer_stringify(timers[t]));
-    APP_LOG(APP_LOG_LEVEL_DEBUG, "%d %s", t, timer_describe(timers[t]));
-    persist_write_data(STORAGE_TIMER_START + t, sizeof(timers[t]), timers[t]);
+    persist_write_data(STORAGE_TIMER_START + t, sizeof(Timer), timers[t]);
   }
   persist_write_int(STORAGE_SAVE_TIME, time(NULL));
 }

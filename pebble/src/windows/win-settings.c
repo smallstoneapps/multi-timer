@@ -113,7 +113,7 @@ static void menu_draw_row_callback(GContext* ctx, const Layer *cell_layer, MenuI
           strcpy(value, settings()->save_timers_auto ? "ON": "OFF");
         break;
         case MENU_ROW_SAVE_RESUME:
-          strcpy(label, "Resume Timers");
+          strcpy(label, "Auto Resume");
           strcpy(value, settings()->resume_timers ? "ON": "OFF");
         break;
       }
