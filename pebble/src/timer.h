@@ -10,37 +10,37 @@
 #include <pebble.h>
 
 typedef enum {
-  TIMER_STOPPED,
-  TIMER_RUNNING,
-  TIMER_PAUSED,
-  TIMER_FINISHED
+  TIMER_STATUS_STOPPED,
+  TIMER_STATUS_RUNNING,
+  TIMER_STATUS_PAUSED,
+  TIMER_STATUS_FINISHED
 } TimerStatus;
 
 typedef enum {
-  TIMER_UP = 0,
-  TIMER_DOWN = 1
+  TIMER_DIRECTION_UP,
+  TIMER_DIRECTION_DOWN
 } TimerDirection;
 
-#define TIMER_VIBE_COUNT 6
+#define TIMER_VIBRATION_COUNT 6
 
 typedef enum {
-  TIMER_VIBE_OFF,
-  TIMER_VIBE_SHORT,
-  TIMER_VIBE_LONG,
-  TIMER_VIBE_DOUBLE,
-  TIMER_VIBE_TRIPLE,
-  TIMER_VIBE_CONTINUOUS
+  TIMER_VIBRATION_OFF,
+  TIMER_VIBRATION_SHORT,
+  TIMER_VIBRATION_LONG,
+  TIMER_VIBRATION_DOUBLE,
+  TIMER_VIBRATION_TRIPLE,
+  TIMER_VIBRATION_CONTINUOUS
 } TimerVibration;
 
 typedef struct {
-  uint16_t length;
-  uint16_t time_left;
+  TimerDirection direction;
+  int length;
+  int time_left;
   TimerStatus status;
   TimerVibration vibrate;
   bool repeat;
   AppTimer* app_timer;
-  TimerDirection direction;
-} Timer;
+} __attribute__((__packed__)) Timer;
 
 void timer_start(Timer* timer);
 void timer_pause(Timer* timer);
@@ -50,3 +50,4 @@ void timer_reset(Timer* timer);
 char* timer_vibe_str(TimerVibration vibe, bool shortStr);
 char* timer_stringify(Timer* timer);
 Timer* timer_unstringify(char* str);
+char* timer_describe(Timer* timer);

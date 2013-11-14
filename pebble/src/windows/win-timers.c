@@ -109,14 +109,14 @@ static uint16_t menu_get_num_rows_callback(MenuLayer *me, uint16_t section_index
       return MENU_ROWS_FOOTER;
     break;
     case MENU_SECTION_TIMERS:
-      return get_timer_count();
+      return timers_get_count();
     break;
   }
   return 0;
 }
 
 static int16_t menu_get_header_height_callback(MenuLayer *me, uint16_t section_index, void *data) {
-  if (get_timer_count() == 0) {
+  if (timers_get_count() == 0) {
     return 0;
   }
 
@@ -192,7 +192,7 @@ static void menu_draw_footer_row(GContext* ctx, const Layer *cell_layer, MenuInd
 }
 
 static void menu_draw_timer_row(GContext* ctx, const Layer *cell_layer, MenuIndex *cell_index, void *data) {
-  Timer* timer = get_timer(cell_index->row);
+  Timer* timer = timers_get(cell_index->row);
   char* time_left = malloc(32);
   GBitmap* row_bmp = NULL;
   GBitmap* dir_bmp = NULL;
@@ -203,25 +203,25 @@ static void menu_draw_timer_row(GContext* ctx, const Layer *cell_layer, MenuInde
   timer_duration_str(timer->time_left, settings()->timers_hours, time_left, 32);
 
   switch (timer->status) {
-    case TIMER_RUNNING:
+    case TIMER_STATUS_RUNNING:
       row_bmp = bitmaps_get_bitmap(RESOURCE_ID_MENU_ICON_PLAY);
     break;
-    case TIMER_PAUSED:
+    case TIMER_STATUS_PAUSED:
       row_bmp = bitmaps_get_bitmap(RESOURCE_ID_MENU_ICON_PAUSE);
     break;
-    case TIMER_STOPPED:
+    case TIMER_STATUS_STOPPED:
       row_bmp = bitmaps_get_bitmap(RESOURCE_ID_MENU_ICON_STOP);
     break;
-    case TIMER_FINISHED:
+    case TIMER_STATUS_FINISHED:
       row_bmp = bitmaps_get_bitmap(RESOURCE_ID_MENU_ICON_DONE);
     break;
   }
 
   switch (timer->direction) {
-    case TIMER_UP:
+    case TIMER_DIRECTION_UP:
       dir_bmp = bitmaps_get_bitmap(RESOURCE_ID_ARROW_UP);
     break;
-    case TIMER_DOWN:
+    case TIMER_DIRECTION_DOWN:
       dir_bmp = bitmaps_get_bitmap(RESOURCE_ID_ARROW_DOWN);
     break;
   }
@@ -255,25 +255,25 @@ static void menu_select_click_callback(MenuLayer *menu_layer, MenuIndex *cell_in
     }
     break;
     case MENU_SECTION_TIMERS: {
-      if (get_timer_count() == 0) {
+      if (timers_get_count() == 0) {
         return;
       }
 
-      Timer* timer = get_timer(cell_index->row);
+      Timer* timer = timers_get(cell_index->row);
       if (! timer) {
         return;
       }
       switch (timer->status) {
-        case TIMER_RUNNING:
+        case TIMER_STATUS_RUNNING:
           timer_pause(timer);
         break;
-        case TIMER_PAUSED:
+        case TIMER_STATUS_PAUSED:
           timer_resume(timer);
         break;
-        case TIMER_STOPPED:
+        case TIMER_STATUS_STOPPED:
           timer_start(timer);
         break;
-        case TIMER_FINISHED:
+        case TIMER_STATUS_FINISHED:
           timer_reset(timer);
         break;
       }
@@ -287,17 +287,17 @@ static void menu_select_long_click_callback(MenuLayer *menu_layer, MenuIndex *ce
   if (cell_index->section != MENU_SECTION_TIMERS) {
     return;
   }
-  Timer* timer = get_timer(cell_index->row);
+  Timer* timer = timers_get(cell_index->row);
   if (! timer) {
     return;
   }
   switch (timer->status) {
-    case TIMER_PAUSED:
+    case TIMER_STATUS_PAUSED:
       timer_reset(timer);
     break;
-    case TIMER_STOPPED:
-    case TIMER_FINISHED:
-      remove_timer(cell_index->row);
+    case TIMER_STATUS_STOPPED:
+    case TIMER_STATUS_FINISHED:
+      timers_remove(cell_index->row);
     break;
     default:
       return;

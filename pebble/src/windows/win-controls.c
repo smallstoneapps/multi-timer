@@ -107,25 +107,25 @@ static void menu_draw_row_callback(GContext* ctx, const Layer *cell_layer, MenuI
 static void menu_select_click_callback(MenuLayer *menu_layer, MenuIndex *cell_index, void *callback_context) {
   switch (cell_index->row) {
     case MENU_ROW_START:
-      for (int t = 0; t < get_timer_count(); t += 1) {
-        timer_start(get_timer(t));
+      for (int t = 0; t < timers_get_count(); t += 1) {
+        timer_start(timers_get(t));
       }
       win_timers_jump(0);
     break;
     case MENU_ROW_PAUSE:
-      for (int t = 0; t < get_timer_count(); t += 1) {
-        timer_pause(get_timer(t));
+      for (int t = 0; t < timers_get_count(); t += 1) {
+        timer_pause(timers_get(t));
       }
       win_timers_jump(0);
     break;
     case MENU_ROW_RESET:
-      for (int t = 0; t < get_timer_count(); t += 1) {
-        timer_reset(get_timer(t));
+      for (int t = 0; t < timers_get_count(); t += 1) {
+        timer_reset(timers_get(t));
       }
       win_timers_jump(0);
     break;
     case MENU_ROW_CLEAR:
-      clear_timers();
+      timers_clear();
     break;
   }
   window_stack_pop(true);

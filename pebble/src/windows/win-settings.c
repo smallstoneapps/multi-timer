@@ -20,13 +20,12 @@
 #define MENU_SECTION_TIMERS 1
 #define MENU_SECTION_MISC 2
 
-#define MENU_SECTION_ROWS_SAVE 3
+#define MENU_SECTION_ROWS_SAVE 2
 #define MENU_SECTION_ROWS_TIMERS 3
 #define MENU_SECTION_ROWS_MISC 1
 
 #define MENU_ROW_SAVE_AUTO 0
-#define MENU_ROW_SAVE_SAVE 1
-#define MENU_ROW_SAVE_LOAD 2
+#define MENU_ROW_SAVE_RESUME 1
 #define MENU_ROW_TIMERS_START 0
 #define MENU_ROW_TIMERS_VIBRATE 1
 #define MENU_ROW_TIMERS_HOURS 2
@@ -113,11 +112,9 @@ static void menu_draw_row_callback(GContext* ctx, const Layer *cell_layer, MenuI
           strcpy(label, "Auto Save");
           strcpy(value, settings()->save_timers_auto ? "ON": "OFF");
         break;
-        case MENU_ROW_SAVE_SAVE:
-          strcpy(label, "Save Timers");
-        break;
-        case MENU_ROW_SAVE_LOAD:
-          strcpy(label, "Load Timers");
+        case MENU_ROW_SAVE_RESUME:
+          strcpy(label, "Resume Timers");
+          strcpy(value, settings()->resume_timers ? "ON": "OFF");
         break;
       }
     break;
@@ -175,11 +172,9 @@ static void menu_select_click_callback(MenuLayer *menu_layer, MenuIndex *cell_in
           settings()->save_timers_auto = ! settings()->save_timers_auto;
           menu_layer_reload_data(layer_menu);
         break;
-        case MENU_ROW_SAVE_SAVE:
-          timers_save();
-        break;
-        case MENU_ROW_SAVE_LOAD:
-          timers_restore();
+        case MENU_ROW_SAVE_RESUME:
+          settings()->resume_timers = ! settings()->resume_timers;
+          menu_layer_reload_data(layer_menu);
         break;
       }
     break;

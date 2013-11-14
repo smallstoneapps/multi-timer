@@ -11,13 +11,11 @@
 
 #define MAX_TIMERS 8
 
-Timer* get_timer(int pos);
-int get_timer_count();
-void clear_timers();
-bool add_timer(int duration, TimerVibration vibrate);
-bool add_stopwatch();
-void remove_timer(int pos);
+Timer* timers_get(int pos);
+int timers_get_count();
+void timers_clear();
+void timers_add(Timer* timer);
+void timers_remove(int pos);
 
 void timers_restore(void);
 void timers_save(void);
-void timers_add(Timer* timer);

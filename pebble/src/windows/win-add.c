@@ -58,7 +58,7 @@ void win_add_init(void) {
 
 void win_add_show(void) {
   timer = malloc(sizeof(Timer));
-  timer->direction = TIMER_DOWN;
+  timer->direction = TIMER_DIRECTION_DOWN;
   timer->vibrate = settings()->timers_vibration;
   timer->length = 10 * 60;
 
@@ -86,7 +86,7 @@ static uint16_t menu_get_num_rows_callback(MenuLayer *me, uint16_t section_index
       if (timer == NULL) {
         return 0;
       }
-      if (timer->direction == TIMER_DOWN) {
+      if (timer->direction == TIMER_DIRECTION_DOWN) {
         return 4;
       }
       return 1;
@@ -132,7 +132,7 @@ static void menu_draw_row_callback(GContext* ctx, const Layer *cell_layer, MenuI
       switch (cell_index->row) {
         case MENU_ROW_DIRECTION:
           strcpy(option, "Direction");
-          strcpy(value, timer->direction == TIMER_UP ?  "Up" : "Down");
+          strcpy(value, timer->direction == TIMER_DIRECTION_UP ?  "Up" : "Down");
           uppercase(value);
         break;
         case MENU_ROW_DURATION:
@@ -142,22 +142,22 @@ static void menu_draw_row_callback(GContext* ctx, const Layer *cell_layer, MenuI
         case MENU_ROW_VIBRATION:
           strcpy(option, "Vibration");
           switch (timer->vibrate) {
-            case TIMER_VIBE_OFF:
+            case TIMER_VIBRATION_OFF:
               strcpy(value, "None");
             break;
-            case TIMER_VIBE_SHORT:
+            case TIMER_VIBRATION_SHORT:
               strcpy(value, "Short");
             break;
-            case TIMER_VIBE_LONG:
+            case TIMER_VIBRATION_LONG:
               strcpy(value, "Long");
             break;
-            case TIMER_VIBE_DOUBLE:
+            case TIMER_VIBRATION_DOUBLE:
               strcpy(value, "Double");
             break;
-            case TIMER_VIBE_TRIPLE:
+            case TIMER_VIBRATION_TRIPLE:
               strcpy(value, "Triple");
             break;
-            case TIMER_VIBE_CONTINUOUS:
+            case TIMER_VIBRATION_CONTINUOUS:
               strcpy(value, "Solid");
             break;
           }
@@ -189,7 +189,7 @@ static void menu_select_click_callback(MenuLayer *menu_layer, MenuIndex *cell_in
     case MENU_SECTION_MAIN:
       switch (cell_index->row) {
         case MENU_ROW_DIRECTION:
-          timer->direction = timer->direction == TIMER_UP ? TIMER_DOWN : TIMER_UP;
+          timer->direction = timer->direction == TIMER_DIRECTION_UP ? TIMER_DIRECTION_DOWN : TIMER_DIRECTION_UP;
           menu_layer_reload_data(layer_menu);
         break;
         case MENU_ROW_DURATION:
@@ -205,7 +205,7 @@ static void menu_select_click_callback(MenuLayer *menu_layer, MenuIndex *cell_in
       }
     break;
     case MENU_SECTION_FOOTER:
-      if (timer->direction == TIMER_DOWN && timer->length == 0) {
+      if (timer->direction == TIMER_DIRECTION_DOWN && timer->length == 0) {
         vibes_short_pulse();
         menu_layer_set_selected_index(layer_menu, (MenuIndex) { MENU_SECTION_MAIN, MENU_ROW_DURATION }, MenuRowAlignCenter, true);
         return;
@@ -214,7 +214,7 @@ static void menu_select_click_callback(MenuLayer *menu_layer, MenuIndex *cell_in
       if (settings()->timers_start_auto) {
         timer_start(timer);
       }
-      win_timers_jump(get_timer_count() - 1);
+      win_timers_jump(timers_get_count() - 1);
       window_stack_pop(true);
     break;
   }

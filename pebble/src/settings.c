@@ -10,10 +10,12 @@
 #include "settings.h"
 #include "timer.h"
 
+// Set the default settings for the app.
 Settings _settings = {
   .save_timers_auto = true,
+  .resume_timers = true,
   .timers_start_auto = false,
-  .timers_vibration = TIMER_VIBE_OFF,
+  .timers_vibration = TIMER_VIBRATION_OFF,
   .timers_hours = false
 };
 
