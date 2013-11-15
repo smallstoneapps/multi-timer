@@ -3,7 +3,7 @@
   "shortName": "Multi Timer",
   "longName": "Multi Timer",
   "companyName": "Matthew Tole",
-  "versionCode": 3,
+  "versionCode": 4,
   "versionLabel": "2.2.0",
   "watchapp": {
     "watchface": false
