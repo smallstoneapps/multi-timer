@@ -31,3 +31,5 @@ The app is also available to [download on MyPebbleFaces][4].
 [2]: http://forums.getpebble.com/discussion/6475/multiple-timer-app
 [3]: http://smallstoneapps.s3.amazonaws.com/multi-timer/builds/multi-timer_1-2.pbw
 [4]: http://www.mypebblefaces.com/view?fID=5362&aName=matthewtole&pageTitle=Multi+Timer&auID=5242
+
+[![Analytics](https://ga-beacon.appspot.com/UA-37478501-3/smallstoneapps/multi-timer/readme)](https://github.com/igrigorik/ga-beacon)
