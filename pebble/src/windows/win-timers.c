@@ -7,26 +7,28 @@
 
 #include <pebble.h>
 
-#include "../libs/pebble-assist.h"
+#include "../libs/pebble-assist/pebble-assist.h"
+#include "../libs/bitmap-loader/bitmap-loader.h"
 #include "../timers.h"
 #include "../settings.h"
 #include "../timer.h"
 #include "../common.h"
-#include "../libs/bitmaps.h"
 #include "win-add.h"
 #include "win-controls.h"
 #include "win-settings.h"
 #include "win-vibrate.h"
+#include "win-about.h"
 
 #define MENU_SECTIONS 2
 #define MENU_SECTION_TIMERS 0
 #define MENU_SECTION_FOOTER 1
 
-#define MENU_ROWS_FOOTER 3
+#define MENU_ROWS_FOOTER 4
 
 #define MENU_ITEM_FOOTER_ADD 0
 #define MENU_ITEM_FOOTER_CONTROLS 1
 #define MENU_ITEM_FOOTER_SETTINGS 2
+#define MENU_ITEM_FOOTER_ABOUT 3
 
 #define ROW_HEIGHT 36
 
@@ -70,6 +72,7 @@ void win_timers_init(void) {
   win_controls_init();
   win_settings_init();
   win_vibrate_init();
+  win_about_create();
 }
 
 void win_timers_show(void) {
@@ -85,6 +88,7 @@ void win_timers_destroy(void) {
   win_add_destroy();
   win_controls_destroy();
   win_settings_destroy();
+  win_about_destroy();
   window_destroy(window);
   menu_layer_destroy(layer_menu);
 }
@@ -180,13 +184,17 @@ static void menu_draw_footer_row(GContext* ctx, const Layer *cell_layer, MenuInd
       strcpy(row_label, "Settings");
       row_icon = bitmaps_get_bitmap(RESOURCE_ID_MENU_ICON_SETTINGS);
     break;
+    case MENU_ITEM_FOOTER_ABOUT:
+      strcpy(row_label, "About");
+      row_icon = bitmaps_get_bitmap(RESOURCE_ID_MENU_ICON_ABOUT);
+    break;
   }
 
   graphics_context_set_text_color(ctx, GColorBlack);
   if (row_icon != NULL) {
-    graphics_draw_bitmap_in_rect(ctx, row_icon, GRect(4, 6, 24, 24));
+    graphics_draw_bitmap_in_rect(ctx, row_icon, GRect(8, 6, 24, 24));
   }
-  graphics_draw_text(ctx, row_label, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD), GRect(32, 1, 112, 24), 0, GTextAlignmentLeft, NULL);
+  graphics_draw_text(ctx, row_label, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD), GRect(36, 1, 112, 28), 0, GTextAlignmentLeft, NULL);
 
   free(row_label);
 }
@@ -230,7 +238,7 @@ static void menu_draw_timer_row(GContext* ctx, const Layer *cell_layer, MenuInde
   if (row_bmp != NULL) {
     graphics_draw_bitmap_in_rect(ctx, row_bmp, GRect(8, 8, 24, 24));
   }
-  graphics_draw_text(ctx, time_left, fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD), GRect(36, 2, 110, 28), 0, GTextAlignmentLeft, NULL);
+  graphics_draw_text(ctx, time_left, fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD), GRect(36, 2, 110, 32), 0, GTextAlignmentLeft, NULL);
   if (dir_bmp != NULL) {
     graphics_draw_bitmap_in_rect(ctx, dir_bmp, GRect(132, 16, 8, 8));
   }
@@ -244,13 +252,16 @@ static void menu_select_click_callback(MenuLayer *menu_layer, MenuIndex *cell_in
       switch (cell_index->row) {
         case MENU_ITEM_FOOTER_ADD:
           win_add_show();
-        break;
+          break;
         case MENU_ITEM_FOOTER_CONTROLS:
           win_controls_show();
-        break;
+          break;
         case MENU_ITEM_FOOTER_SETTINGS:
           win_settings_show();
-        break;
+          break;
+        case MENU_ITEM_FOOTER_ABOUT:
+          win_about_show(true);
+          break;
       }
     }
     break;

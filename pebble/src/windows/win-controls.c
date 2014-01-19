@@ -7,13 +7,12 @@
 
 #include <pebble.h>
 
-
-#include "../libs/pebble-assist.h"
+#include "../libs/pebble-assist/pebble-assist.h"
+#include "../libs/bitmap-loader/bitmap-loader.h"
 #include "win-timers.h"
 #include "win-controls.h"
 #include "../timers.h"
 #include "../timer.h"
-#include "../libs/bitmaps.h"
 
 #define MENU_NUM_ROWS 4
 #define MENU_ROW_START 0
@@ -97,7 +96,7 @@ static void menu_draw_row_callback(GContext* ctx, const Layer *cell_layer, MenuI
     break;
   }
   graphics_context_set_text_color(ctx, GColorBlack);
-  graphics_draw_text(ctx, label, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD), GRect(36, 2, 104, 24), GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, NULL);
+  graphics_draw_text(ctx, label, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD), GRect(36, 2, 104, 28), GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, NULL);
   if (icon != NULL) {
     graphics_draw_bitmap_in_rect(ctx, icon, GRect(8, 6, 24, 24));
   }

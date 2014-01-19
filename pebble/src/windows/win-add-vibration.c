@@ -7,11 +7,10 @@
 
 #include <pebble.h>
 
-
-#include "../libs/pebble-assist.h"
+#include "../libs/pebble-assist/pebble-assist.h"
+#include "../libs/bitmap-loader/bitmap-loader.h"
 #include "win-add-vibration.h"
 #include "../timer.h"
-#include "../libs/bitmaps.h"
 
 static uint16_t menu_get_num_sections_callback(MenuLayer *me, void *data);
 static uint16_t menu_get_num_rows_callback(MenuLayer *me, uint16_t section_index, void *data);
@@ -75,7 +74,7 @@ static void menu_draw_row_callback(GContext* ctx, const Layer *cell_layer, MenuI
   char label[24];
   strcpy(label, timer_vibe_str(cell_index->row, false));
   graphics_context_set_text_color(ctx, GColorBlack);
-  graphics_draw_text(ctx, label, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD), GRect(4, 1, 112, 24), GTextOverflowModeTrailingEllipsis , GTextAlignmentLeft, NULL);
+  graphics_draw_text(ctx, label, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD), GRect(4, 1, 112, 28), GTextOverflowModeTrailingEllipsis , GTextAlignmentLeft, NULL);
   if (timer->vibrate == cell_index->row) {
     graphics_draw_bitmap_in_rect(ctx, bitmaps_get_bitmap(RESOURCE_ID_MENU_ICON_MED_TICK), GRect(120, 10, 16, 16));
   }

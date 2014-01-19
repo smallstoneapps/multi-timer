@@ -8,8 +8,8 @@
 #include <pebble.h>
 
 #include "win-vibrate.h"
-#include "../libs/bitmaps.h"
-#include "../libs/pebble-assist.h"
+#include "../libs/bitmap-loader/bitmap-loader.h"
+#include "../libs/pebble-assist/pebble-assist.h"
 
 void click_config_provider(Window* window);
 void click_handler(ClickRecognizerRef recognizer, void* context);
@@ -43,8 +43,8 @@ void win_vibrate_show(void) {
 }
 
 void win_vibrate_destroy(void) {
-  bitmap_layer_destroy_safe(bmp_layer);
-  window_destroy_safe(window);
+  bitmap_layer_destroy(bmp_layer);
+  window_destroy(window);
 }
 
 bool win_vibrate_is_visible(void) {

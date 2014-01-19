@@ -7,7 +7,7 @@
 
 #include <pebble.h>
 
-#include "../libs/pebble-assist.h"
+#include "../libs/pebble-assist/pebble-assist.h"
 #include "win-timers.h"
 #include "win-add-vibration.h"
 #include "win-add-duration.h"
@@ -57,10 +57,12 @@ void win_add_init(void) {
 }
 
 void win_add_show(void) {
+  // TODO: Fix the rather bad memory leak that will occur here.
   timer = malloc(sizeof(Timer));
   timer->direction = TIMER_DIRECTION_DOWN;
   timer->vibrate = settings()->timers_vibration;
   timer->length = 10 * 60;
+  timer->repeat = false;
 
   window_stack_push(window, true);
   menu_layer_reload_data(layer_menu);
@@ -171,14 +173,14 @@ static void menu_draw_row_callback(GContext* ctx, const Layer *cell_layer, MenuI
       }
 
       graphics_context_set_text_color(ctx, GColorBlack);
-      graphics_draw_text(ctx, option, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD), GRect(4, 2, 136, 24), GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, NULL);
-      graphics_draw_text(ctx, value, fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD), GRect(4, 6, 136, 18), GTextOverflowModeTrailingEllipsis, GTextAlignmentRight, NULL);
+      graphics_draw_text(ctx, option, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD), GRect(4, 2, 136, 28), GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, NULL);
+      graphics_draw_text(ctx, value, fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD), GRect(4, 6, 136, 20), GTextOverflowModeTrailingEllipsis, GTextAlignmentRight, NULL);
     }
     break;
 
     case MENU_SECTION_FOOTER:
       graphics_context_set_text_color(ctx, GColorBlack);
-      graphics_draw_text(ctx, "Add Timer", fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD), GRect(4, 5, 136, 24), GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, NULL);
+      graphics_draw_text(ctx, "Add Timer", fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD), GRect(4, 5, 136, 28), GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, NULL);
     break;
 
   }

@@ -8,7 +8,7 @@
 #include <pebble.h>
 #include "windows/win-timers.h"
 #include "windows/win-vibrate.h"
-#include "libs/pebble-assist.h"
+#include "libs/pebble-assist/pebble-assist.h"
 #include "common.h"
 #include "timer.h"
 

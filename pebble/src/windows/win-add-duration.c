@@ -8,8 +8,8 @@
 #include <pebble.h>
 
 #include "win-add-duration.h"
-#include "../libs/bitmaps.h"
-#include "../libs/pebble-assist.h"
+#include "../libs/bitmap-loader/bitmap-loader.h"
+#include "../libs/pebble-assist/pebble-assist.h"
 #include "../timer.h"
 #include "../common.h"
 #include "../settings.h"
