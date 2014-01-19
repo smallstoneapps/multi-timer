@@ -26,4 +26,4 @@ An incredible Pebble app that allows you to create multiple, independent countdo
 [![Analytics](https://ga-beacon.appspot.com/UA-37478501-3/smallstoneapps/multi-timer/readme)](https://github.com/igrigorik/ga-beacon)
 
 [1]: pebble://appstore/52d30a1d19412b4d84000025
-[2]: http://smallstoneapps.s3.amazonaws.com/multi-timer/builds/multi-timer_2-5.pbw
+[2]: http://smallstoneapps.s3.amazonaws.com/multi-timer/builds/multi-timer_2-5-0.pbw
