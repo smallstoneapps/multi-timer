@@ -2,7 +2,7 @@
 
 An incredible Pebble app that allows you to create multiple, independent countdown timers with an optional vibration at the end. You can also add stopwatches, which are just like timers except they count up.
 
-[![Available on the Pebble App Store](http://wearewearable.com/appstore/PebbleAppStore.png)][1]
+[![Available on the Pebble App Store](http://dev.pblweb.com/badge/black/52d30a1d19412b4d84000025)][1]
 
 --
 
