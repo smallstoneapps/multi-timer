@@ -8,9 +8,9 @@ An incredible Pebble app that allows you to create multiple, independent countdo
 
 #### Screenshots
 
-![Pebble Screenshot #1](http://pblweb.com/screenshots/wrap/?colour=steel_stainless&url=http://smallstoneapps.s3.amazonaws.com/multi-timer/screenshots/multi-timer_2-2_01.png) &nbsp;
-![Pebble Screenshot #2](http://pblweb.com/screenshots/wrap/?colour=steel_stainless&url=http://smallstoneapps.s3.amazonaws.com/multi-timer/screenshots/multi-timer_2-2_02.png) &nbsp;
-![Pebble Screenshot #3](http://pblweb.com/screenshots/wrap/?colour=steel_stainless&url=http://smallstoneapps.s3.amazonaws.com/multi-timer/screenshots/multi-timer_2-2_03.png) &nbsp;
+![Pebble Screenshot #1](http://pblweb.com/screenshots/wrap/?colour=steel_stainless&url=http://smallstoneapps.s3.amazonaws.com/multi-timer/screenshots/multi-timer_2-2_01.png)
+![Pebble Screenshot #2](http://pblweb.com/screenshots/wrap/?colour=steel_stainless&url=http://smallstoneapps.s3.amazonaws.com/multi-timer/screenshots/multi-timer_2-2_02.png)
+![Pebble Screenshot #3](http://pblweb.com/screenshots/wrap/?colour=steel_stainless&url=http://smallstoneapps.s3.amazonaws.com/multi-timer/screenshots/multi-timer_2-2_03.png)
 ![Pebble Screenshot #4](http://pblweb.com/screenshots/wrap/?colour=steel_stainless&url=http://smallstoneapps.s3.amazonaws.com/multi-timer/screenshots/multi-timer_2-2_04.png)
 
 [1]: http://pblweb.com/appstore/52d30a1d19412b4d84000025
