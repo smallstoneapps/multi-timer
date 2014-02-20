@@ -1,4 +1,4 @@
-![Multi Timer Banner](http://smallstoneapps.s3.amazonaws.com/multi-timer/marketing/banner_01.png)
+![Multi Timer Banner](https://smallstoneapps.s3.amazonaws.com/multi-timer/marketing/banner_02.png)
 
 An incredible Pebble app that allows you to create multiple, independent countdown timers with an optional vibration at the end. You can also add stopwatches, which are just like timers except they count up.
 
@@ -8,22 +8,9 @@ An incredible Pebble app that allows you to create multiple, independent countdo
 
 #### Screenshots
 
-![Pebble Screenshot #1](http://smallstoneapps.s3.amazonaws.com/multi-timer/screenshots/multi-timer_2-2_01.png) &nbsp;
-![Pebble Screenshot #2](http://smallstoneapps.s3.amazonaws.com/multi-timer/screenshots/multi-timer_2-2_02.png) &nbsp;
-![Pebble Screenshot #3](http://smallstoneapps.s3.amazonaws.com/multi-timer/screenshots/multi-timer_2-2_03.png) &nbsp;
-![Pebble Screenshot #4](http://smallstoneapps.s3.amazonaws.com/multi-timer/screenshots/multi-timer_2-2_04.png)
+![Pebble Screenshot #1](http://pblweb.com/screenshots/wrap/?colour=steel_stainless&url=http://smallstoneapps.s3.amazonaws.com/multi-timer/screenshots/multi-timer_2-2_01.png) &nbsp;
+![Pebble Screenshot #2](http://pblweb.com/screenshots/wrap/?colour=steel_stainless&url=http://smallstoneapps.s3.amazonaws.com/multi-timer/screenshots/multi-timer_2-2_02.png) &nbsp;
+![Pebble Screenshot #3](http://pblweb.com/screenshots/wrap/?colour=steel_stainless&url=http://smallstoneapps.s3.amazonaws.com/multi-timer/screenshots/multi-timer_2-2_03.png) &nbsp;
+![Pebble Screenshot #4](http://pblweb.com/screenshots/wrap/?colour=steel_stainless&url=http://smallstoneapps.s3.amazonaws.com/multi-timer/screenshots/multi-timer_2-2_04.png)
 
-#### Installation
-
-*You will need the latest Pebble 2.0 (BETA5) installed on your Pebble for this app to run.*
-
-[![Install QR Code](http://smallstoneapps.s3.amazonaws.com/multi-timer/qr/multi-timer_2-5-0_qr.png)][2]
-
-**Latest PBW:** [Multi Timer 2.5.0][2]
-
---
-
-[![Analytics](https://ga-beacon.appspot.com/UA-37478501-3/smallstoneapps/multi-timer/readme)](https://github.com/igrigorik/ga-beacon)
-
-[1]: pebble://appstore/52d30a1d19412b4d84000025
-[2]: http://smallstoneapps.s3.amazonaws.com/multi-timer/builds/multi-timer_2-5-0.pbw
+[1]: http://pblweb.com/appstore/52d30a1d19412b4d84000025
