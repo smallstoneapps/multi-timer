@@ -108,7 +108,7 @@ Timer* timer_unstringify(char* str) {
     end ++;
   }
   strncpy(substr, start, (end - start));
-  timer->length = patoi(substr);
+  timer->length = atoi(substr);
   start ++;
   end = start;
 
@@ -116,7 +116,7 @@ Timer* timer_unstringify(char* str) {
     end ++;
   }
   strncpy(substr, start, (end - start));
-  timer->vibrate = patoi(substr);
+  timer->vibrate = atoi(substr);
   start ++;
   end = start;
 
@@ -124,7 +124,7 @@ Timer* timer_unstringify(char* str) {
     end ++;
   }
   strncpy(substr, start, (end - start));
-  timer->vibrate = patoi(substr);
+  timer->vibrate = atoi(substr);
   start ++;
   end = start;
 
@@ -132,7 +132,7 @@ Timer* timer_unstringify(char* str) {
     end ++;
   }
   strncpy(substr, start, (end - start));
-  timer->time_left = patoi(substr);
+  timer->time_left = atoi(substr);
   start ++;
   end = start;
 
@@ -141,7 +141,7 @@ Timer* timer_unstringify(char* str) {
   }
   strncpy(substr, start, (end - start));
   APP_LOG(APP_LOG_LEVEL_DEBUG, "%s", substr);
-  timer->status = patoi(substr);
+  timer->status = atoi(substr);
   APP_LOG(APP_LOG_LEVEL_DEBUG, "%d %d", timer->status, TIMER_STATUS_RUNNING);
 
   return timer;

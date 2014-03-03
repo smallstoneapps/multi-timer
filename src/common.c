@@ -6,7 +6,6 @@
  ***/
 
 #include <pebble.h>
-#include "libs/xprintf.h"
 
 void uppercase(char* str) {
   char* point = str;
@@ -16,12 +15,6 @@ void uppercase(char* str) {
     }
     point += 1;
   }
-}
-
-int patoi(char* str) {
-  long num;
-  xatoi(&str, &num);
-  return (int)num;
 }
 
 void timer_duration_str(int duration, bool showHours, char* str, int str_len) {

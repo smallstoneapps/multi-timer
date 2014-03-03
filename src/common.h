@@ -10,5 +10,4 @@
 #include <pebble.h>
 
 void uppercase(char* str);
-int patoi(char* str);
 void timer_duration_str(int duration, bool showHours, char* str, int str_len);
