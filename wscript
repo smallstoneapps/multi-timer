@@ -26,10 +26,10 @@ def build(ctx):
   ctx.load('pebble_sdk')
 
   js_sources = [
-    '../src/js/src/lib/http.js',
-    '../src/js/src/lib/pebble-ga.js',
+    # '../src/js/src/lib/http.js',
+    # '../src/js/src/lib/pebble-ga.js',
     '../src/js/src/appinfo.js',
-    '../src/js/src/main.js'
+    # '../src/js/src/main.js'
   ]
   built_js = '../src/js/pebble-js-app.js'
 
@@ -43,7 +43,7 @@ def build(ctx):
   ctx(rule=js_jshint, source=js_sources)
 
   # Run the suite of JS tests.
-  ctx(rule=js_karma)
+  # ctx(rule=js_karma)
 
   # Combine the source JS files into a single JS file.
   ctx(rule=concatenate_js, source=' '.join(js_sources), target=built_js)

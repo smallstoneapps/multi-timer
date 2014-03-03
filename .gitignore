@@ -2,13 +2,7 @@
 build
 
 # Waf lock files
-pebble/.lock-*
-
-# Generated Javascript
-pebble/src/js
+.lock-*
 
 # OS guff
 .DS_Store
-
-screenshots
-store
