@@ -1,6 +1,6 @@
 /***
  * Multi Timer
- * Copyright © 2013 Matthew Tole
+ * Copyright © 2014 Matthew Tole
  *
  * win-settings.c
  ***/
@@ -15,21 +15,17 @@
 #include "../common.h"
 
 #define MENU_NUM_SECTIONS 2
-
 #define MENU_SECTION_SAVE 0
 #define MENU_SECTION_TIMERS 1
-#define MENU_SECTION_MISC 2
 
 #define MENU_SECTION_ROWS_SAVE 2
 #define MENU_SECTION_ROWS_TIMERS 3
-#define MENU_SECTION_ROWS_MISC 1
 
 #define MENU_ROW_SAVE_AUTO 0
 #define MENU_ROW_SAVE_RESUME 1
 #define MENU_ROW_TIMERS_START 0
 #define MENU_ROW_TIMERS_VIBRATE 1
 #define MENU_ROW_TIMERS_HOURS 2
-#define MENU_ROW_MISC_THANK 0
 
 static uint16_t menu_get_num_sections_callback(MenuLayer *me, void *data);
 static uint16_t menu_get_num_rows_callback(MenuLayer *me, uint16_t section_index, void *data);
@@ -86,9 +82,6 @@ static uint16_t menu_get_num_rows_callback(MenuLayer *me, uint16_t section_index
     case MENU_SECTION_TIMERS:
       return MENU_SECTION_ROWS_TIMERS;
     break;
-    case MENU_SECTION_MISC:
-      return MENU_SECTION_ROWS_MISC;
-    break;
   }
   return 0;
 }
@@ -135,13 +128,6 @@ static void menu_draw_row_callback(GContext* ctx, const Layer *cell_layer, MenuI
         break;
       }
     break;
-    case MENU_SECTION_MISC:
-      switch (cell_index->row) {
-        case MENU_ROW_MISC_THANK:
-          strcpy(label, "Thank the dev");
-        break;
-      }
-    break;
   }
   graphics_context_set_text_color(ctx, GColorBlack);
   graphics_draw_text(ctx, label, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD), GRect(4, 2, 136, 28), GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, NULL);
@@ -157,9 +143,6 @@ static void menu_draw_header_callback(GContext* ctx, const Layer *cell_layer, ui
     break;
     case MENU_SECTION_TIMERS:
       menu_cell_basic_header_draw(ctx, cell_layer, "Timer Defaults");
-    break;
-    case MENU_SECTION_MISC:
-      menu_cell_basic_header_draw(ctx, cell_layer, "Miscelleanous");
     break;
   }
 }
@@ -190,12 +173,6 @@ static void menu_select_click_callback(MenuLayer *menu_layer, MenuIndex *cell_in
         case MENU_ROW_TIMERS_HOURS:
           settings()->timers_hours = ! settings()->timers_hours;
           menu_layer_reload_data(layer_menu);
-        break;
-      }
-    break;
-    case MENU_SECTION_MISC:
-      switch (cell_index->row) {
-        case MENU_ROW_MISC_THANK:
         break;
       }
     break;

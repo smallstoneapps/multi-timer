@@ -9,6 +9,7 @@
 #include "globals.h"
 #include "timers.h"
 #include "settings.h"
+#include "libs/pebble-assist/pebble-assist.h"
 
 static Timer* timers[MAX_TIMERS];
 static int num_timers = 0;
@@ -96,7 +97,8 @@ void timers_restore(void) {
 }
 
 void timers_save(void) {
-  persist_write_int(STORAGE_TIMER_COUNT, num_timers);
+  int status = persist_write_int(STORAGE_TIMER_COUNT, num_timers);
+  LOG("%d", status);
   for (int t = 0; t < num_timers; t += 1) {
     persist_write_data(STORAGE_TIMER_START + t, timers[t], sizeof(Timer));
   }
