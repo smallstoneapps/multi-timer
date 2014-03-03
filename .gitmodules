@@ -1,6 +1,0 @@
-[submodule "pebble/src/libs/pebble-assist"]
-	path = pebble/src/libs/pebble-assist
-	url = https://gist.github.com/7699013.git
-[submodule "pebble/src/libs/bitmap-loader"]
-	path = pebble/src/libs/bitmap-loader
-	url = https://gist.github.com/7699122.git
