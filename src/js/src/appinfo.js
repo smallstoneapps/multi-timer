@@ -5,8 +5,8 @@ var AppInfo = {
   "shortName": "Multi Timer",
   "longName": "Multi Timer",
   "companyName": "Matthew Tole",
-  "versionCode": 7,
-  "versionLabel": "2.5.0",
+  "versionCode": 8,
+  "versionLabel": "2.5.1",
   "watchapp": {
     "watchface": false
   },
