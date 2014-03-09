@@ -107,7 +107,12 @@ static void menu_select_click_callback(MenuLayer *menu_layer, MenuIndex *cell_in
   switch (cell_index->row) {
     case MENU_ROW_START:
       for (int t = 0; t < timers_get_count(); t += 1) {
-        timer_start(timers_get(t));
+        if (timers_get(t)->status == TIMER_STATUS_PAUSED) {
+          timer_resume(timers_get(t));
+        }
+        else if (timers_get(t)->status == TIMER_STATUS_STOPPED) {
+          timer_start(timers_get(t));
+        }
       }
       win_timers_jump(0);
     break;
