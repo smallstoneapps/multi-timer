@@ -6,3 +6,6 @@ build
 
 # OS guff
 .DS_Store
+
+src/js/pebble-js-app.js
+src/js/coverage/

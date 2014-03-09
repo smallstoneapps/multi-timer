@@ -29,7 +29,8 @@ def build(ctx):
     # '../src/js/src/lib/http.js',
     # '../src/js/src/lib/pebble-ga.js',
     '../src/js/src/appinfo.js',
-    # '../src/js/src/main.js'
+    '../src/js/src/version.js',
+    '../src/js/src/main.js'
   ]
   built_js = '../src/js/pebble-js-app.js'
 

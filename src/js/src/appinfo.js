@@ -10,6 +10,7 @@ var AppInfo = {
   "watchapp": {
     "watchface": false
   },
+  "capabilities": [ "configurable" ],
   "appKeys": {
   },
   "resources": {

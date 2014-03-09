@@ -1,13 +1,11 @@
 /* globals Pebble */
 /* globals AppInfo */
+/* globals VersionChecker */
 
 var MultiTimer = function () {
 
   Pebble.addEventListener('ready', function () {
-  });
-
-  Pebble.addEventListener('showConfiguration', function () {
-    // Pebble.openURL('http://pblweb.com/hearts/app/config/?version=' + AppInfo.versionLabel);
+    VersionChecker.check(AppInfo);
   });
 
 };
