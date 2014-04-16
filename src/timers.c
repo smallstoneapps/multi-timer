@@ -102,10 +102,10 @@ void timers_remove(int pos) {
 
 }
 
-void timers_restore(void) {
+status_t timers_restore(void) {
   timers_clear();
   if (! persist_exists(STORAGE_TIMER_COUNT)) {
-    return;
+    return 0;
   }
   uint8_t timer_count = persist_read_int(STORAGE_TIMER_COUNT);
   int seconds_elapsed = 0;
@@ -139,13 +139,18 @@ void timers_restore(void) {
       timer_reset(timer);
     }
   }
+  return 0;
 }
 
-void timers_save(void) {
-  int status = persist_write_int(STORAGE_TIMER_COUNT, num_timers);
+status_t timers_save(void) {
+  status_t status = persist_write_int(STORAGE_TIMER_COUNT, num_timers);
+  if (status < 0) {
+    return status;
+  }
   for (int t = 0; t < num_timers; t += 1) {
     persist_write_data(STORAGE_TIMER_START + t, timers_get(t), sizeof(Timer));
   }
-  persist_write_int(STORAGE_SAVE_TIME, time(NULL));
+  status = persist_write_int(STORAGE_SAVE_TIME, time(NULL));
+  return status;
 }
 

@@ -17,5 +17,5 @@ void timers_clear();
 void timers_add(Timer* timer);
 void timers_remove(int pos);
 
-void timers_restore(void);
-void timers_save(void);
+status_t timers_restore(void);
+status_t timers_save(void);
