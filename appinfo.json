@@ -3,76 +3,74 @@
   "shortName": "Multi Timer",
   "longName": "Multi Timer",
   "companyName": "Matthew Tole",
-  "versionCode": 8,
-  "versionLabel": "2.5.1",
+  "versionCode": 9,
+  "versionLabel": "2.6.0",
   "watchapp": {
     "watchface": false
   },
-  "capabilities": [ "configurable" ],
-  "appKeys": {
-  },
+  "appKeys": { },
   "resources": {
     "media": [
       {
         "menuIcon": true,
         "type": "png",
         "name": "MENU_ICON",
-        "file": "images/menu_icon.png"
+        "file": "images/menu.png"
       },
       {
         "type": "png",
         "name": "MENU_ICON_PLAY",
-        "file": "images/menu_icon_play.png"
+        "file": "images/icon_play.png"
       },
       {
         "type": "png",
         "name": "MENU_ICON_PAUSE",
-        "file": "images/menu_icon_pause.png"
+        "file": "images/icon_pause.png"
       },
       {
         "type": "png",
         "name": "MENU_ICON_STOP",
-        "file": "images/menu_icon_stop.png"
+        "file": "images/icon_stop.png"
       },
       {
         "type": "png",
         "name": "MENU_ICON_DONE",
-        "file": "images/menu_icon_done.png"
+        "file": "images/icon_done.png"
       },
       {
         "type": "png",
         "name": "MENU_ICON_CLEAR",
-        "file": "images/menu_icon_clear.png"
+        "file": "images/icon_clear.png"
       },
       {
         "type": "png",
         "name": "MENU_ICON_RESET",
-        "file": "images/menu_icon_reset.png"
+        "file": "images/icon_reset.png"
       },
       {
         "type": "png",
         "name": "MENU_ICON_ADD",
-        "file": "images/menu_icon_add.png"
+        "file": "images/icon_add.png"
       },
       {
         "type": "png",
         "name": "MENU_ICON_CONTROLS",
-        "file": "images/menu_icon_controls.png"
+        "file": "images/icon_controls.png"
       },
       {
         "type": "png",
         "name": "MENU_ICON_SETTINGS",
-        "file": "images/menu_icon_settings.png"
+        "file": "images/icon_settings.png"
       },
       {
         "type": "png",
         "name": "MENU_ICON_ABOUT",
-        "file": "images/menu_icon_about.png"
+        "file": "images/icon_about.png"
       },
       {
         "type": "png",
         "name": "MENU_ICON_MED_TICK",
-        "file": "images/menu_icon_med_tick.png"
+        "file": "images/icon_med_tick.png"
       },
       {
         "type": "png",

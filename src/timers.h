@@ -1,6 +1,6 @@
 /***
  * Multi Timer
- * Copyright © 2013 Matthew Tole
+ * Copyright © 2013 - 2014 Matthew Tole
  *
  * timers.h
  ***/
@@ -9,7 +9,7 @@
 
 #include "timer.h"
 
-#define MAX_TIMERS 8
+#define MAX_TIMERS 16
 
 Timer* timers_get(int pos);
 int timers_get_count();

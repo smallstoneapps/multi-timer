@@ -1,6 +1,6 @@
 /***
  * Multi Timer
- * Copyright © 2013 Matthew Tole
+ * Copyright © 2013 - 2014 Matthew Tole
  *
  * win-timers.c
  ***/
@@ -18,6 +18,7 @@
 #include "win-settings.h"
 #include "win-vibrate.h"
 #include "win-about.h"
+#include "win-timer.h"
 
 #define MENU_SECTIONS 2
 #define MENU_SECTION_TIMERS 0
@@ -72,7 +73,8 @@ void win_timers_init(void) {
   win_controls_init();
   win_settings_init();
   win_vibrate_init();
-  win_about_create();
+  win_timer_init();
+  win_about_init();
 }
 
 void win_timers_show(void) {
@@ -89,6 +91,7 @@ void win_timers_destroy(void) {
   win_controls_destroy();
   win_settings_destroy();
   win_about_destroy();
+  win_timer_destroy();
   window_destroy(window);
   menu_layer_destroy(layer_menu);
 }
@@ -192,7 +195,7 @@ static void menu_draw_footer_row(GContext* ctx, const Layer *cell_layer, MenuInd
 
   graphics_context_set_text_color(ctx, GColorBlack);
   if (row_icon != NULL) {
-    graphics_draw_bitmap_in_rect(ctx, row_icon, GRect(8, 6, 24, 24));
+    graphics_draw_bitmap_in_rect(ctx, row_icon, GRect(8, 8, 20, 20));
   }
   graphics_draw_text(ctx, row_label, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD), GRect(36, 1, 112, 28), 0, GTextAlignmentLeft, NULL);
 
@@ -201,49 +204,7 @@ static void menu_draw_footer_row(GContext* ctx, const Layer *cell_layer, MenuInd
 
 static void menu_draw_timer_row(GContext* ctx, const Layer *cell_layer, MenuIndex *cell_index, void *data) {
   Timer* timer = timers_get(cell_index->row);
-  char* time_left = malloc(32);
-  GBitmap* row_bmp = NULL;
-  GBitmap* dir_bmp = NULL;
-
-  if (timer == NULL) {
-    return;
-  }
-  timer_duration_str(timer->time_left, settings()->timers_hours, time_left, 32);
-
-  switch (timer->status) {
-    case TIMER_STATUS_RUNNING:
-      row_bmp = bitmaps_get_bitmap(RESOURCE_ID_MENU_ICON_PLAY);
-    break;
-    case TIMER_STATUS_PAUSED:
-      row_bmp = bitmaps_get_bitmap(RESOURCE_ID_MENU_ICON_PAUSE);
-    break;
-    case TIMER_STATUS_STOPPED:
-      row_bmp = bitmaps_get_bitmap(RESOURCE_ID_MENU_ICON_STOP);
-    break;
-    case TIMER_STATUS_FINISHED:
-      row_bmp = bitmaps_get_bitmap(RESOURCE_ID_MENU_ICON_DONE);
-    break;
-  }
-
-  switch (timer->direction) {
-    case TIMER_DIRECTION_UP:
-      dir_bmp = bitmaps_get_bitmap(RESOURCE_ID_ARROW_UP);
-    break;
-    case TIMER_DIRECTION_DOWN:
-      dir_bmp = bitmaps_get_bitmap(RESOURCE_ID_ARROW_DOWN);
-    break;
-  }
-
-  graphics_context_set_text_color(ctx, GColorBlack);
-  if (row_bmp != NULL) {
-    graphics_draw_bitmap_in_rect(ctx, row_bmp, GRect(8, 8, 24, 24));
-  }
-  graphics_draw_text(ctx, time_left, fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD), GRect(36, 2, 110, 32), 0, GTextAlignmentLeft, NULL);
-  if (dir_bmp != NULL) {
-    graphics_draw_bitmap_in_rect(ctx, dir_bmp, GRect(132, 16, 8, 8));
-  }
-
-  free(time_left);
+  timer_draw(timer, ctx);
 }
 
 static void menu_select_click_callback(MenuLayer *menu_layer, MenuIndex *cell_index, void *callback_context) {
@@ -299,21 +260,8 @@ static void menu_select_long_click_callback(MenuLayer *menu_layer, MenuIndex *ce
     return;
   }
   Timer* timer = timers_get(cell_index->row);
-  if (! timer) {
-    return;
-  }
-  switch (timer->status) {
-    case TIMER_STATUS_PAUSED:
-      timer_reset(timer);
-    break;
-    case TIMER_STATUS_STOPPED:
-    case TIMER_STATUS_FINISHED:
-      timers_remove(cell_index->row);
-    break;
-    default:
-      return;
-  }
-  menu_layer_reload_data(layer_menu);
+  win_timer_set_timer(timer, cell_index->row);
+  win_timer_show();
 }
 
 static void jump_to_timer(int t, bool animate) {

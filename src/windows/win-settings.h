@@ -1,6 +1,6 @@
 /***
  * Multi Timer
- * Copyright © 2013 Matthew Tole
+ * Copyright © 2013 - 2014 Matthew Tole
  *
  * win-settings.h
  ***/

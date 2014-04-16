@@ -1,6 +1,6 @@
 /***
  * Multi Timer
- * Copyright © 2013 Matthew Tole
+ * Copyright © 2013 - 2014 Matthew Tole
  *
  * win-controls.c
  ***/
@@ -96,9 +96,9 @@ static void menu_draw_row_callback(GContext* ctx, const Layer *cell_layer, MenuI
     break;
   }
   graphics_context_set_text_color(ctx, GColorBlack);
-  graphics_draw_text(ctx, label, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD), GRect(36, 2, 104, 28), GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, NULL);
+  graphics_draw_text(ctx, label, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD), GRect(36, 1, 112, 28), GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, NULL);
   if (icon != NULL) {
-    graphics_draw_bitmap_in_rect(ctx, icon, GRect(8, 6, 24, 24));
+    graphics_draw_bitmap_in_rect(ctx, icon, GRect(8, 8, 20, 20));
   }
   free(label);
 }

@@ -1,16 +1,19 @@
 /***
  * Multi Timer
- * Copyright © 2013 Matthew Tole
+ * Copyright © 2013 - 2014 Matthew Tole
  *
  * timer.c
  ***/
 
 #include <pebble.h>
+#include "timer.h"
 #include "windows/win-timers.h"
 #include "windows/win-vibrate.h"
 #include "libs/pebble-assist/pebble-assist.h"
+#include "libs/data-processor/data-processor.h"
+#include "libs/bitmap-loader/bitmap-loader.h"
 #include "common.h"
-#include "timer.h"
+#include "settings.h"
 
 static void timer_callback(void* data);
 static void timer_set_app_timer(Timer* timer);
@@ -57,6 +60,11 @@ void timer_tick(Timer* timer) {
   }
 }
 
+void timer_destroy(Timer* timer) {
+  timer_cancel_app_timer(timer);
+  free(timer);
+}
+
 char* timer_vibe_str(TimerVibration vibe, bool shortStr) {
   switch (vibe) {
     case TIMER_VIBRATION_OFF:
@@ -73,78 +81,6 @@ char* timer_vibe_str(TimerVibration vibe, bool shortStr) {
       return shortStr ? "Solid" : "Continous";
   }
   return "";
-}
-
-char* timer_stringify(Timer* timer) {
-  char* str = malloc(sizeof(char) * 32);
-  if (timer->direction == TIMER_DIRECTION_UP) {
-    snprintf(str, 20, "%d", timer->direction);
-  }
-  else {
-    // Max length of string = 19 characters
-    // X|XXXXX|X|X|XXXXX|X
-    snprintf(str, 20, "%d|%d|%d|%d|%d|%d", timer->direction, timer->length, timer->vibrate, timer->repeat, timer->time_left, timer->status);
-    APP_LOG(APP_LOG_LEVEL_DEBUG, "%s", str);
-  }
-  return str;
-}
-
-Timer* timer_unstringify(char* str) {
-  Timer* timer = malloc(sizeof(Timer));
-  if (strlen(str) == 1) {
-    timer->direction = TIMER_DIRECTION_UP;
-    return timer;
-  }
-
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "%s", str);
-
-  timer->direction = TIMER_DIRECTION_DOWN;
-  char* start = str;
-  start ++; start ++;
-  char* end = start;
-  char substr[8] = "";
-
-  while (*end != '\0' && *end != '|') {
-    end ++;
-  }
-  strncpy(substr, start, (end - start));
-  timer->length = atoi(substr);
-  start ++;
-  end = start;
-
-  while (*end != '\0' && *end != '|') {
-    end ++;
-  }
-  strncpy(substr, start, (end - start));
-  timer->vibrate = atoi(substr);
-  start ++;
-  end = start;
-
-  while (*end != '\0' && *end != '|') {
-    end ++;
-  }
-  strncpy(substr, start, (end - start));
-  timer->vibrate = atoi(substr);
-  start ++;
-  end = start;
-
-  while (*end != '\0' && *end != '|') {
-    end ++;
-  }
-  strncpy(substr, start, (end - start));
-  timer->time_left = atoi(substr);
-  start ++;
-  end = start;
-
-  while (*end != '\0' && *end != '|') {
-    end ++;
-  }
-  strncpy(substr, start, (end - start));
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "%s", substr);
-  timer->status = atoi(substr);
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "%d %d", timer->status, TIMER_STATUS_RUNNING);
-
-  return timer;
 }
 
 char* timer_describe(Timer* timer) {
@@ -185,6 +121,52 @@ char* timer_describe(Timer* timer) {
   snprintf(description, 512, "I am a %s that is %s, length %d, %d left, %s, %s", type, status, timer->length, timer->time_left, repeat, vibrate);
 
   return description;
+}
+
+void timer_draw(Timer* timer, GContext* ctx) {
+  char* time_left = malloc(32);
+  GBitmap* row_bmp = NULL;
+  GBitmap* dir_bmp = NULL;
+
+  if (NULL == timer) {
+    return;
+  }
+  timer_duration_str(timer->time_left, settings()->timers_hours, time_left, 32);
+
+  switch (timer->status) {
+    case TIMER_STATUS_RUNNING:
+      row_bmp = bitmaps_get_bitmap(RESOURCE_ID_MENU_ICON_PLAY);
+    break;
+    case TIMER_STATUS_PAUSED:
+      row_bmp = bitmaps_get_bitmap(RESOURCE_ID_MENU_ICON_PAUSE);
+    break;
+    case TIMER_STATUS_STOPPED:
+      row_bmp = bitmaps_get_bitmap(RESOURCE_ID_MENU_ICON_STOP);
+    break;
+    case TIMER_STATUS_FINISHED:
+      row_bmp = bitmaps_get_bitmap(RESOURCE_ID_MENU_ICON_DONE);
+    break;
+  }
+
+  switch (timer->direction) {
+    case TIMER_DIRECTION_UP:
+      dir_bmp = bitmaps_get_bitmap(RESOURCE_ID_ARROW_UP);
+    break;
+    case TIMER_DIRECTION_DOWN:
+      dir_bmp = bitmaps_get_bitmap(RESOURCE_ID_ARROW_DOWN);
+    break;
+  }
+
+  graphics_context_set_text_color(ctx, GColorBlack);
+  if (row_bmp != NULL) {
+    graphics_draw_bitmap_in_rect(ctx, row_bmp, GRect(8, 10, 20, 20));
+  }
+  graphics_draw_text(ctx, time_left, fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD), GRect(36, 1, 110, 32), 0, GTextAlignmentLeft, NULL);
+  if (dir_bmp != NULL) {
+    graphics_draw_bitmap_in_rect(ctx, dir_bmp, GRect(132, 16, 8, 8));
+  }
+
+  free(time_left);
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - //

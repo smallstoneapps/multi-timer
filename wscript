@@ -28,6 +28,7 @@ def build(ctx):
   js_sources = [
     # '../src/js/src/lib/http.js',
     # '../src/js/src/lib/pebble-ga.js',
+    # '../src/js/src/libs/connector.js',
     '../src/js/src/appinfo.js',
     '../src/js/src/version.js',
     '../src/js/src/main.js'
@@ -41,17 +42,18 @@ def build(ctx):
   ctx(rule=generate_appinfo_c, source='../appinfo.json', target='../src/generated/appinfo.h')
 
   # Run jshint on all the JavaScript files
-  ctx(rule=js_jshint, source=js_sources)
+  # ctx(rule=js_jshint, source=js_sources)
 
   # Run the suite of JS tests.
   # ctx(rule=js_karma)
 
   # Combine the source JS files into a single JS file.
-  ctx(rule=concatenate_js, source=' '.join(js_sources), target=built_js)
+  # ctx(rule=concatenate_js, source=' '.join(js_sources), target=built_js)
 
   # Build and bundle the Pebble app.
   ctx.pbl_program(source=ctx.path.ant_glob('src/**/*.c'), target='pebble-app.elf')
-  ctx.pbl_bundle(elf='pebble-app.elf', js=built_js)
+  # ctx.pbl_bundle(elf='pebble-app.elf', js=built_js)
+  ctx.pbl_bundle(elf='pebble-app.elf')
 
 def generate_appinfo_c(task):
   ext_out = '.c'
@@ -60,6 +62,13 @@ def generate_appinfo_c(task):
   appinfo = json.load(open(src))
 
   f = open(target, 'w')
+
+  f.write('/***\n')
+  f.write(' * Multi Timer\n')
+  f.write(' * Copyright © 2013 - 2014 Matthew Tole\n')
+  f.write(' *\n')
+  f.write(' * generated/appinfo.h\n')
+  f.write(' ***/\n\n')
   f.write('#pragma once\n\n')
   f.write('#define VERSION_LABEL "{0}"\n'.format(appinfo["versionLabel"]))
   f.write('#define VERSION_CODE {0}\n'.format(appinfo["versionCode"]))

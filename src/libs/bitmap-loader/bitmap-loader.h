@@ -1,6 +1,6 @@
 /***
  * Bitmap Loader
- * Copyright © 2013-2014 Matthew Tole
+ * Copyright © 2013 - 2014 Matthew Tole
  *
  * Version 2.0.2
  ***/

@@ -10,11 +10,10 @@ static char* data_start = NULL;
 static char* data_pos = NULL;
 static char data_delim;
 
-bool data_processor_init(char* data, char delim) {
+void data_processor_init(char* data, char delim) {
   data_start = data;
   data_pos = data_start;
   data_delim = delim;
-  return true;
 }
 
 uint8_t data_processor_count(void) {
@@ -29,7 +28,7 @@ uint8_t data_processor_count(void) {
   return ++count;
 }
 
-bool data_processor_get_string(char** str) {
+char* data_processor_get_string(void) {
   char* data_block_start = data_pos;
   int str_len = 0;
   while (*data_pos != data_delim && *data_pos != '\0') {
@@ -40,21 +39,20 @@ bool data_processor_get_string(char** str) {
   char* tmp = malloc(str_len + 1);
   strncpy(tmp, data_block_start, str_len + 1);
   data_pos++;
-  *str = tmp;
-  return true;
+  return tmp;
 }
 
-bool data_processor_get_bool(bool* boolean) {
+bool data_processor_get_bool(void) {
   char bool_char =  *data_pos;
   data_pos++;
   data_pos++;
   return (bool_char == '1');
 }
 
-bool data_processor_get_uint8(uint8_t* num) {
-  char* tmp_str;
-  data_processor_get_string(&tmp_str);
-  *num = atoi(tmp_str);
+int data_processor_get_int(void) {
+  char* tmp_str = data_processor_get_string();
+  int num = atoi(tmp_str);
   free(tmp_str);
-  return true;
+  return num;
 }
+

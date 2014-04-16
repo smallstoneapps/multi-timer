@@ -1,11 +1,12 @@
 /***
  * Multi Timer
- * Copyright © 2013 Matthew Tole
+ * Copyright © 2013 - 2014 Matthew Tole
  *
  * settings.c
  ***/
 
 #include <pebble.h>
+#include "libs/pebble-assist/pebble-assist.h"
 #include "globals.h"
 #include "settings.h"
 #include "timer.h"
@@ -22,10 +23,9 @@ Settings _settings = {
 void settings_load(void) {
   if (persist_exists(STORAGE_SETTINGS)) {
     int res = persist_read_data(STORAGE_SETTINGS, &_settings, sizeof(_settings));
-    APP_LOG(APP_LOG_LEVEL_DEBUG, "settings_load: %d", res);
-  }
-  else {
-    APP_LOG(APP_LOG_LEVEL_DEBUG, "settings_load: No settings.");
+    if (res < 0) {
+      LOG("Settings load failed: %d", res);
+    }
   }
 }
 
@@ -35,5 +35,7 @@ Settings* settings() {
 
 void settings_save(void) {
   int res = persist_write_data(STORAGE_SETTINGS, &_settings, sizeof(_settings));
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "settings_save: %d", res);
+  if (res < 0) {
+    LOG("Settings load failed: %d", res);
+  }
 }

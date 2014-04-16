@@ -1,6 +1,6 @@
 /***
  * Multi Timer
- * Copyright © 2013 Matthew Tole
+ * Copyright © 2013 - 2014 Matthew Tole
  *
  * timers.c
  ***/
@@ -11,14 +11,25 @@
 #include "settings.h"
 #include "libs/pebble-assist/pebble-assist.h"
 
-static Timer* timers[MAX_TIMERS];
+typedef struct TimerList TimerList;
+
+struct TimerList {
+  Timer* timer;
+  TimerList* next;
+};
+
+static TimerList* timers = NULL;
 static int num_timers = 0;
 
 Timer* timers_get(int pos) {
-  if (pos >= num_timers) {
-    return NULL;
+  TimerList* tmp = timers;
+  for (uint8_t t = 0; t < pos; t += 1) {
+    if (NULL == tmp) {
+      return NULL;
+    }
+    tmp = tmp->next;
   }
-  return timers[pos];
+  return (NULL == tmp) ? NULL : tmp->timer;
 }
 
 int timers_get_count() {
@@ -35,27 +46,60 @@ void timers_add(Timer* timer) {
   else {
     timer->time_left = timer->length;
   }
-  timers[num_timers] = timer;
+
+  TimerList* tl = malloc(sizeof(TimerList));
+  tl->timer = timer;
+  tl->next = NULL;
+
+  if (timers == NULL) {
+    timers = tl;
+  }
+  else {
+    TimerList* tail = timers;
+    while (tail->next != NULL) {
+      tail = tail->next;
+    }
+    tail->next = tl;
+  }
   num_timers += 1;
 }
 
 void timers_clear() {
-  for (int t = 0; t < num_timers; t += 1) {
-    timer_reset(timers[t]);
-    free(timers[t]);
+  while (timers != NULL) {
+    free(timers->timer);
+    TimerList* tmp = timers;
+    timers = timers->next;
+    free(tmp);
   }
   num_timers = 0;
 }
 
 void timers_remove(int pos) {
-  if (pos >= num_timers) {
-    return;
+
+  TimerList* current = timers;
+  TimerList* previous = NULL;
+
+  for (uint8_t t = 0; t < pos; t += 1) {
+    previous = current;
+    current = current->next;
   }
-  free(timers[pos]);
-  for (int p = pos + 1; p < num_timers; p += 1) {
-    timers[p - 1] = timers[p];
+  timer_destroy(current->timer);
+
+  if (previous == NULL) {
+    if (current->next == NULL) {
+      timers = NULL;
+    }
+    else {
+      timers = current->next;
+    }
   }
+  else {
+    timers->next = current->next;
+  }
+
+  free(current);
   num_timers -= 1;
+
 }
 
 void timers_restore(void) {
@@ -63,44 +107,44 @@ void timers_restore(void) {
   if (! persist_exists(STORAGE_TIMER_COUNT)) {
     return;
   }
-  num_timers = persist_read_int(STORAGE_TIMER_COUNT);
+  uint8_t timer_count = persist_read_int(STORAGE_TIMER_COUNT);
   int seconds_elapsed = 0;
   if (settings()->resume_timers) {
     int save_time = persist_read_int(STORAGE_SAVE_TIME);
     seconds_elapsed = time(NULL) - save_time;
   }
-  for (int t = 0; t < num_timers; t += 1) {
-    timers[t] = malloc(sizeof(Timer));
-    persist_read_data(STORAGE_TIMER_START + t, timers[t], sizeof(Timer));
-    timers[t]->app_timer = NULL;
+  for (int t = 0; t < timer_count; t += 1) {
+    Timer* timer = malloc(sizeof(Timer));
+    timers_add(timer);
+    persist_read_data(STORAGE_TIMER_START + t, timer, sizeof(Timer));
+    timer->app_timer = NULL;
     if (settings()->resume_timers) {
-      if (timers[t]->status == TIMER_STATUS_RUNNING) {
-        if (timers[t]->direction == TIMER_DIRECTION_UP) {
-          timers[t]->time_left += seconds_elapsed;
+      if (timer->status == TIMER_STATUS_RUNNING) {
+        if (timer->direction == TIMER_DIRECTION_UP) {
+          timer->time_left += seconds_elapsed;
         }
         else {
-          timers[t]->time_left -= seconds_elapsed;
-          if (timers[t]->time_left <= 0) {
-            timers[t]->time_left = 0;
-            timers[t]->status = TIMER_STATUS_FINISHED;
+          timer->time_left -= seconds_elapsed;
+          if (timer->time_left <= 0) {
+            timer->time_left = 0;
+            timer->status = TIMER_STATUS_FINISHED;
           }
         }
-        if (timers[t]->status == TIMER_STATUS_RUNNING) {
-          timer_resume(timers[t]);
+        if (timer->status == TIMER_STATUS_RUNNING) {
+          timer_resume(timer);
         }
       }
     }
     else {
-      timer_reset(timers[t]);
+      timer_reset(timer);
     }
   }
 }
 
 void timers_save(void) {
   int status = persist_write_int(STORAGE_TIMER_COUNT, num_timers);
-  LOG("%d", status);
   for (int t = 0; t < num_timers; t += 1) {
-    persist_write_data(STORAGE_TIMER_START + t, timers[t], sizeof(Timer));
+    persist_write_data(STORAGE_TIMER_START + t, timers_get(t), sizeof(Timer));
   }
   persist_write_int(STORAGE_SAVE_TIME, time(NULL));
 }
