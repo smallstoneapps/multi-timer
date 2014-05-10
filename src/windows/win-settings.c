@@ -68,7 +68,7 @@ void win_settings_destroy(void) {
   window_destroy(window);
 }
 
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - //
+//----------------------------------------------------------------------------//
 
 static uint16_t menu_get_num_sections_callback(MenuLayer *me, void *data) {
   return MENU_NUM_SECTIONS;

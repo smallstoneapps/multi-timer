@@ -65,7 +65,7 @@ void win_timer_destroy(void) {
   window_destroy(window);
 }
 
-//
+//----------------------------------------------------------------------------//
 
 static void window_load(Window* window) {
   menu_layer = menu_layer_create(FRAME_MENU);

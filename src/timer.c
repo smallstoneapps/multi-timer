@@ -48,19 +48,20 @@ void timer_reset(Timer* timer) {
 
 void timer_tick(Timer* timer) {
   if (! timer) { return; }
-  if (timer->status != TIMER_STATUS_RUNNING) { return; }
-  if (timer->direction == TIMER_DIRECTION_DOWN) {
+  if (TIMER_STATUS_RUNNING == timer->status) { return; }
+  if (TIMER_DIRECTION_DOWN == timer->direction) {
     timer->time_left -= 1;
     if (timer->time_left <= 0) {
       timer_finished(timer);
     }
   }
-  else if (timer->direction == TIMER_DIRECTION_UP) {
+  else if (TIMER_DIRECTION_UP == timer->direction) {
     timer->time_left += 1;
   }
 }
 
 void timer_destroy(Timer* timer) {
+  if (! timer) { return; }
   timer_cancel_app_timer(timer);
   free(timer);
 }
@@ -83,7 +84,7 @@ char* timer_vibe_str(TimerVibration vibe, bool shortStr) {
   return "";
 }
 
-char* timer_describe(Timer* timer) {
+/*char* timer_describe(Timer* timer) {
   static char description[512];
   char type[16];
   char status[16];
@@ -121,7 +122,7 @@ char* timer_describe(Timer* timer) {
   snprintf(description, 512, "I am a %s that is %s, length %d, %d left, %s, %s", type, status, timer->length, timer->time_left, repeat, vibrate);
 
   return description;
-}
+}*/
 
 void timer_draw(Timer* timer, GContext* ctx) {
   char* time_left = malloc(32);

@@ -16,7 +16,7 @@ Settings _settings = {
   .save_timers_auto = true,
   .resume_timers = true,
   .timers_start_auto = false,
-  .timers_vibration = TIMER_VIBRATION_OFF,
+  .timers_vibration = TIMER_VIBRATION_SHORT,
   .timers_hours = false
 };
 

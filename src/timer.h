@@ -53,5 +53,5 @@ void timer_destroy(Timer* timer);
 void timer_set_label(Timer* timer);
 
 char* timer_vibe_str(TimerVibration vibe, bool shortStr);
-char* timer_describe(Timer* timer);
+// char* timer_describe(Timer* timer);
 void timer_draw(Timer* timer, GContext* ctx);

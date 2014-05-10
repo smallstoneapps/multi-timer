@@ -33,7 +33,10 @@
 
 #define ROW_HEIGHT 36
 
+static void window_load(Window* window);
+static void window_unload(Window* window);
 static void window_appear(Window* window);
+
 static uint16_t menu_get_num_sections_callback(MenuLayer *me, void *data);
 static uint16_t menu_get_num_rows_callback(MenuLayer *me, uint16_t section_index, void *data);
 static int16_t menu_get_header_height_callback(MenuLayer *me, uint16_t section_index, void *data);
@@ -50,25 +53,14 @@ static Window* window;
 static MenuLayer* layer_menu;
 
 void win_timers_init(void) {
+  // Create the window and setup event handlers.
   window = window_create();
   window_set_window_handlers(window, (WindowHandlers) {
+    .load = window_load,
+    .unload = window_unload,
     .appear = window_appear
   });
-
-  layer_menu = menu_layer_create_fullscreen(window);
-  menu_layer_set_callbacks(layer_menu, NULL, (MenuLayerCallbacks) {
-    .get_num_sections = menu_get_num_sections_callback,
-    .get_num_rows = menu_get_num_rows_callback,
-    .get_header_height = menu_get_header_height_callback,
-    .get_cell_height = menu_get_cell_height_callback,
-    .draw_header = menu_draw_header_callback,
-    .draw_row = menu_draw_row_callback,
-    .select_click = menu_select_click_callback,
-    .select_long_click = menu_select_long_click_callback,
-  });
-  menu_layer_set_click_config_onto_window(layer_menu, window);
-  menu_layer_add_to_window(layer_menu, window);
-
+  // Initialise all of the windows that can be spawned from this one.
   win_add_init();
   win_controls_init();
   win_settings_init();
@@ -93,14 +85,34 @@ void win_timers_destroy(void) {
   win_about_destroy();
   win_timer_destroy();
   window_destroy(window);
-  menu_layer_destroy(layer_menu);
 }
 
 void win_timers_jump(int pos) {
   jump_to_timer(pos, false);
 }
 
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - //
+//----------------------------------------------------------------------------//
+
+static void window_load(Window* window) {
+  // Create the menu with callbacks and click config.
+  layer_menu = menu_layer_create_fullscreen(window);
+  menu_layer_set_callbacks(layer_menu, NULL, (MenuLayerCallbacks) {
+    .get_num_sections = menu_get_num_sections_callback,
+    .get_num_rows = menu_get_num_rows_callback,
+    .get_header_height = menu_get_header_height_callback,
+    .get_cell_height = menu_get_cell_height_callback,
+    .draw_header = menu_draw_header_callback,
+    .draw_row = menu_draw_row_callback,
+    .select_click = menu_select_click_callback,
+    .select_long_click = menu_select_long_click_callback,
+  });
+  menu_layer_set_click_config_onto_window(layer_menu, window);
+  menu_layer_add_to_window(layer_menu, window);
+}
+
+static void window_unload(Window* window) {
+  menu_layer_destroy(layer_menu);
+}
 
 static void window_appear(Window* window) {
   menu_layer_reload_data(layer_menu);
@@ -126,7 +138,6 @@ static int16_t menu_get_header_height_callback(MenuLayer *me, uint16_t section_i
   if (timers_get_count() == 0) {
     return 0;
   }
-
   switch (section_index) {
     case MENU_SECTION_FOOTER:
       return 4;
@@ -197,7 +208,9 @@ static void menu_draw_footer_row(GContext* ctx, const Layer *cell_layer, MenuInd
   if (row_icon != NULL) {
     graphics_draw_bitmap_in_rect(ctx, row_icon, GRect(8, 8, 20, 20));
   }
-  graphics_draw_text(ctx, row_label, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD), GRect(36, 1, 112, 28), 0, GTextAlignmentLeft, NULL);
+  graphics_draw_text(ctx, row_label,
+    fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD),
+    GRect(36, 1, 112, 28), 0, GTextAlignmentLeft, NULL);
 
   free(row_label);
 }

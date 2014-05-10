@@ -51,7 +51,7 @@ bool win_vibrate_is_visible(void) {
   return is_visible;
 }
 
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - //
+//----------------------------------------------------------------------------//
 
 void click_config_provider(Window* window) {
   window_single_click_subscribe(BUTTON_ID_UP, click_handler);

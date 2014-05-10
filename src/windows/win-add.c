@@ -133,7 +133,7 @@ static void menu_draw_row_callback(GContext* ctx, const Layer *cell_layer, MenuI
 
       switch (cell_index->row) {
         case MENU_ROW_DIRECTION:
-          strcpy(option, "Direction");
+          strcpy(option, "Count");
           strcpy(value, timer->direction == TIMER_DIRECTION_UP ?  "Up" : "Down");
           uppercase(value);
         break;

@@ -39,7 +39,7 @@ int timers_get_count() {
 void timers_add(Timer* timer) {
   timer->status = TIMER_STATUS_STOPPED;
   timer->app_timer = NULL;
-  if (timer->direction == TIMER_DIRECTION_UP) {
+  if (TIMER_DIRECTION_UP == timer->direction) {
     timer->length = 0;
     timer->time_left = 0;
   }
@@ -51,12 +51,12 @@ void timers_add(Timer* timer) {
   tl->timer = timer;
   tl->next = NULL;
 
-  if (timers == NULL) {
+  if (NULL == timers) {
     timers = tl;
   }
   else {
     TimerList* tail = timers;
-    while (tail->next != NULL) {
+    while (NULL != tail->next) {
       tail = tail->next;
     }
     tail->next = tl;
@@ -118,33 +118,40 @@ status_t timers_restore(void) {
     timers_add(timer);
     persist_read_data(STORAGE_TIMER_START + t, timer, sizeof(Timer));
     timer->app_timer = NULL;
-    if (settings()->resume_timers) {
-      if (timer->status == TIMER_STATUS_RUNNING) {
-        if (timer->direction == TIMER_DIRECTION_UP) {
-          timer->time_left += seconds_elapsed;
+    if (! settings()->resume_timers) {
+      timer_reset(timer);
+      continue;
+    }
+    if (TIMER_STATUS_RUNNING != timer->status) {
+      continue;
+    }
+    if (TIMER_DIRECTION_UP == timer->direction) {
+      timer->time_left += seconds_elapsed;
+    }
+    else {
+      if (true == timer->repeat) {
+        timer->time_left -= (seconds_elapsed % timer->length);
+        if (timer->time_left <= 0) {
+          timer->time_left += timer->length;
         }
-        else {
-          timer->time_left -= seconds_elapsed;
-          if (timer->time_left <= 0) {
-            timer->time_left = 0;
-            timer->status = TIMER_STATUS_FINISHED;
-          }
-        }
-        if (timer->status == TIMER_STATUS_RUNNING) {
-          timer_resume(timer);
+      }
+      else {
+        timer->time_left -= seconds_elapsed;
+        if (0 >= timer->time_left) {
+          timer->time_left = 0;
+          timer->status = TIMER_STATUS_FINISHED;
+          continue;
         }
       }
     }
-    else {
-      timer_reset(timer);
-    }
+    timer_resume(timer);
   }
   return 0;
 }
 
 status_t timers_save(void) {
   status_t status = persist_write_int(STORAGE_TIMER_COUNT, num_timers);
-  if (status < 0) {
+  if (0 > status) {
     return status;
   }
   for (int t = 0; t < num_timers; t += 1) {

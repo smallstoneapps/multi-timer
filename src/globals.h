@@ -7,6 +7,7 @@
 
 #pragma once
 
+// Persistent storage keys
 #define STORAGE_TIMER_COUNT 1
 #define STORAGE_TIMER_START 2
 #define STORAGE_SETTINGS 100
