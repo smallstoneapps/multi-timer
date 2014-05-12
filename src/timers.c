@@ -82,7 +82,15 @@ void timers_remove(int pos) {
   for (uint8_t t = 0; t < pos; t += 1) {
     previous = current;
     current = current->next;
+    if (NULL == current) {
+      return;
+    }
   }
+
+  if (NULL == current) {
+    return;
+  }
+
   timer_destroy(current->timer);
 
   if (previous == NULL) {
@@ -94,7 +102,7 @@ void timers_remove(int pos) {
     }
   }
   else {
-    timers->next = current->next;
+    previous->next = current->next;
   }
 
   free(current);
