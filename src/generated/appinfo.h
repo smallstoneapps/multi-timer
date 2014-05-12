@@ -7,6 +7,6 @@
 
 #pragma once
 
-#define VERSION_LABEL "2.6.0"
-#define VERSION_CODE 9
+#define VERSION_LABEL "2.6.2"
+#define VERSION_CODE 11
 #define UUID "0db6a55e-b32a-4b03-b037-95637bf306ff"
