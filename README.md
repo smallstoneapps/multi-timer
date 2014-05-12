@@ -6,7 +6,7 @@ An incredible Pebble app that allows you to create multiple, independent countdo
 
 --
 
-#### Screenshots
+## Screenshots
 
 ![Pebble Screenshot #1](http://pblweb.com/screenshots/wrap/?colour=steel_stainless&url=https://raw.githubusercontent.com/smallstoneapps/multi-timer/master/store/screenshots/multi-timer_2-2_01.png)
 ![Pebble Screenshot #2](http://pblweb.com/screenshots/wrap/?colour=steel_stainless&url=https://raw.githubusercontent.com/smallstoneapps/multi-timer/master/store/screenshots/multi-timer_2-2_02.png)
