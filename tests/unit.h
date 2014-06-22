@@ -1,8 +1,8 @@
 /*
 
-Data Processor v1.0
-A Pebble library for extracting elements from a delimited string.
-http://smallstoneapps.github.io/data-processor/
+Pebble Tests
+A Pebble library for doing unit tests.
+http://smallstoneapps.github.io/pebble-tests/
 
 ----------------------
 

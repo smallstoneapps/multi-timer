@@ -1,9 +1,37 @@
-/***
- * Multi Timer
- * Copyright © 2013 - 2014 Matthew Tole
- *
- * timer.c
- ***/
+/*
+
+Multi Timer v2.7.0
+http://matthewtole.com/pebble/multi-timer/
+
+----------------------
+
+The MIT License (MIT)
+
+Copyright © 2013 - 2014 Matthew Tole
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+
+--------------------
+
+src/timer.c
+
+*/
 
 #include <pebble.h>
 #include "timer.h"
@@ -19,6 +47,19 @@ static void timer_callback(void* data);
 static void timer_set_app_timer(Timer* timer);
 static void timer_cancel_app_timer(Timer* timer);
 static void timer_finished(Timer* timer);
+
+void timer_init(Timer* timer) {
+  if (! timer) { return; }
+  timer->status = TIMER_STATUS_STOPPED;
+  timer->app_timer = NULL;
+  if (TIMER_DIRECTION_UP == timer->direction) {
+    timer->length = 0;
+    timer->time_left = 0;
+  }
+  else {
+    timer->time_left = timer->length;
+  }
+}
 
 void timer_start(Timer* timer) {
   if (! timer) { return; }
@@ -66,6 +107,20 @@ void timer_destroy(Timer* timer) {
   free(timer);
 }
 
+Timer* timer_clone(Timer* timer) {
+  Timer* clone = malloc(sizeof(Timer));
+  clone->direction = timer->direction;
+  memcpy(clone->label, timer->label, 24);
+  clone->time_left = timer->time_left;
+  clone->app_timer = timer->app_timer;
+  clone->id = timer->id;
+  clone->length = timer->length;
+  clone->repeat = timer->repeat;
+  clone->vibrate = timer->vibrate;
+  clone->status = timer->status;
+  return clone;
+}
+
 char* timer_vibe_str(TimerVibration vibe, bool shortStr) {
   switch (vibe) {
     case TIMER_VIBRATION_OFF:
@@ -84,7 +139,20 @@ char* timer_vibe_str(TimerVibration vibe, bool shortStr) {
   return "";
 }
 
-/*char* timer_describe(Timer* timer) {
+// X|XXXXXX|X|X|
+char* timer_serialize(Timer* timer, char delim) {
+  char* str = malloc(TIMER_STR_LENGTH);
+  if (timer->direction == TIMER_DIRECTION_UP) {
+    snprintf(str, TIMER_STR_LENGTH, "%X%c%d%c%s", timer->id, delim, timer->direction, delim, timer->label);
+  }
+  else {
+    snprintf(str, TIMER_STR_LENGTH, "%X%c%d%c%d%c%d%c%d%c%s", timer->id, delim, timer->direction, delim, (int)timer->length, delim, timer->repeat,
+      delim, timer->vibrate, delim, timer->label);
+  }
+  return str;
+}
+
+char* timer_describe(Timer* timer) {
   static char description[512];
   char type[16];
   char status[16];
@@ -119,10 +187,10 @@ char* timer_vibe_str(TimerVibration vibe, bool shortStr) {
 
   strcpy(vibrate, timer_vibe_str(timer->vibrate, true));
 
-  snprintf(description, 512, "I am a %s that is %s, length %d, %d left, %s, %s", type, status, timer->length, timer->time_left, repeat, vibrate);
+  snprintf(description, 512, "%d: I am a %s that is %s, length %d, %d left, %s, %s", timer->id, type, status, (int)timer->length, (int)timer->time_left, repeat, vibrate);
 
   return description;
-}*/
+}
 
 void timer_draw(Timer* timer, GContext* ctx) {
   char* time_left = malloc(32);
@@ -170,6 +238,18 @@ void timer_draw(Timer* timer, GContext* ctx) {
   free(time_left);
 }
 
+void timer_duration_str(int duration, bool showHours, char* str, int str_len) {
+  int hours = duration / 3600;
+  int minutes = (showHours ? (duration % 3600) : duration) / 60;
+  int seconds = (showHours ? (duration % 3600) : duration) % 60;
+  if (showHours) {
+    snprintf(str, str_len, "%02d:%02d:%02d", hours, minutes, seconds);
+  }
+  else {
+    snprintf(str, str_len, "%02d:%02d", minutes, seconds);
+  }
+}
+
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - //
 
 static void timer_callback(void* data) {
@@ -202,10 +282,7 @@ static void timer_set_app_timer(Timer* timer) {
 }
 
 static void timer_cancel_app_timer(Timer* timer) {
-  if (timer->app_timer != NULL) {
-    app_timer_cancel(timer->app_timer);
-    timer->app_timer = NULL;
-  }
+  app_timer_cancel_safe(timer->app_timer);
 }
 
 static void timer_finished(Timer* timer) {
@@ -248,3 +325,5 @@ static void timer_finished(Timer* timer) {
     timer_start(timer);
   }
 }
+
+

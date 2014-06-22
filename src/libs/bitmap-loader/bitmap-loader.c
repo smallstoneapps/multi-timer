@@ -30,6 +30,10 @@ GBitmap* bitmaps_get_bitmap(uint32_t res_id) {
   AppBitmap* app_bmp = get_app_bitmap_by_res_id(res_id);
   if (app_bmp == NULL) {
     app_bmp = malloc(sizeof(AppBitmap));
+    if (! app_bmp) {
+      APP_LOG(APP_LOG_LEVEL_ERROR, "Could not allocate space for a bitmap!");
+      return NULL;
+    }
     app_bmp->res_id = res_id;
     app_bmp->bitmap = gbitmap_create_with_resource(app_bmp->res_id);
     app_bmp->next = NULL;

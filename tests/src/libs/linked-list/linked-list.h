@@ -1,13 +1,14 @@
 /*
 
-Multi Timer v2.7.0
-http://matthewtole.com/pebble/multi-timer/
+Linked List v0.2.3
+A Pebble library for working with linked lists.
+http://smallstoneapps.github.io/linked-list/
 
 ----------------------
 
 The MIT License (MIT)
 
-Copyright © 2013 - 2014 Matthew Tole
+Copyright © 2014 Matthew Tole
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -29,13 +30,27 @@ THE SOFTWARE.
 
 --------------------
 
-src/windows/win-vibrate.h
+src/linked-list.h
 
 */
 
 #pragma once
 
-void win_vibrate_init(void);
-void win_vibrate_show(void);
-void win_vibrate_destroy(void);
-bool win_vibrate_is_visible(void);
+#include <pebble.h>
+
+typedef struct LinkedList LinkedList;
+typedef struct LinkedRoot LinkedRoot;
+typedef bool (*ObjectCompare)(void* object1, void* object2);
+
+LinkedRoot* linked_list_create_root(void);
+uint16_t linked_list_count(LinkedRoot* root);
+void linked_list_append(LinkedRoot* root, void* object);
+void linked_list_prepend(LinkedRoot* root, void* object);
+void linked_list_insert(LinkedRoot* root, void* object, uint16_t after);
+void* linked_list_get(LinkedRoot* root, uint16_t index);
+void linked_list_remove(LinkedRoot* root, uint16_t index);
+void linked_list_clear(LinkedRoot* root);
+bool linked_list_contains(LinkedRoot* root, void* object);
+bool linked_list_contains_compare(LinkedRoot* root, void* object, ObjectCompare compare);
+int16_t linked_list_find(LinkedRoot* root, void* object);
+int16_t linked_list_find_compare(LinkedRoot* root, void* object, ObjectCompare compare);

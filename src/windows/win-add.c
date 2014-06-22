@@ -1,9 +1,37 @@
-/***
- * Multi Timer
- * Copyright © 2013 - 2014 Matthew Tole
- *
- * win-add.c
- ***/
+/*
+
+Multi Timer v2.7.0
+http://matthewtole.com/pebble/multi-timer/
+
+----------------------
+
+The MIT License (MIT)
+
+Copyright © 2013 - 2014 Matthew Tole
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+
+--------------------
+
+src/windows/win-add.c
+
+*/
 
 #include <pebble.h>
 
@@ -63,6 +91,7 @@ void win_add_show(void) {
   timer->vibrate = settings()->timers_vibration;
   timer->length = 10 * 60;
   timer->repeat = false;
+  timer->label[0] = 0;
 
   window_stack_push(window, true);
   menu_layer_reload_data(layer_menu);
@@ -212,6 +241,7 @@ static void menu_select_click_callback(MenuLayer *menu_layer, MenuIndex *cell_in
         menu_layer_set_selected_index(layer_menu, (MenuIndex) { MENU_SECTION_MAIN, MENU_ROW_DURATION }, MenuRowAlignCenter, true);
         return;
       }
+      timer_init(timer);
       timers_add(timer);
       if (settings()->timers_start_auto) {
         timer_start(timer);

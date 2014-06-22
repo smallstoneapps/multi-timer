@@ -66,8 +66,6 @@ bool mqueue_add(char* group, char* operation, char* data) {
   mq->message->data = malloc(strlen(data));
   strcpy(mq->message->data, data);
 
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "%s, %s, %s", mq->message->group, mq->message->operation, mq->message->data);
-
   if (msg_queue == NULL) {
     msg_queue = mq;
   }
@@ -119,6 +117,7 @@ static void outbox_sent_callback(DictionaryIterator *iterator, void *context) {
 
 static void outbox_failed_callback(DictionaryIterator *iterator, AppMessageResult reason, void *context) {
   sending = false;
+  APP_LOG(APP_LOG_LEVEL_ERROR, "AppMessage Failed: %d", reason);
   send_next_message();
 }
 
@@ -165,8 +164,8 @@ static void send_next_message() {
   DictionaryIterator* dict;
   app_message_outbox_begin(&dict);
   dict_write_cstring(dict, KEY_GROUP, mq->message->group);
-  dict_write_cstring(dict, KEY_DATA, mq->message->data);
   dict_write_cstring(dict, KEY_OPERATION, mq->message->operation);
+  dict_write_cstring(dict, KEY_DATA, mq->message->data);
   app_message_outbox_send();
   mq->attempts_left -= 1;
 }

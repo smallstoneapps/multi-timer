@@ -1,130 +1,113 @@
-/***
- * Multi Timer
- * Copyright © 2013 - 2014 Matthew Tole
- *
- * timers.c
- ***/
+/*
+
+Multi Timer v2.7.0
+http://matthewtole.com/pebble/multi-timer/
+
+----------------------
+
+The MIT License (MIT)
+
+Copyright © 2013 - 2014 Matthew Tole
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+
+--------------------
+
+src/timers.c
+
+*/
 
 #include <pebble.h>
 #include "globals.h"
 #include "timers.h"
 #include "settings.h"
 #include "libs/pebble-assist/pebble-assist.h"
+#include "libs/linked-list/linked-list.h"
 
-typedef struct TimerList TimerList;
+#define TIMER_BLOCK_SIZE 5
 
-struct TimerList {
-  Timer* timer;
-  TimerList* next;
-};
+typedef struct TimerBlock {
+  Timer timers[TIMER_BLOCK_SIZE];
+  uint8_t count;
+  int time;
+} TimerBlock;
 
-static TimerList* timers = NULL;
-static int num_timers = 0;
+static LinkedRoot* timers = NULL;
+
+void timers_init(void) {
+  timers = linked_list_create_root();
+}
 
 Timer* timers_get(int pos) {
-  TimerList* tmp = timers;
-  for (uint8_t t = 0; t < pos; t += 1) {
-    if (NULL == tmp) {
-      return NULL;
-    }
-    tmp = tmp->next;
-  }
-  return (NULL == tmp) ? NULL : tmp->timer;
+  return (Timer*) linked_list_get(timers, pos);
 }
 
 int timers_get_count() {
-  return num_timers;
+  return linked_list_count(timers);
 }
 
 void timers_add(Timer* timer) {
-  timer->status = TIMER_STATUS_STOPPED;
-  timer->app_timer = NULL;
-  if (TIMER_DIRECTION_UP == timer->direction) {
-    timer->length = 0;
-    timer->time_left = 0;
-  }
-  else {
-    timer->time_left = timer->length;
-  }
-
-  TimerList* tl = malloc(sizeof(TimerList));
-  tl->timer = timer;
-  tl->next = NULL;
-
-  if (NULL == timers) {
-    timers = tl;
-  }
-  else {
-    TimerList* tail = timers;
-    while (NULL != tail->next) {
-      tail = tail->next;
-    }
-    tail->next = tl;
-  }
-  num_timers += 1;
+  linked_list_append(timers, timer);
 }
 
 void timers_clear() {
-  while (timers != NULL) {
-    free(timers->timer);
-    TimerList* tmp = timers;
-    timers = timers->next;
-    free(tmp);
+  while (timers_get_count() > 0) {
+    timers_remove(0);
   }
-  num_timers = 0;
 }
 
 void timers_remove(int pos) {
-
-  TimerList* current = timers;
-  TimerList* previous = NULL;
-
-  for (uint8_t t = 0; t < pos; t += 1) {
-    previous = current;
-    current = current->next;
-    if (NULL == current) {
-      return;
-    }
-  }
-
-  if (NULL == current) {
-    return;
-  }
-
-  timer_destroy(current->timer);
-
-  if (previous == NULL) {
-    if (current->next == NULL) {
-      timers = NULL;
-    }
-    else {
-      timers = current->next;
-    }
-  }
-  else {
-    previous->next = current->next;
-  }
-
-  free(current);
-  num_timers -= 1;
-
+  Timer* tmr = timers_get(pos);
+  free_safe(tmr);
+  linked_list_remove(timers, pos);
 }
 
 status_t timers_restore(void) {
   timers_clear();
-  if (! persist_exists(STORAGE_TIMER_COUNT)) {
+
+  if (! persist_exists(STORAGE_TIMER_START)) {
     return 0;
   }
-  uint8_t timer_count = persist_read_int(STORAGE_TIMER_COUNT);
+
+  int block = 0;
+  TimerBlock* timerBlock = malloc(sizeof(TimerBlock));
+  persist_read_data(STORAGE_TIMER_START, timerBlock, sizeof(TimerBlock));
+
+  uint8_t timer_count = timerBlock->count;
   int seconds_elapsed = 0;
   if (settings()->resume_timers) {
-    int save_time = persist_read_int(STORAGE_SAVE_TIME);
+    int save_time = timerBlock->time;
     seconds_elapsed = time(NULL) - save_time;
   }
+
   for (int t = 0; t < timer_count; t += 1) {
-    Timer* timer = malloc(sizeof(Timer));
+
+    if (t > 0 && t % TIMER_BLOCK_SIZE == 0) {
+      block += 1;
+      free_safe(timerBlock);
+      timerBlock = malloc(sizeof(TimerBlock));
+      persist_read_data(STORAGE_TIMER_START + block, timerBlock, sizeof(TimerBlock));
+    }
+
+    Timer* timer = timer_clone(&timerBlock->timers[t % TIMER_BLOCK_SIZE]);
     timers_add(timer);
-    persist_read_data(STORAGE_TIMER_START + t, timer, sizeof(Timer));
+
     timer->app_timer = NULL;
     if (! settings()->resume_timers) {
       timer_reset(timer);
@@ -154,18 +137,31 @@ status_t timers_restore(void) {
     }
     timer_resume(timer);
   }
+  free_safe(timerBlock);
   return 0;
 }
 
 status_t timers_save(void) {
-  status_t status = persist_write_int(STORAGE_TIMER_COUNT, num_timers);
-  if (0 > status) {
-    return status;
+  int block = 0;
+  uint8_t num_timers = timers_get_count();
+  if (num_timers == 0) {
+    persist_delete(STORAGE_TIMER_START);
+    return 0;
   }
-  for (int t = 0; t < num_timers; t += 1) {
-    persist_write_data(STORAGE_TIMER_START + t, timers_get(t), sizeof(Timer));
+  for (int t = 0; t < num_timers; t += TIMER_BLOCK_SIZE) {
+    TimerBlock* timerBlock = malloc(sizeof(TimerBlock));
+    timerBlock->count = num_timers;
+    timerBlock->time = time(NULL);
+    for (int u = 0; u < TIMER_BLOCK_SIZE; u += 1) {
+      if (t + u >= num_timers) {
+        break;
+      }
+      timerBlock->timers[u] = *timers_get(t + u);
+    }
+    persist_write_data(STORAGE_TIMER_START + block, timerBlock, sizeof(TimerBlock));
+    free(timerBlock);
+    block += 1;
   }
-  status = persist_write_int(STORAGE_SAVE_TIME, time(NULL));
-  return status;
+  return 0;
 }
 
