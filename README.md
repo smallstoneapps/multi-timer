@@ -6,11 +6,11 @@ An incredible Pebble app that allows you to create multiple, independent countdo
 
 ## Screenshots
 
-![Pebble Screenshot #1](http://pblweb.com/screenshots/wrap/?colour=steel_stainless&url=https://raw.githubusercontent.com/smallstoneapps/multi-timer/master/marketing/screenshots/2.7/multi-timer_2-7_01.png)
-![Pebble Screenshot #2](http://pblweb.com/screenshots/wrap/?colour=steel_stainless&url=https://raw.githubusercontent.com/smallstoneapps/multi-timer/master/marketing/screenshots/2.7/multi-timer_2-7_02.png)
-![Pebble Screenshot #3](http://pblweb.com/screenshots/wrap/?colour=steel_stainless&url=https://raw.githubusercontent.com/smallstoneapps/multi-timer/master/marketing/screenshots/2.7/multi-timer_2-7_03.png)
-![Pebble Screenshot #4](http://pblweb.com/screenshots/wrap/?colour=steel_stainless&url=https://raw.githubusercontent.com/smallstoneapps/multi-timer/master/marketing/screenshots/2.7/multi-timer_2-7_04.png)
-![Pebble Screenshot #5](http://pblweb.com/screenshots/wrap/?colour=steel_stainless&url=https://raw.githubusercontent.com/smallstoneapps/multi-timer/master/marketing/screenshots/2.7/multi-timer_2-7_05.png)
+<img src="http://pblweb.com/screenshots/wrap/?colour=steel_stainless&url=https://raw.githubusercontent.com/smallstoneapps/multi-timer/master/marketing/screenshots/2.7/multi-timer_2-7_01.png" width="20%" alt="Pebble Screenshot #1" />
+<img src="http://pblweb.com/screenshots/wrap/?colour=steel_stainless&url=https://raw.githubusercontent.com/smallstoneapps/multi-timer/master/marketing/screenshots/2.7/multi-timer_2-7_02.png" width="20%" alt="Pebble Screenshot #2" />
+<img src="http://pblweb.com/screenshots/wrap/?colour=steel_stainless&url=https://raw.githubusercontent.com/smallstoneapps/multi-timer/master/marketing/screenshots/2.7/multi-timer_2-7_03.png" width="20%" alt="Pebble Screenshot #3" />
+<img src="http://pblweb.com/screenshots/wrap/?colour=steel_stainless&url=https://raw.githubusercontent.com/smallstoneapps/multi-timer/master/marketing/screenshots/2.7/multi-timer_2-7_04.png" width="20%" alt="Pebble Screenshot #4" />
+<img src="http://pblweb.com/screenshots/wrap/?colour=steel_stainless&url=https://raw.githubusercontent.com/smallstoneapps/multi-timer/master/marketing/screenshots/2.7/multi-timer_2-7_05.png" width="20%" alt="Pebble Screenshot #5" />
 
 ## Tests
 
