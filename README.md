@@ -6,10 +6,18 @@ An incredible Pebble app that allows you to create multiple, independent countdo
 
 ## Screenshots
 
-![Pebble Screenshot #1](http://pblweb.com/screenshots/wrap/?colour=steel_stainless&url=https://raw.githubusercontent.com/smallstoneapps/multi-timer/master/store/screenshots/multi-timer_2-2_01.png)
-![Pebble Screenshot #2](http://pblweb.com/screenshots/wrap/?colour=steel_stainless&url=https://raw.githubusercontent.com/smallstoneapps/multi-timer/master/store/screenshots/multi-timer_2-2_02.png)
-![Pebble Screenshot #3](http://pblweb.com/screenshots/wrap/?colour=steel_stainless&url=https://raw.githubusercontent.com/smallstoneapps/multi-timer/master/store/screenshots/multi-timer_2-6_01.png)
-![Pebble Screenshot #4](http://pblweb.com/screenshots/wrap/?colour=steel_stainless&url=https://raw.githubusercontent.com/smallstoneapps/multi-timer/master/store/screenshots/multi-timer_2-2_03.png)
-![Pebble Screenshot #5](http://pblweb.com/screenshots/wrap/?colour=steel_stainless&url=https://raw.githubusercontent.com/smallstoneapps/multi-timer/master/store/screenshots/multi-timer_2-2_04.png)
+![Pebble Screenshot #1](http://pblweb.com/screenshots/wrap/?colour=steel_stainless&url=https://raw.githubusercontent.com/smallstoneapps/multi-timer/master/marketing/screenshots/2.7/multi-timer_2-7_01.png)
+![Pebble Screenshot #2](http://pblweb.com/screenshots/wrap/?colour=steel_stainless&url=https://raw.githubusercontent.com/smallstoneapps/multi-timer/master/marketing/screenshots/2.7/multi-timer_2-7_02.png)
+![Pebble Screenshot #3](http://pblweb.com/screenshots/wrap/?colour=steel_stainless&url=https://raw.githubusercontent.com/smallstoneapps/multi-timer/master/marketing/screenshots/2.7/multi-timer_2-7_03.png)
+![Pebble Screenshot #4](http://pblweb.com/screenshots/wrap/?colour=steel_stainless&url=https://raw.githubusercontent.com/smallstoneapps/multi-timer/master/marketing/screenshots/2.7/multi-timer_2-7_04.png)
+![Pebble Screenshot #5](http://pblweb.com/screenshots/wrap/?colour=steel_stainless&url=https://raw.githubusercontent.com/smallstoneapps/multi-timer/master/marketing/screenshots/2.7/multi-timer_2-7_05.png)
+
+## Tests
+
+Tests are automatically run using [Travis CI][2].
+
+[![Build Status](https://travis-ci.org/smallstoneapps/multi-timer.png?branch=master)][3]
 
 [1]: http://pblweb.com/appstore/52d30a1d19412b4d84000025
+[2]: https://travis-ci.org/
+[3]: https://travis-ci.org/smallstoneapps/multi-timer/
