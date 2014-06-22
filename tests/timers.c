@@ -135,12 +135,11 @@ static char* test_add_remove_one(void) {
 // The timer count should be 0.
 static char* test_fill_empty(void) {
   const int num_timers = 100;
-  int t;
-  for (t = 0; t < num_timers; t += 1) {
+  for (int t = 0; t < num_timers; t += 1) {
     Timer* t = malloc(sizeof(Timer));
     timers_add(t);
   }
-  for (t = (num_timers - 1); t >= 0; t -= 1) {
+  for (int t = (num_timers - 1); t >= 0; t -= 1) {
     timers_remove(t);
   }
   mu_assert(0 == timers_get_count(), "Timers not reporting size of 0");
