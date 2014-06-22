@@ -12,6 +12,12 @@ An incredible Pebble app that allows you to create multiple, independent countdo
 <img src="http://pblweb.com/screenshots/wrap/?colour=steel_stainless&url=https://raw.githubusercontent.com/smallstoneapps/multi-timer/master/marketing/screenshots/2.7/multi-timer_2-7_04.png" width="20%" alt="Pebble Screenshot #4" />
 <img src="http://pblweb.com/screenshots/wrap/?colour=steel_stainless&url=https://raw.githubusercontent.com/smallstoneapps/multi-timer/master/marketing/screenshots/2.7/multi-timer_2-7_05.png" width="20%" alt="Pebble Screenshot #5" />
 
+## Download
+
+The recommended method for downloading Multi Timer is to use the Pebble appstore on your Android or iOS device.
+
+If you want to download the PBW for Multi Timer directly, you can do so from here: http://smallstoneapps.s3.amazonaws.com/multi-timer/builds/multi-timer_2-7-0.pbw
+
 ## Tests
 
 Tests are automatically run using [Travis CI][2].
