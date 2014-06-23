@@ -315,6 +315,16 @@ static char* test_dont_resume_running_timer(void) {
   return 0;
 }
 
+// When a timer is added
+// And we search for it by id
+// The timer should be returned
+static char* test_find_valid(void) {
+  Timer* tmr = create_timer_down(50);
+  timers_add(tmr);
+  mu_assert(timers_find(tmr->id)->id == tmr->id, "Could not find timer by id");
+  return 0;
+}
+
 // Run all the tests!
 static char* all_tests() {
   mu_run_test(test_empty);
@@ -330,6 +340,7 @@ static char* all_tests() {
   mu_run_test(test_resume_running_timer);
   mu_run_test(test_resume_stopped_timer);
   mu_run_test(test_dont_resume_running_timer);
+  mu_run_test(test_find_valid);
   return 0;
 }
 

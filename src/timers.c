@@ -1,6 +1,7 @@
 /*
 
-Multi Timer v2.7.1
+Multi Timer v2.8.0
+
 http://matthewtole.com/pebble/multi-timer/
 
 ----------------------
@@ -54,7 +55,7 @@ void timers_init(void) {
   timers = linked_list_create_root();
 }
 
-Timer* timers_get(int pos) {
+Timer* timers_get(uint8_t pos) {
   return (Timer*) linked_list_get(timers, pos);
 }
 
@@ -72,10 +73,20 @@ void timers_clear() {
   }
 }
 
-void timers_remove(int pos) {
+void timers_remove(uint8_t pos) {
   Timer* tmr = timers_get(pos);
   free_safe(tmr);
   linked_list_remove(timers, pos);
+}
+
+Timer* timers_find(const uint16_t id) {
+  uint8_t count = timers_get_count();
+  for (uint8_t t = 0; t < count; t += 1) {
+    if (id == timers_get(t)->id) {
+      return timers_get(t);
+    }
+  }
+  return NULL;
 }
 
 status_t timers_restore(void) {

@@ -1,6 +1,7 @@
 /*
 
-Multi Timer v2.7.1
+Multi Timer v2.8.0
+
 http://matthewtole.com/pebble/multi-timer/
 
 ----------------------
@@ -37,8 +38,8 @@ src/windows/win-add.c
 
 #include "../libs/pebble-assist/pebble-assist.h"
 #include "win-timers.h"
-#include "win-add-vibration.h"
 #include "win-add-duration.h"
+#include "win-vibration.h"
 #include "../timer.h"
 #include "../timers.h"
 #include "../settings.h"
@@ -59,6 +60,7 @@ static int16_t menu_get_cell_height_callback(MenuLayer* me, MenuIndex* cell_inde
 static void menu_draw_header_callback(GContext* ctx, const Layer *cell_layer, uint16_t section_index, void *data);
 static void menu_draw_row_callback(GContext* ctx, const Layer *cell_layer, MenuIndex *cell_index, void *data);
 static void menu_select_click_callback(MenuLayer *menu_layer, MenuIndex *cell_index, void *callback_context);
+static void vibration_callback(TimerVibration vibration);
 
 static Window* window;
 static MenuLayer* layer_menu;
@@ -80,7 +82,6 @@ void win_add_init(void) {
   menu_layer_set_click_config_onto_window(layer_menu, window);
   menu_layer_add_to_window(layer_menu, window);
 
-  win_add_vibration_init();
   win_add_duration_init();
 }
 
@@ -99,7 +100,6 @@ void win_add_show(void) {
 }
 
 void win_add_destroy(void) {
-  win_add_vibration_destroy();
   win_add_duration_destroy();
   menu_layer_destroy(layer_menu);
   window_destroy(window);
@@ -227,7 +227,7 @@ static void menu_select_click_callback(MenuLayer *menu_layer, MenuIndex *cell_in
           win_add_duration_show(timer);
         break;
         case MENU_ROW_VIBRATION:
-          win_add_vibration_show(timer);
+          win_vibration_show(vibration_callback, timer->vibrate);
         break;
         case MENU_ROW_REPEAT:
           timer->repeat = ! timer->repeat;
@@ -250,4 +250,8 @@ static void menu_select_click_callback(MenuLayer *menu_layer, MenuIndex *cell_in
       window_stack_pop(true);
     break;
   }
+}
+
+static void vibration_callback(TimerVibration vibration) {
+  timer->vibrate = vibration;
 }

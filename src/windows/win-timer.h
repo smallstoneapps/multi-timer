@@ -1,6 +1,7 @@
 /*
 
-Multi Timer v2.7.1
+Multi Timer v2.8.0
+
 http://matthewtole.com/pebble/multi-timer/
 
 ----------------------
@@ -39,6 +40,5 @@ src/windows/win-timer.h
 #include "../timer.h"
 
 void win_timer_init(void);
-void win_timer_set_timer(Timer* tmr, uint8_t pos);
-void win_timer_show(void);
+void win_timer_show(Timer* tmr, uint8_t pos);
 void win_timer_destroy(void);

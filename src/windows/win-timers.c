@@ -1,6 +1,7 @@
 /*
 
-Multi Timer v2.7.1
+Multi Timer v2.8.0
+
 http://matthewtole.com/pebble/multi-timer/
 
 ----------------------
@@ -60,10 +61,12 @@ src/windows/win-timers.c
 #define MENU_ITEM_FOOTER_ABOUT 3
 
 #define ROW_HEIGHT 36
+#define ROW_HEIGHT_LABEL 50
 
 static void window_load(Window* window);
 static void window_unload(Window* window);
 static void window_appear(Window* window);
+static void window_disappear(Window* window);
 
 static uint16_t menu_get_num_sections_callback(MenuLayer *me, void *data);
 static uint16_t menu_get_num_rows_callback(MenuLayer *me, uint16_t section_index, void *data);
@@ -86,7 +89,8 @@ void win_timers_init(void) {
   window_set_window_handlers(window, (WindowHandlers) {
     .load = window_load,
     .unload = window_unload,
-    .appear = window_appear
+    .appear = window_appear,
+    .disappear = window_disappear
   });
   // Initialise all of the windows that can be spawned from this one.
   win_add_init();
@@ -146,6 +150,12 @@ static void window_appear(Window* window) {
   menu_layer_reload_data(layer_menu);
 }
 
+// This function exists because it actually reduces the code size to have all
+// four window handlers implemented instead of just three.
+static void window_disappear(Window* window) {
+
+}
+
 static uint16_t menu_get_num_sections_callback(MenuLayer *me, void *data) {
   return MENU_SECTIONS;
 }
@@ -179,8 +189,10 @@ static int16_t menu_get_header_height_callback(MenuLayer *me, uint16_t section_i
 
 static int16_t menu_get_cell_height_callback(MenuLayer* me, MenuIndex* cell_index, void* data) {
   switch (cell_index->section) {
-    case MENU_SECTION_TIMERS:
-      return ROW_HEIGHT + 4;
+    case MENU_SECTION_TIMERS: {
+      Timer* timer = timers_get(cell_index->row);
+      return strlen(timer->label) > 0 ? (ROW_HEIGHT_LABEL + 4) : (ROW_HEIGHT + 4);
+    }
     break;
     case MENU_SECTION_FOOTER:
       return ROW_HEIGHT;
@@ -300,9 +312,7 @@ static void menu_select_long_click_callback(MenuLayer *menu_layer, MenuIndex *ce
   if (cell_index->section != MENU_SECTION_TIMERS) {
     return;
   }
-  Timer* timer = timers_get(cell_index->row);
-  win_timer_set_timer(timer, cell_index->row);
-  win_timer_show();
+  win_timer_show(timers_get(cell_index->row), cell_index->row);
 }
 
 static void jump_to_timer(int t, bool animate) {

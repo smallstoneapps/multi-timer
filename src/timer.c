@@ -1,6 +1,6 @@
 /*
 
-Multi Timer v2.7.1
+Multi Timer v2.8.0
 http://matthewtole.com/pebble/multi-timer/
 
 ----------------------
@@ -233,6 +233,10 @@ void timer_draw(Timer* timer, GContext* ctx) {
   graphics_draw_text(ctx, time_left, fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD), GRect(36, 1, 110, 32), 0, GTextAlignmentLeft, NULL);
   if (dir_bmp != NULL) {
     graphics_draw_bitmap_in_rect(ctx, dir_bmp, GRect(132, 16, 8, 8));
+  }
+
+  if (strlen(timer->label) > 0) {
+    graphics_draw_text(ctx, timer->label, fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD), GRect(8, 30, 120, 13), GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, NULL);
   }
 
   free(time_left);

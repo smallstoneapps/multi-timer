@@ -122,9 +122,9 @@ static void outbox_failed_callback(DictionaryIterator *iterator, AppMessageResul
 }
 
 static void inbox_received_callback(DictionaryIterator *iterator, void *context) {
-  char* group = dict_find(iterator, KEY_GROUP)->value->cstring;
-  char* operation = dict_find(iterator, KEY_OPERATION)->value->cstring;
-  char* data = dict_find(iterator, KEY_DATA)->value->cstring;
+  char* group = dict_find(iterator, KEY_GROUP) != NULL ? dict_find(iterator, KEY_GROUP)->value->cstring : "";
+  char* operation = dict_find(iterator, KEY_OPERATION) != NULL ? dict_find(iterator, KEY_OPERATION)->value->cstring : "";
+  char* data = dict_find(iterator, KEY_DATA) != NULL ? dict_find(iterator, KEY_DATA)->value->cstring : "";
 
   HandlerQueue* hq = handler_queue;
   while (hq != NULL) {

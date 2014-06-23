@@ -1,6 +1,7 @@
 /*
 
-Multi Timer v2.7.1
+Multi Timer v2.8.0
+
 http://matthewtole.com/pebble/multi-timer/
 
 ----------------------
@@ -71,7 +72,7 @@ typedef struct Timer {
   TimerVibration vibrate;
   bool repeat;
   AppTimer* app_timer;
-  char label[24];
+  char label[25];
 } __attribute__((__packed__)) Timer;
 
 void timer_init(Timer* timer);

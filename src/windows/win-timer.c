@@ -1,6 +1,7 @@
 /*
 
-Multi Timer v2.7.1
+Multi Timer v2.8.0
+
 http://matthewtole.com/pebble/multi-timer/
 
 ----------------------
@@ -40,7 +41,9 @@ src/windows/win-timer.c
 #include "../libs/bitmap-loader/bitmap-loader.h"
 
 #define FRAME_TOP GRect(0, 0, 144, 40)
+#define FRAME_TOP_LABEL GRect(0, 0, 144, 54)
 #define FRAME_MENU GRect(0, 40, 144, 112)
+#define FRAME_MENU_LABEL GRect(0, 54, 144, 98)
 
 #define MENU_ROW_STARTPAUSE 0
 #define MENU_ROW_RESET 1
@@ -80,13 +83,23 @@ void win_timer_init(void) {
   });
 }
 
-void win_timer_set_timer(Timer* tmr, uint8_t pos) {
+void win_timer_show(Timer* tmr, uint8_t pos) {
   timer = tmr;
   timer_pos = pos;
-}
-
-void win_timer_show(void) {
   window_stack_push(window, true);
+  if (NULL == layer_timer) {
+    return;
+  }
+  if (strlen(timer->label) > 0) {
+    layer_set_frame(layer_timer, FRAME_TOP_LABEL);
+    layer_set_frame(inverter_layer_get_layer(layer_invert), FRAME_TOP_LABEL);
+    layer_set_frame(menu_layer_get_layer(menu_layer), FRAME_MENU_LABEL);
+  }
+  else {
+    layer_set_frame(layer_timer, FRAME_TOP);
+    layer_set_frame(inverter_layer_get_layer(layer_invert), FRAME_TOP);
+    layer_set_frame(menu_layer_get_layer(menu_layer), FRAME_MENU);
+  }
 }
 
 void win_timer_destroy(void) {
@@ -96,7 +109,13 @@ void win_timer_destroy(void) {
 //----------------------------------------------------------------------------//
 
 static void window_load(Window* window) {
-  menu_layer = menu_layer_create(FRAME_MENU);
+
+  bool label = false;
+  if (timer && strlen(timer->label) > 0) {
+    label = true;
+  }
+
+  menu_layer = menu_layer_create(label ? FRAME_MENU_LABEL : FRAME_MENU);
   menu_layer_set_callbacks(menu_layer, NULL, (MenuLayerCallbacks) {
     .get_num_sections = menu_get_num_sections_callback,
     .get_num_rows = menu_get_num_rows_callback,
@@ -107,18 +126,18 @@ static void window_load(Window* window) {
   });
   menu_layer_add_to_window(menu_layer, window);
 
-  layer_timer = layer_create(FRAME_TOP);
+  layer_timer = layer_create(label ? FRAME_TOP_LABEL : FRAME_TOP);
   layer_set_update_proc(layer_timer, layer_timer_update);
   layer_add_to_window(layer_timer, window);
 
-  layer_invert = inverter_layer_create(FRAME_TOP);
+  layer_invert = inverter_layer_create(label ? FRAME_TOP_LABEL : FRAME_TOP);
   inverter_layer_add_to_window(layer_invert, window);
 }
 
 static void window_unload(Window* window) {
-  inverter_layer_destroy(layer_invert);
-  layer_destroy(layer_timer);
-  menu_layer_destroy(menu_layer);
+  inverter_layer_destroy_safe(layer_invert);
+  layer_destroy_safe(layer_timer);
+  menu_layer_destroy_safe(menu_layer);
 }
 
 static void window_appear(Window* window) {
@@ -175,6 +194,7 @@ static void menu_select_click_callback(MenuLayer *menu_layer, MenuIndex *cell_in
       timer_reset(timer);
     break;
     case MENU_ROW_CLEAR:
+      // TODO: Remove the timer!
       timers_remove(timer_pos);
       window_stack_pop(true);
       return;

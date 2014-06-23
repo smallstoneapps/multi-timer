@@ -1,6 +1,6 @@
 /*
 
-Multi Timer v2.7.1
+Multi Timer v2.8.0
 http://matthewtole.com/pebble/multi-timer/
 
 ----------------------
@@ -29,12 +29,16 @@ THE SOFTWARE.
 
 --------------------
 
-src/windows/win-settings-vibration.h
+src/windows/win-vibration.h
 
 */
 
 #pragma once
 
-void win_settings_vibration_init(void);
-void win_settings_vibration_show(void);
-void win_settings_vibration_destroy(void);
+#include "../timer.h"
+
+typedef void (*VibrationCallback)(TimerVibration vibration);
+
+void win_vibration_init(void);
+void win_vibration_show(VibrationCallback callback, TimerVibration vibration);
+void win_vibration_destroy(void);

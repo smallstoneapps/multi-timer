@@ -1,6 +1,6 @@
 /*
 
-Multi Timer v2.7.1
+Multi Timer v2.8.0
 http://matthewtole.com/pebble/multi-timer/
 
 ----------------------
@@ -29,14 +29,24 @@ THE SOFTWARE.
 
 --------------------
 
-src/windows/win-add-vibration.h
+src/js/src/config.js
 
 */
 
-#pragma once
+/* exported Config */
 
-#include "../timer.h"
+var Config = {
 
-void win_add_vibration_init(void);
-void win_add_vibration_show(Timer* timer);
-void win_add_vibration_destroy(void);
+  settingsUrl: 'http://smallstoneapps.s3.amazonaws.com/multi-timer/config/2.8.0/index.html',
+  firebase: {
+    root: 'https://smallstoneapps.firebaseio.com/multi-timer/'
+  },
+  bugsense: {
+    key: 'fc792e71'
+  },
+  delimiters: {
+    inner: '`',
+    outer: '~'
+  }
+
+};

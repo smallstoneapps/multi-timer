@@ -1,6 +1,6 @@
 /*
 
-Multi Timer v2.7.1
+Multi Timer v2.8.0
 http://matthewtole.com/pebble/multi-timer/
 
 ----------------------
@@ -29,19 +29,15 @@ THE SOFTWARE.
 
 --------------------
 
-src/windows/win-settings-vibration.c
+src/windows/win-vibration.c
 
 */
 
+#include "win-vibration.h"
 #include <pebble.h>
-
-#include "win-add-vibration.h"
-
+#include "../timer.h"
 #include "../libs/pebble-assist/pebble-assist.h"
 #include "../libs/bitmap-loader/bitmap-loader.h"
-#include "../timer.h"
-#include "../settings.h"
-
 
 static uint16_t menu_get_num_sections_callback(MenuLayer *me, void *data);
 static uint16_t menu_get_num_rows_callback(MenuLayer *me, uint16_t section_index, void *data);
@@ -52,8 +48,10 @@ static void menu_select_click_callback(MenuLayer *menu_layer, MenuIndex *cell_in
 
 static Window* window;
 static MenuLayer* layer_menu;
+static VibrationCallback current_callback;
+static TimerVibration current_vibration;
 
-void win_settings_vibration_init(void) {
+void win_vibration_init(void) {
   window = window_create();
 
   layer_menu = menu_layer_create_fullscreen(window);
@@ -69,11 +67,17 @@ void win_settings_vibration_init(void) {
   menu_layer_add_to_window(layer_menu, window);
 }
 
-void win_settings_vibration_show(void) {
+void win_vibration_show(VibrationCallback callback, TimerVibration vibration) {
   window_stack_push(window, true);
+  MenuIndex index;
+  index.section = 0;
+  index.row = vibration;
+  menu_layer_set_selected_index(layer_menu, index, MenuRowAlignTop, false);
+  current_vibration = vibration;
+  current_callback = callback;
 }
 
-void win_settings_vibration_destroy(void) {
+void win_vibration_destroy(void) {
   menu_layer_destroy(layer_menu);
   window_destroy(window);
 }
@@ -99,16 +103,15 @@ static int16_t menu_get_cell_height_callback(MenuLayer* me, MenuIndex* cell_inde
 static void menu_draw_row_callback(GContext* ctx, const Layer *cell_layer, MenuIndex *cell_index, void *data) {
   char label[24];
   strcpy(label, timer_vibe_str(cell_index->row, false));
-
   graphics_context_set_text_color(ctx, GColorBlack);
   graphics_draw_text(ctx, label, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD), GRect(4, 1, 112, 28), GTextOverflowModeTrailingEllipsis , GTextAlignmentLeft, NULL);
-  if (settings()->timers_vibration == cell_index->row) {
+  if (current_vibration == cell_index->row) {
     graphics_draw_bitmap_in_rect(ctx, bitmaps_get_bitmap(RESOURCE_ID_MENU_ICON_MED_TICK), GRect(120, 10, 16, 16));
   }
 
 }
 
 static void menu_select_click_callback(MenuLayer *menu_layer, MenuIndex *cell_index, void *callback_context) {
-  settings()->timers_vibration = cell_index->row;
+  current_callback(cell_index->row);
   window_stack_pop(true);
 }

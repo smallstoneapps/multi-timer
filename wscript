@@ -59,15 +59,19 @@ def build(ctx):
   ctx.load('pebble_sdk')
 
   js_libs = [
+    '../src/js/src/libs/bugsense.min.js',
     '../src/js/src/libs/firebase.js',
+    '../src/js/src/libs/http.js',
+    '../src/js/src/libs/version.js',
+    '../src/js/src/libs/pebble-ga.js',
+    '../src/js/src/libs/keen.js',
   ]
 
   js_sources = [
     '../src/js/src/appinfo.js',
-    '../src/js/src/version.js',
     '../src/js/src/config.js',
-    '../src/js/src/timers.js',
-    '../src/js/src/main.js'
+    '../src/js/src/main.js',
+    '../src/js/src/timers.js'
   ]
   built_js = '../src/js/pebble-js-app.js'
 
@@ -83,18 +87,17 @@ def build(ctx):
   ctx(rule=make_test);
 
   # Run jshint on all the JavaScript files
-  # ctx(rule=js_jshint, source=js_sources)
+  ctx(rule=js_jshint, source=js_sources)
 
   # Run the suite of JS tests.
   # ctx(rule=js_karma)
 
   # Combine the source JS files into a single JS file.
-  # ctx(rule=concatenate_js, source=' '.join(js_libs + js_sources), target=built_js)
+  ctx(rule=concatenate_js, source=' '.join(js_libs + js_sources), target=built_js)
 
   # Build and bundle the Pebble app.
   ctx.pbl_program(source=c_sources, target='pebble-app.elf')
-  # ctx.pbl_bundle(elf='pebble-app.elf', js=built_js)
-  ctx.pbl_bundle(elf='pebble-app.elf')
+  ctx.pbl_bundle(elf='pebble-app.elf', js=built_js)
 
 def generate_appinfo_c(task):
   ext_out = '.c'

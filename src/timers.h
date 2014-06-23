@@ -1,6 +1,7 @@
 /*
 
-Multi Timer v2.7.1
+Multi Timer v2.8.0
+
 http://matthewtole.com/pebble/multi-timer/
 
 ----------------------
@@ -40,11 +41,12 @@ src/timers.h
 #define MAX_TIMERS 16
 
 void timers_init(void);
-Timer* timers_get(int pos);
+Timer* timers_get(uint8_t pos);
 int timers_get_count();
 void timers_clear();
 void timers_add(Timer* timer);
-void timers_remove(int pos);
+void timers_remove(uint8_t pos);
+Timer* timers_find(const uint16_t id);
 
 status_t timers_restore(void);
 status_t timers_save(void);

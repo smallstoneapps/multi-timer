@@ -1,6 +1,7 @@
 /*
 
-Multi Timer v2.7.1
+Multi Timer v2.8.0
+
 http://matthewtole.com/pebble/multi-timer/
 
 ----------------------
@@ -37,7 +38,7 @@ src/windows/win-settings.c
 
 #include "../libs/pebble-assist/pebble-assist.h"
 #include "win-settings.h"
-#include "win-settings-vibration.h"
+#include "win-vibration.h"
 #include "../settings.h"
 #include "../timers.h"
 #include "../common.h"
@@ -62,6 +63,7 @@ static int16_t menu_get_cell_height_callback(MenuLayer* me, MenuIndex* cell_inde
 static void menu_draw_row_callback(GContext* ctx, const Layer *cell_layer, MenuIndex *cell_index , void *data);
 static void menu_draw_header_callback(GContext* ctx, const Layer *cell_layer, uint16_t section_index , void *data);
 static void menu_select_click_callback(MenuLayer *menu_layer, MenuIndex *cell_index, void *callback_context);
+static void vibration_callback(TimerVibration vibration);
 
 static Window* window;
 static MenuLayer* layer_menu;
@@ -81,8 +83,6 @@ void win_settings_init(void) {
   });
   menu_layer_set_click_config_onto_window(layer_menu, window);
   menu_layer_add_to_window(layer_menu, window);
-
-  win_settings_vibration_init();
 }
 
 void win_settings_show(void) {
@@ -90,7 +90,6 @@ void win_settings_show(void) {
 }
 
 void win_settings_destroy(void) {
-  win_settings_vibration_destroy();
   layer_remove_from_parent(menu_layer_get_layer(layer_menu));
   menu_layer_destroy(layer_menu);
   window_destroy(window);
@@ -196,7 +195,7 @@ static void menu_select_click_callback(MenuLayer *menu_layer, MenuIndex *cell_in
           menu_layer_reload_data(layer_menu);
         break;
         case MENU_ROW_TIMERS_VIBRATE:
-          win_settings_vibration_show();
+          win_vibration_show(vibration_callback, settings()->timers_vibration);
         break;
         case MENU_ROW_TIMERS_HOURS:
           settings()->timers_hours = ! settings()->timers_hours;
@@ -205,4 +204,8 @@ static void menu_select_click_callback(MenuLayer *menu_layer, MenuIndex *cell_in
       }
     break;
   }
+}
+
+static void vibration_callback(TimerVibration vibration) {
+  settings()->timers_vibration = vibration;
 }

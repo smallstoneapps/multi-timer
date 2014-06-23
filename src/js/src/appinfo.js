@@ -1,4 +1,6 @@
-{
+/* exported AppInfo */
+
+var AppInfo = {
   "uuid": "0db6a55e-b32a-4b03-b037-95637bf306ff",
   "shortName": "Multi Timer",
   "longName": "Multi Timer",
@@ -8,12 +10,7 @@
   "watchapp": {
     "watchface": false
   },
-  "appKeys": {
-    "group": 0,
-    "operation": 1,
-    "data": 2
-  },
-  "capabilities": [ "configurable" ],
+  "appKeys": { },
   "resources": {
     "media": [
       {
@@ -120,4 +117,4 @@
       }
     ]
   }
-}
+};
