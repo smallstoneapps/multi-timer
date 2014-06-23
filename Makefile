@@ -1,4 +1,4 @@
-# Multi Timer v2.7.0
+# Multi Timer v2.7.1
 # http://matthewtole.com/pebble/multi-timer/
 #
 # ----------------------

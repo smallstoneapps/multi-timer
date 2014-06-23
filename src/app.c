@@ -1,6 +1,6 @@
 /*
 
-Multi Timer v2.7.0
+Multi Timer v2.7.1
 http://matthewtole.com/pebble/multi-timer/
 
 ----------------------
@@ -64,18 +64,6 @@ int main(void) {
 //! Handles the loading of settings, timers and the primary window.
 void handle_init() {
 
-  // If the persistence test fails, show the error window and point people
-  // to the page telling them how to fix the issue.
-  StatusCode test_status = test_persist();
-  if (S_SUCCESS > test_status) {
-    win_error_init();
-    win_error_set_text("Persistent storage is no longer working correctly on \
-your watch, so timers and settings will not be saved by this app.\n\
-Please factory reset your watch and reload apps from the locker to \
-correct the issue. For more information visit:\nbit.ly/pblstorage");
-    win_error_show();
-  }
-
   // Init all the things!
   timers_init();
   // mqueue_init();
@@ -94,6 +82,19 @@ correct the issue. For more information visit:\nbit.ly/pblstorage");
 
   // Show the main window.
   win_timers_show();
+
+  // If the persistence test fails, show the error window and point people
+  // to the page telling them how to fix the issue.
+  StatusCode test_status = test_persist();
+  if (S_SUCCESS > test_status) {
+    win_error_init();
+    win_error_set_text("Persistent storage is no longer working correctly on \
+your watch, so timers and settings will not be saved by this app.\n\
+Please factory reset your watch and reload apps from the locker to \
+correct the issue. For more information visit:\nbit.ly/pblstorage");
+    win_error_show();
+  }
+
 }
 
 //! App deinitialise functions
