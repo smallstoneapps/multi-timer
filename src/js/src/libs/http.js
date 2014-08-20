@@ -12,6 +12,7 @@ var http = (function () {
     url += '?' + serialize(query);
     req.open('GET', url, true);
     req.setRequestHeader('Connection', 'close');
+    req.setRequestHeader('X-Pebble-ID', Pebble.getAccountToken());
     req.onload = function () {
       if (req.readyState === 4 && req.status === 200) {
         if (req.status === 200) {
@@ -49,6 +50,7 @@ var http = (function () {
     req.open('POST', url, true);
     req.setRequestHeader('Connection', 'close');
     req.setRequestHeader('Content-Type', 'application/json');
+    req.setRequestHeader('X-Pebble-ID', Pebble.getAccountToken());
     req.onload = function () {
       if ([ 200, 201 ].indexOf(req.status) !== -1) {
         var response = JSON.parse(req.responseText);

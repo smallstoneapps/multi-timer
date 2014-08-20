@@ -1,6 +1,6 @@
 /*
 
-Multi Timer v2.8.0
+Multi Timer v3.0
 
 http://matthewtole.com/pebble/multi-timer/
 
@@ -36,8 +36,8 @@ src/windows/win-about.c
 
 #include <pebble.h>
 #include "win-about.h"
-#include "../libs/scroll-text-layer/scroll-text-layer.h"
-#include "../libs/pebble-assist/pebble-assist.h"
+#include <scroll-text-layer.h>
+#include <pebble-assist.h>
 #include "../generated/appinfo.h"
 
 static void window_load(Window* window);

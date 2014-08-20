@@ -1,6 +1,6 @@
 /*
 
-Multi Timer v2.8.0
+Multi Timer v3.0
 
 http://matthewtole.com/pebble/multi-timer/
 
@@ -37,19 +37,16 @@ src/app.c
 #include <pebble.h>
 #include "generated/appinfo.h"
 #include "globals.h"
-#include "libs/bitmap-loader/bitmap-loader.h"
-#include "libs/pebble-assist/pebble-assist.h"
-#include "libs/message-queue/message-queue.h"
-#include "libs/data-processor/data-processor.h"
+#include <bitmap-loader.h>
+#include <pebble-assist.h>
+#include <message-queue.h>
+#include <data-processor.h>
 #include "windows/win-timers.h"
 #include "windows/win-error.h"
 #include "windows/win-vibration.h"
 #include "settings.h"
 #include "timers.h"
 #include "common.h"
-
-#define OUTER_SEP "~"
-#define INNER_SEP '`'
 
 static void handle_init(void);
 static void handle_deinit(void);
@@ -114,25 +111,7 @@ void handle_deinit() {
 
 static void message_handler_timers(char* operation, char* data) {
   if (0 == strcmp(operation, "LIST")) {
-    const uint8_t timer_count = timers_get_count();
-    if (0 == timer_count) {
-      mqueue_add("TMR", "LIST", " ");
-    }
-    else {
-      size_t timer_string_size = (TIMER_STR_LENGTH * timer_count) + timer_count;
-      char* timer_string = malloc(sizeof(char) * timer_string_size);
-      if (NULL == timer_string) {
-        ERROR("Could not allocate enough memory for the timer string!");
-        return;
-      }
-      timer_string[0] = 0;
-      for (uint8_t t = 0; t < timer_count; t += 1) {
-        strcat(timer_string, timer_serialize(timers_get(t), INNER_SEP));
-        strcat(timer_string, OUTER_SEP);
-      }
-      mqueue_add("TMR", "LIST", timer_string);
-      free(timer_string);
-    }
+    timers_send_list();
   }
   else if (0 == strcmp(operation, "LABEL")) {
     data_processor_init(data, OUTER_SEP[0]);

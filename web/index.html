@@ -42,7 +42,7 @@
               <div class="col-xs-7" ng-class="{ 'label-blank' : timer.label.length === 0 }">{{ timer.label | ifEmpty: 'No Label' }}</div>
             </div>
           </div>
-          <div class="row" ng-if="timers">
+          <div class="row" ng-if="noTimers()">
             <div class="col-xs-12">
               <h3 class="text-center text-muted">No Timers <i class="fa fa-warning"></i></h3>
             </div>
@@ -96,6 +96,10 @@
         $scope.timers = $firebase(rootRef.child('timers'));
 
         $scope.everything = $firebase(rootRef);
+
+        $scope.noTimers = function () {
+          return $scope.timers.$getIndex().length === 0;
+        }
 
         $scope.editTimer = function (timer) {
           $scope.editLabel = timer.label;

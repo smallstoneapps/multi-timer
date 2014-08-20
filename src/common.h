@@ -1,6 +1,6 @@
 /*
 
-Multi Timer v2.8.0
+Multi Timer v3.0
 
 http://matthewtole.com/pebble/multi-timer/
 
@@ -37,6 +37,9 @@ src/common.h
 #pragma once
 
 #include <pebble.h>
+
+#define OUTER_SEP "~"
+#define INNER_SEP '`'
 
 void uppercase(char* str);
 StatusCode test_persist(void);

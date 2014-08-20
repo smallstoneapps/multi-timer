@@ -1,6 +1,6 @@
 /*
 
-Multi Timer v2.8.0
+Multi Timer v3.0
 http://matthewtole.com/pebble/multi-timer/
 
 ----------------------
@@ -37,13 +37,13 @@ src/js/src/config.js
 
 var Config = {
 
-  settingsUrl: 'http://smallstoneapps.s3.amazonaws.com/multi-timer/config/2.8.0/index.html',
-  firebase: {
-    root: 'https://smallstoneapps.firebaseio.com/multi-timer/'
+  settingsUrl: 'http://192.168.0.8:6006/multi-timer/config/',
+  socketUrl: 'http://192.168.0.8:6006/multi-timer',
+  keen: {
+    projectId: '53a84295bcb79c58c7000002',
+    writeKey: 'f91165f494c5bff28908caf75bf0a07ded19fe01ec813985c3ad466fe8e7799879e3a5246b0e504ea97fc80b10d39faeda96e1a5811af406a203721ce92d8a97c9f1d4bebf53b80a60b57f78784fac3880b888062084a3a3070650f650777ed3a1048d941ac76f3b6ad739e32931bf6c'
   },
-  bugsense: {
-    key: 'fc792e71'
-  },
+  googleAnalytics: 'UA-48246810-3',
   delimiters: {
     inner: '`',
     outer: '~'

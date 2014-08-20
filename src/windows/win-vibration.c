@@ -1,6 +1,6 @@
 /*
 
-Multi Timer v2.8.0
+Multi Timer v3.0
 http://matthewtole.com/pebble/multi-timer/
 
 ----------------------
@@ -36,8 +36,8 @@ src/windows/win-vibration.c
 #include "win-vibration.h"
 #include <pebble.h>
 #include "../timer.h"
-#include "../libs/pebble-assist/pebble-assist.h"
-#include "../libs/bitmap-loader/bitmap-loader.h"
+#include <pebble-assist.h>
+#include <bitmap-loader.h>
 
 static uint16_t menu_get_num_sections_callback(MenuLayer *me, void *data);
 static uint16_t menu_get_num_rows_callback(MenuLayer *me, uint16_t section_index, void *data);

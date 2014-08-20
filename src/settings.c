@@ -1,6 +1,6 @@
 /*
 
-Multi Timer v2.8.0
+Multi Timer v3.0
 
 http://matthewtole.com/pebble/multi-timer/
 
@@ -35,7 +35,7 @@ src/settings.c
 */
 
 #include <pebble.h>
-#include "libs/pebble-assist/pebble-assist.h"
+#include <pebble-assist.h>
 #include "globals.h"
 #include "settings.h"
 #include "timer.h"

@@ -1,6 +1,6 @@
 /*
 
-Multi Timer v2.8.0
+Multi Timer v3.0
 http://matthewtole.com/pebble/multi-timer/
 
 ----------------------
@@ -37,11 +37,12 @@ src/timer.c
 #include "timer.h"
 #include "windows/win-timers.h"
 #include "windows/win-vibrate.h"
-#include "libs/pebble-assist/pebble-assist.h"
-#include "libs/data-processor/data-processor.h"
-#include "libs/bitmap-loader/bitmap-loader.h"
+#include <pebble-assist.h>
+#include <data-processor.h>
+#include <bitmap-loader.h>
 #include "common.h"
 #include "settings.h"
+#include "timers.h"
 
 static void timer_callback(void* data);
 static void timer_set_app_timer(Timer* timer);
@@ -219,20 +220,20 @@ void timer_draw(Timer* timer, GContext* ctx) {
 
   switch (timer->direction) {
     case TIMER_DIRECTION_UP:
-      dir_bmp = bitmaps_get_bitmap(RESOURCE_ID_ARROW_UP);
+      dir_bmp = gbitmap_create_as_sub_bitmap(bitmaps_get_bitmap(RESOURCE_ID_ARROWS), GRect(0, 0, 8, 16)) ;
     break;
     case TIMER_DIRECTION_DOWN:
-      dir_bmp = bitmaps_get_bitmap(RESOURCE_ID_ARROW_DOWN);
+      dir_bmp = gbitmap_create_as_sub_bitmap(bitmaps_get_bitmap(RESOURCE_ID_ARROWS), GRect(8, 0, 8, 16)) ;
     break;
   }
 
   graphics_context_set_text_color(ctx, GColorBlack);
   if (row_bmp != NULL) {
-    graphics_draw_bitmap_in_rect(ctx, row_bmp, GRect(8, 10, 20, 20));
+    graphics_draw_bitmap_in_rect(ctx, row_bmp, GRect(8, 8, 16, 16));
   }
-  graphics_draw_text(ctx, time_left, fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD), GRect(36, 1, 110, 32), 0, GTextAlignmentLeft, NULL);
+  graphics_draw_text(ctx, time_left, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD), GRect(32, -1, 88, 24), 0, GTextAlignmentLeft, NULL);
   if (dir_bmp != NULL) {
-    graphics_draw_bitmap_in_rect(ctx, dir_bmp, GRect(132, 16, 8, 8));
+    graphics_draw_bitmap_in_rect(ctx, dir_bmp, GRect(128, 8, 8, 16));
   }
 
   if (strlen(timer->label) > 0) {
@@ -252,6 +253,20 @@ void timer_duration_str(int duration, bool showHours, char* str, int str_len) {
   else {
     snprintf(str, str_len, "%02d:%02d", minutes, seconds);
   }
+}
+
+Timer* timer_create(void) {
+  Timer* timer = malloc(sizeof(Timer));
+  timer->direction = TIMER_DIRECTION_DOWN;
+  timer->vibrate = settings()->timers_vibration;
+  timer->length = 10 * 60;
+  timer->repeat = false;
+  timer->label[0] = 0;
+  timer->id = rand() % UINT16_MAX;
+  while (NULL != timers_find(timer->id)) {
+    timer->id = rand() % UINT16_MAX;
+  }
+  return timer;
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - //

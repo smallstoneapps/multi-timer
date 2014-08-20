@@ -1,6 +1,6 @@
 /*
 
-Multi Timer v2.8.0
+Multi Timer v3.0
 
 http://matthewtole.com/pebble/multi-timer/
 
@@ -83,6 +83,7 @@ void timer_reset(Timer* timer);
 void timer_destroy(Timer* timer);
 void timer_set_label(Timer* timer);
 Timer* timer_clone(Timer* timer);
+Timer* timer_create(void);
 
 char* timer_vibe_str(TimerVibration vibe, bool shortStr);
 char* timer_serialize(Timer* timer, char delim);

@@ -1,75 +1,84 @@
+/*
+
+Multi Timer v3.0
+http://matthewtole.com/pebble/multi-timer/
+
+----------------------
+
+The MIT License (MIT)
+
+Copyright © 2013 - 2014 Matthew Tole
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+
+--------------------
+
+src/js/src/timers.js
+
+*/
+
 /* exported Timers */
 
 var Timers = (function () {
 
-  var self = {
-    timers: [],
-    config: {},
-    firebase: null
-  };
-
-  return {
-    init: init,
-    handleMessage: handleMessage,
-    getTimers: getTimers
-  };
-
-  function init(config, firebase) {
-    self.config = config;
-    self.timers = [];
-    self.firebase = firebase;
-    if (self.firebase) {
-      self.firebase.child('timers').on('child_changed', handleTimerChanged);
-    }
+  function Timers(config, socket) {
+    this.config = config;
+    this.timers = [];
+    this.socket = socket;
+    this.socket.on('connect', function () {
+      this.socket.emit('id', { token: Pebble.getAccountToken(), type: 'app' });
+    }.bind(this));
+    this.socket.on('label', function (data) {
+      Pebble.sendAppMessage({ group: 'TMR', operation: 'LABEL', data: [ data.id, data.label ].join(this.config.delimiters.outer) });
+    }.bind(this));
   }
 
-  function handleMessage(operation, data) {
+  Timers.prototype.handleMessage = function(operation, data) {
     try {
       switch (operation) {
         case 'LIST':
-          var timerStrings = data.split(self.config.delimiters.outer);
-          self.timers = [];
+          var timerStrings = data.split(this.config.delimiters.outer);
+          this.timers = [];
           timerStrings.forEach(function (str) {
             if (! str.length) {
               return;
             }
-            var timer = parseTimer(str);
+            var timer = parseTimer.call(this, str);
             if (null !== timer) {
-              self.timers.push(timer);
+              this.timers.push(timer);
             }
-          });
-          syncTimers();
+          }.bind(this));
+          this.socket.emit('timers!', this.timers);
           break;
       }
     }
     catch (ex) {
       console.log(ex);
     }
-  }
+  };
 
-  function getTimers() {
-    return self.timers;
-  }
-
-  function handleTimerChanged(snapshot) {
-    Pebble.sendAppMessage({
-      group: 'TMR',
-      operation: 'LABEL',
-      data: [ snapshot.val().id, snapshot.val().label.substr(0, 24) ].join(self.config.delimiters.outer)
-    });
-  }
-
-  function syncTimers() {
-    if (! self.firebase) { return; }
-    self.firebase.child('timers').remove();
-    self.timers.forEach(function (timer) {
-      self.firebase.child('timers').push(timer);
-    });
-    self.firebase.child('state').set('loaded');
-  }
+  Timers.prototype.getTimers = function() {
+    return this.timers;
+  };
 
   function parseTimer(str) {
-    var bits = str.split(self.config.delimiters.inner);
+    var bits = str.split(this.config.delimiters.inner);
     if (bits.length <= 1) {
       return null;
     }
@@ -102,5 +111,6 @@ var Timers = (function () {
     return vibeStrings[vibe];
   }
 
+  return Timers;
 
 }());

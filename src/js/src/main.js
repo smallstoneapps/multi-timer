@@ -1,62 +1,93 @@
+/*
+
+Multi Timer v3.0
+http://matthewtole.com/pebble/multi-timer/
+
+----------------------
+
+The MIT License (MIT)
+
+Copyright © 2013 - 2014 Matthew Tole
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+
+--------------------
+
+src/js/src/main.js
+
+*/
+
 /* global Pebble */
-/* global Config */
-/* global AppInfo */
 /* global Analytics */
 /* global Keen */
-/* global Firebase */
 /* global http */
-/* global Bugsense */
-
+/* global io */
+/* global Config */
+/* global AppInfo */
 /* global Timers */
 
 (function () {
 
-  var self = {
-    ga: null,
-    firebase: null,
-    config: Config
-  };
+  var ga = null;
+  var socket = null;
+  var timers = null;
+  var firstTime = localStorage.getItem('run-check') === null;
+  localStorage.setItem('run-check', true);
 
   Pebble.addEventListener('ready', function () {
     try {
-      setup();
+      ga = new Analytics(Config.googleAnalytics, AppInfo.shortName, AppInfo.versionLabel);
+      Keen.init(http, Pebble, Config.keen, AppInfo);
+      socket = io.connect(Config.socketUrl);
+      timers = new Timers(Config, socket);
+      ga.trackEvent('app', 'run');
     }
     catch (ex) {
-      console.log(ex);
-      try {
-        Bugsense.notify(ex);
-      }
-      catch (ex2) {
-        console.log(ex2);
-      }
+      Keen.sendEvent('error', { message: ex.toString() });
     }
   });
 
   Pebble.addEventListener('showConfiguration', function () {
-    self.firebase.child('state').set('loading');
-    Pebble.sendAppMessage({ group: 'TMR', operation: 'LIST', data: '' });
-    Pebble.openURL(self.config.settingsUrl + '#?token=' + Pebble.getAccountToken());
+    try {
+      Pebble.sendAppMessage({ group: 'TMR', operation: 'LIST', data: '' });
+      Pebble.openURL(Config.settingsUrl + Pebble.getAccountToken() + '?version=' + AppInfo.versionLabel + '&firstTime=' + firstTime);
+    }
+    catch (ex) {
+      Keen.sendEvent('error', { message: ex.toString() });
+      console.log(ex);
+    }
+  });
+
+  Pebble.addEventListener('webviewclosed', function () {
+    firstTime = false;
   });
 
   Pebble.addEventListener('appmessage', function (event) {
     switch (event.data.group) {
       case 'TMR':
-        Timers.handleMessage(event.data.operation, event.data.data);
+        if (timers) {
+          timers.handleMessage(event.data.operation, event.data.data);
+        }
         break;
       default:
         console.log(JSON.stringify(event.data));
     }
   });
-
-  function setup() {
-    Bugsense.initAndStartSession({ apiKey: self.config.bugsense.key, appVersion: AppInfo.versionLabel, userIdentifier: Pebble.getAccountToken() });
-    self.ga = new Analytics('UA-48246810-3', 'Multi Timer', AppInfo.versionLabel);
-    Keen.init(http, Pebble, Config.keen, AppInfo);
-    self.firebase = new Firebase(self.config.firebase.root + Pebble.getAccountToken());
-    self.firebase.child('lastRun').set(Date.now());
-    self.firebase.child('version').set(AppInfo.versionLabel);
-    Timers.init(self.config, self.firebase);
-    console.log([].butts.foo);
-  }
 
 }());

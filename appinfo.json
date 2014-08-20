@@ -3,8 +3,8 @@
   "shortName": "Multi Timer",
   "longName": "Multi Timer",
   "companyName": "Matthew Tole",
-  "versionCode": 13,
-  "versionLabel": "2.7.1",
+  "versionCode": 1,
+  "versionLabel": "3.0",
   "watchapp": {
     "watchface": false
   },
@@ -89,18 +89,18 @@
       },
       {
         "type": "png",
-        "name": "ARROW_DOWN",
-        "file": "images/arrow_down.png"
-      },
-      {
-        "type": "png",
-        "name": "ACTION_INC",
-        "file": "images/action_inc.png"
+        "name": "ARROWS",
+        "file": "images/arrows.png"
       },
       {
         "type": "png",
         "name": "ACTION_DEC",
         "file": "images/action_dec.png"
+      },
+      {
+        "type": "png",
+        "name": "ACTION_INC",
+        "file": "images/action_inc.png"
       },
       {
         "type": "png",

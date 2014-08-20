@@ -20,5 +20,8 @@ bool win_vibrate_is_visible(void) {
 }
 
 void win_timers_update(void) {
-  
+}
+
+void mqueue_add(char* group, char* operation, char* data) {
+
 }

@@ -1,6 +1,6 @@
 /*
 
-Multi Timer v2.8.0
+Multi Timer v3.0
 
 http://matthewtole.com/pebble/multi-timer/
 
@@ -37,8 +37,8 @@ src/windows/win-timer.c
 #include <pebble.h>
 #include "../timer.h"
 #include "../timers.h"
-#include "../libs/pebble-assist/pebble-assist.h"
-#include "../libs/bitmap-loader/bitmap-loader.h"
+#include <pebble-assist.h>
+#include <bitmap-loader.h>
 
 #define FRAME_TOP GRect(0, 0, 144, 40)
 #define FRAME_TOP_LABEL GRect(0, 0, 144, 54)
@@ -194,9 +194,9 @@ static void menu_select_click_callback(MenuLayer *menu_layer, MenuIndex *cell_in
       timer_reset(timer);
     break;
     case MENU_ROW_CLEAR:
-      // TODO: Remove the timer!
       timers_remove(timer_pos);
       window_stack_pop(true);
+      timers_send_list();
       return;
     break;
   }

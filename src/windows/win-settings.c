@@ -1,6 +1,6 @@
 /*
 
-Multi Timer v2.8.0
+Multi Timer v3.0
 
 http://matthewtole.com/pebble/multi-timer/
 
@@ -36,7 +36,7 @@ src/windows/win-settings.c
 
 #include <pebble.h>
 
-#include "../libs/pebble-assist/pebble-assist.h"
+#include <pebble-assist.h>
 #include "win-settings.h"
 #include "win-vibration.h"
 #include "../settings.h"

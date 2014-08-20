@@ -1,6 +1,6 @@
 /*
 
-Multi Timer v2.8.0
+Multi Timer v3.0
 
 http://matthewtole.com/pebble/multi-timer/
 
@@ -50,3 +50,5 @@ Timer* timers_find(const uint16_t id);
 
 status_t timers_restore(void);
 status_t timers_save(void);
+
+void timers_send_list(void);

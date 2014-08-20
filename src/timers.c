@@ -1,6 +1,6 @@
 /*
 
-Multi Timer v2.8.0
+Multi Timer v3.0
 
 http://matthewtole.com/pebble/multi-timer/
 
@@ -37,9 +37,11 @@ src/timers.c
 #include <pebble.h>
 #include "globals.h"
 #include "timers.h"
+#include "common.h"
 #include "settings.h"
-#include "libs/pebble-assist/pebble-assist.h"
-#include "libs/linked-list/linked-list.h"
+#include <pebble-assist.h>
+#include <linked-list.h>
+#include <message-queue.h>
 
 #define TIMER_BLOCK_SIZE 5
 
@@ -174,5 +176,27 @@ status_t timers_save(void) {
     block += 1;
   }
   return 0;
+}
+
+void timers_send_list(void) {
+  const uint8_t timer_count = timers_get_count();
+  if (0 == timer_count) {
+    mqueue_add("TMR", "LIST", " ");
+  }
+  else {
+    size_t timer_string_size = (TIMER_STR_LENGTH * timer_count) + timer_count;
+    char* timer_string = malloc(sizeof(char) * timer_string_size);
+    if (NULL == timer_string) {
+      ERROR("Could not allocate enough memory for the timer string!");
+      return;
+    }
+    timer_string[0] = 0;
+    for (uint8_t t = 0; t < timer_count; t += 1) {
+      strcat(timer_string, timer_serialize(timers_get(t), INNER_SEP));
+      strcat(timer_string, OUTER_SEP);
+    }
+    mqueue_add("TMR", "LIST", timer_string);
+    free(timer_string);
+  }
 }
 

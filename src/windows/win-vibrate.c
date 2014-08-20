@@ -1,6 +1,6 @@
 /*
 
-Multi Timer v2.8.0
+Multi Timer v3.0
 
 http://matthewtole.com/pebble/multi-timer/
 
@@ -37,8 +37,8 @@ src/windows/win-vibrate.c
 #include <pebble.h>
 
 #include "win-vibrate.h"
-#include "../libs/bitmap-loader/bitmap-loader.h"
-#include "../libs/pebble-assist/pebble-assist.h"
+#include <bitmap-loader.h>
+#include <pebble-assist.h>
 
 void click_config_provider(Window* window);
 void click_handler(ClickRecognizerRef recognizer, void* context);

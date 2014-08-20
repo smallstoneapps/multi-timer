@@ -1,6 +1,6 @@
 /*
 
-Multi Timer v2.7.1
+Multi Timer v3.0
 http://matthewtole.com/pebble/multi-timer/
 
 ----------------------
@@ -352,10 +352,10 @@ int main(int argc, char **argv) {
   printf("-----------------------------------\n%s", KNRM);
   char* result = all_tests();
   if (0 != result) {
-    printf("%sFailed Test:%s %s\n", KRED, KNRM, result);
+    printf("%s- Failed Test:%s %s\n", KRED, KNRM, result);
   }
-  printf("Tests Run: %s%d%s\n", (tests_run == tests_passed) ? KGRN : KRED, tests_run, KNRM);
-  printf("Tests Passed: %s%d%s\n", (tests_run == tests_passed) ? KGRN : KRED, tests_passed, KNRM);
+  printf("- Tests Run: %s%d%s\n", (tests_run == tests_passed) ? KGRN : KRED, tests_run, KNRM);
+  printf("- Tests Passed: %s%d%s\n", (tests_run == tests_passed) ? KGRN : KRED, tests_passed, KNRM);
 
   printf("%s-----------------------------------%s\n", KCYN, KNRM);
   return result != 0;

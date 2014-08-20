@@ -30,15 +30,43 @@ THE SOFTWARE.
 
 --------------------
 
-src/windows/win-timer.h
+src/js/tests/mocks/socket.js
 
 */
 
-#pragma once
+var MockSocket = function () {
+  this.handlers = {};
+  this.mockHandlers = {};
+};
 
-#include <pebble.h>
-#include "../timer.h"
+MockSocket.prototype.on = function (name, callback) {
+  if (! this.handlers.hasOwnProperty(name)) {
+    this.handlers[name] = [];
+  }
+  this.handlers[name].push(callback);
+};
 
-void win_timer_init(void);
-void win_timer_show(Timer* tmr, uint8_t pos);
-void win_timer_destroy(void);
+MockSocket.prototype.emit = function (name, data) {
+  if (! this.mockHandlers.hasOwnProperty(name)) {
+    return;
+  }
+  this.mockHandlers[name].forEach(function (callback) {
+    callback(data);
+  });
+};
+
+MockSocket.prototype._on = function (name, callback) {
+  if (! this.mockHandlers.hasOwnProperty(name)) {
+    this.mockHandlers[name] = [];
+  }
+  this.mockHandlers[name].push(callback);
+}
+
+MockSocket.prototype._emit = function(name, data) {
+  if (! this.handlers.hasOwnProperty(name)) {
+    return;
+  }
+  this.handlers[name].forEach(function (callback) {
+    callback(data);
+  });
+}

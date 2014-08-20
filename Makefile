@@ -1,4 +1,4 @@
-# Multi Timer v2.7.1
+# Multi Timer v2.0.0
 # http://matthewtole.com/pebble/multi-timer/
 #
 # ----------------------
@@ -35,7 +35,12 @@ CFLAGS=-std=c99
 else
 CFLAGS=-std=c11
 endif
-CINCLUDES=-I tests/include/ -I tests/
+CINCLUDES=-I tests/include/ -I tests/ \
+	-I src/libs/pebble-assist/ \
+	-I src/libs/message-queue/ \
+	-I src/libs/linked-list/ \
+	-I src/libs/data-processor/ \
+	-I src/libs/bitmap-loader/
 
 TEST_FILES=tests/timers.c
 SRC_FILES=src/timers.c src/timer.c src/libs/bitmap-loader/bitmap-loader.c src/libs/linked-list/linked-list.c

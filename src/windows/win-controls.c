@@ -1,6 +1,6 @@
 /*
 
-Multi Timer v2.8.0
+Multi Timer v3.0
 
 http://matthewtole.com/pebble/multi-timer/
 
@@ -36,8 +36,8 @@ src/windows/win-controls.c
 
 #include <pebble.h>
 
-#include "../libs/pebble-assist/pebble-assist.h"
-#include "../libs/bitmap-loader/bitmap-loader.h"
+#include <pebble-assist.h>
+#include <bitmap-loader.h>
 #include "win-timers.h"
 #include "win-controls.h"
 #include "../timers.h"
@@ -103,32 +103,24 @@ static int16_t menu_get_cell_height_callback(MenuLayer* me, MenuIndex* cell_inde
 }
 
 static void menu_draw_row_callback(GContext* ctx, const Layer *cell_layer, MenuIndex *cell_index, void *data) {
-  GBitmap* icon = NULL;
   char* label = malloc(32);
 
   switch (cell_index->row) {
     case MENU_ROW_START:
       strcpy(label, "Start All");
-      icon = bitmaps_get_bitmap(RESOURCE_ID_MENU_ICON_PLAY);
     break;
     case MENU_ROW_PAUSE:
       strcpy(label, "Pause All");
-      icon = bitmaps_get_bitmap(RESOURCE_ID_MENU_ICON_PAUSE);
     break;
     case MENU_ROW_RESET:
       strcpy(label, "Reset All");
-      icon = bitmaps_get_bitmap(RESOURCE_ID_MENU_ICON_RESET);
     break;
     case MENU_ROW_CLEAR:
       strcpy(label, "Clear Timers");
-      icon = bitmaps_get_bitmap(RESOURCE_ID_MENU_ICON_CLEAR);
     break;
   }
   graphics_context_set_text_color(ctx, GColorBlack);
-  graphics_draw_text(ctx, label, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD), GRect(36, 1, 112, 28), GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, NULL);
-  if (icon != NULL) {
-    graphics_draw_bitmap_in_rect(ctx, icon, GRect(8, 8, 20, 20));
-  }
+  graphics_draw_text(ctx, label, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD), GRect(0, 1, 144, 28), GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, NULL);
   free(label);
 }
 
@@ -156,6 +148,7 @@ static void menu_select_click_callback(MenuLayer *menu_layer, MenuIndex *cell_in
         timer_reset(timers_get(t));
       }
       win_timers_jump(0);
+      timers_send_list();
     break;
     case MENU_ROW_CLEAR:
       timers_clear();

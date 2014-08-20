@@ -1,6 +1,6 @@
 /*
 
-Multi Timer v2.8.0
+Multi Timer v3.0
 
 http://matthewtole.com/pebble/multi-timer/
 
@@ -36,8 +36,8 @@ src/windows/win-timers.c
 
 #include <pebble.h>
 
-#include "../libs/pebble-assist/pebble-assist.h"
-#include "../libs/bitmap-loader/bitmap-loader.h"
+#include <pebble-assist.h>
+#include <bitmap-loader.h>
 #include "../timers.h"
 #include "../settings.h"
 #include "../timer.h"
@@ -60,7 +60,7 @@ src/windows/win-timers.c
 #define MENU_ITEM_FOOTER_SETTINGS 2
 #define MENU_ITEM_FOOTER_ABOUT 3
 
-#define ROW_HEIGHT 36
+#define ROW_HEIGHT 32
 #define ROW_HEIGHT_LABEL 50
 
 static void window_load(Window* window);
@@ -191,7 +191,7 @@ static int16_t menu_get_cell_height_callback(MenuLayer* me, MenuIndex* cell_inde
   switch (cell_index->section) {
     case MENU_SECTION_TIMERS: {
       Timer* timer = timers_get(cell_index->row);
-      return strlen(timer->label) > 0 ? (ROW_HEIGHT_LABEL + 4) : (ROW_HEIGHT + 4);
+      return strlen(timer->label) > 0 ? ROW_HEIGHT_LABEL : ROW_HEIGHT;
     }
     break;
     case MENU_SECTION_FOOTER:
@@ -228,29 +228,22 @@ static void menu_draw_footer_row(GContext* ctx, const Layer *cell_layer, MenuInd
   switch (cell_index->row) {
     case MENU_ITEM_FOOTER_ADD:
       strcpy(row_label, "Add Timer");
-      row_icon = bitmaps_get_bitmap(RESOURCE_ID_MENU_ICON_ADD);
     break;
     case MENU_ITEM_FOOTER_CONTROLS:
       strcpy(row_label, "Controls");
-      row_icon = bitmaps_get_bitmap(RESOURCE_ID_MENU_ICON_CONTROLS);
     break;
     case MENU_ITEM_FOOTER_SETTINGS:
       strcpy(row_label, "Settings");
-      row_icon = bitmaps_get_bitmap(RESOURCE_ID_MENU_ICON_SETTINGS);
     break;
     case MENU_ITEM_FOOTER_ABOUT:
       strcpy(row_label, "About");
-      row_icon = bitmaps_get_bitmap(RESOURCE_ID_MENU_ICON_ABOUT);
     break;
   }
 
   graphics_context_set_text_color(ctx, GColorBlack);
-  if (row_icon != NULL) {
-    graphics_draw_bitmap_in_rect(ctx, row_icon, GRect(8, 8, 20, 20));
-  }
   graphics_draw_text(ctx, row_label,
     fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD),
-    GRect(36, 1, 112, 28), 0, GTextAlignmentLeft, NULL);
+    GRect(8, -1, 128, 24), 0, GTextAlignmentLeft, NULL);
 
   free(row_label);
 }
