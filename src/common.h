@@ -43,3 +43,4 @@ src/common.h
 
 void uppercase(char* str);
 StatusCode test_persist(void);
+void draw_icon_text_row(const GContext* ctx, const char* label, const GBitmap* icon);

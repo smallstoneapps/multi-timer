@@ -34,12 +34,14 @@ src/timer.c
 */
 
 #include <pebble.h>
-#include "timer.h"
-#include "windows/win-timers.h"
-#include "windows/win-vibrate.h"
 #include <pebble-assist.h>
 #include <data-processor.h>
 #include <bitmap-loader.h>
+
+#include "timer.h"
+
+#include "windows/win-timers.h"
+#include "windows/win-vibrate.h"
 #include "common.h"
 #include "settings.h"
 #include "timers.h"
@@ -88,24 +90,10 @@ void timer_reset(Timer* timer) {
   timer_cancel_app_timer(timer);
 }
 
-void timer_tick(Timer* timer) {
-  if (! timer) { return; }
-  if (TIMER_STATUS_RUNNING == timer->status) { return; }
-  if (TIMER_DIRECTION_DOWN == timer->direction) {
-    timer->time_left -= 1;
-    if (timer->time_left <= 0) {
-      timer_finished(timer);
-    }
-  }
-  else if (TIMER_DIRECTION_UP == timer->direction) {
-    timer->time_left += 1;
-  }
-}
-
 void timer_destroy(Timer* timer) {
   if (! timer) { return; }
   timer_cancel_app_timer(timer);
-  free(timer);
+  free_safe(timer);
 }
 
 Timer* timer_clone(Timer* timer) {
@@ -144,16 +132,18 @@ char* timer_vibe_str(TimerVibration vibe, bool shortStr) {
 char* timer_serialize(Timer* timer, char delim) {
   char* str = malloc(TIMER_STR_LENGTH);
   if (timer->direction == TIMER_DIRECTION_UP) {
-    snprintf(str, TIMER_STR_LENGTH, "%X%c%d%c%s", timer->id, delim, timer->direction, delim, timer->label);
+    snprintf(str, TIMER_STR_LENGTH, "%X%c%d%c%s", timer->id, delim,
+      timer->direction, delim, timer->label);
   }
   else {
-    snprintf(str, TIMER_STR_LENGTH, "%X%c%d%c%d%c%d%c%d%c%s", timer->id, delim, timer->direction, delim, (int)timer->length, delim, timer->repeat,
+    snprintf(str, TIMER_STR_LENGTH, "%X%c%d%c%d%c%d%c%d%c%s", timer->id, delim,
+      timer->direction, delim, (int)timer->length, delim, timer->repeat,
       delim, timer->vibrate, delim, timer->label);
   }
   return str;
 }
 
-char* timer_describe(Timer* timer) {
+/*char* timer_describe(Timer* timer) {
   static char description[512];
   char type[16];
   char status[16];
@@ -191,7 +181,7 @@ char* timer_describe(Timer* timer) {
   snprintf(description, 512, "%d: I am a %s that is %s, length %d, %d left, %s, %s", timer->id, type, status, (int)timer->length, (int)timer->time_left, repeat, vibrate);
 
   return description;
-}
+}*/
 
 void timer_draw(Timer* timer, GContext* ctx) {
   char* time_left = malloc(32);
@@ -220,10 +210,10 @@ void timer_draw(Timer* timer, GContext* ctx) {
 
   switch (timer->direction) {
     case TIMER_DIRECTION_UP:
-      dir_bmp = gbitmap_create_as_sub_bitmap(bitmaps_get_bitmap(RESOURCE_ID_ARROWS), GRect(0, 0, 8, 16)) ;
+      dir_bmp = bitmaps_get_bitmap(RESOURCE_ID_ARROW_UP);
     break;
     case TIMER_DIRECTION_DOWN:
-      dir_bmp = gbitmap_create_as_sub_bitmap(bitmaps_get_bitmap(RESOURCE_ID_ARROWS), GRect(8, 0, 8, 16)) ;
+      dir_bmp = bitmaps_get_bitmap(RESOURCE_ID_ARROW_DOWN);
     break;
   }
 
@@ -237,10 +227,10 @@ void timer_draw(Timer* timer, GContext* ctx) {
   }
 
   if (strlen(timer->label) > 0) {
-    graphics_draw_text(ctx, timer->label, fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD), GRect(8, 30, 120, 13), GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, NULL);
+    graphics_draw_text(ctx, timer->label, fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD), GRect(8, 22, 120, 18), GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, NULL);
   }
 
-  free(time_left);
+  free_safe(time_left);
 }
 
 void timer_duration_str(int duration, bool showHours, char* str, int str_len) {
@@ -272,6 +262,12 @@ Timer* timer_create(void) {
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - //
 
 static void timer_callback(void* data) {
+  DEBUG("%d bytes free", heap_bytes_free());
+
+  if (! data) {
+    return;
+  }
+
   Timer* timer = (Timer*)data;
   timer->app_timer = NULL;
 

@@ -1,6 +1,6 @@
 /*
 
-Multi Timer v3.0
+Multi Timer v2.8.0
 
 http://matthewtole.com/pebble/multi-timer/
 
@@ -36,7 +36,7 @@ src/windows/win-add.c
 
 #include <pebble.h>
 
-#include <pebble-assist.h>
+#include "../libs/pebble-assist/pebble-assist.h"
 #include "win-timers.h"
 #include "win-add-duration.h"
 #include "win-vibration.h"
@@ -59,6 +59,7 @@ static uint16_t menu_get_num_sections_callback(MenuLayer *me, void *data);
 static uint16_t menu_get_num_rows_callback(MenuLayer *me, uint16_t section_index, void *data);
 static int16_t menu_get_header_height_callback(MenuLayer *me, uint16_t section_index, void *data);
 static int16_t menu_get_cell_height_callback(MenuLayer* me, MenuIndex* cell_index, void* data);
+static void menu_draw_header_callback(GContext* ctx, const Layer *cell_layer, uint16_t section_index, void *data);
 static void menu_draw_row_callback(GContext* ctx, const Layer *cell_layer, MenuIndex *cell_index, void *data);
 static void menu_select_click_callback(MenuLayer *menu_layer, MenuIndex *cell_index, void *callback_context);
 static void vibration_callback(TimerVibration vibration);
@@ -81,32 +82,31 @@ void win_add_show(void) {
 }
 
 void win_add_destroy(void) {
+  win_add_duration_destroy();
   window_destroy(window);
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - //
 
 static void window_load(Window* window) {
+  free_safe(timer);
+  timer = timer_create();
+
   layer_menu = menu_layer_create_fullscreen(window);
   menu_layer_set_callbacks(layer_menu, NULL, (MenuLayerCallbacks) {
     .get_num_sections = menu_get_num_sections_callback,
     .get_num_rows = menu_get_num_rows_callback,
     .get_header_height = menu_get_header_height_callback,
     .get_cell_height = menu_get_cell_height_callback,
+    .draw_header = menu_draw_header_callback,
     .draw_row = menu_draw_row_callback,
     .select_click = menu_select_click_callback,
   });
   menu_layer_set_click_config_onto_window(layer_menu, window);
   menu_layer_add_to_window(layer_menu, window);
-
-  free_safe(timer);
-  timer = timer_create();
-  menu_layer_reload_data(layer_menu);
-  menu_layer_set_selected_index(layer_menu, MenuIndex(0, 0), MenuRowAlignTop, false);
 }
 
 static void window_unload(Window* window) {
-  win_add_duration_destroy();
   menu_layer_destroy(layer_menu);
 }
 
@@ -150,6 +150,10 @@ static int16_t menu_get_cell_height_callback(MenuLayer* me, MenuIndex* cell_inde
   return 36;
 }
 
+static void menu_draw_header_callback(GContext* ctx, const Layer *cell_layer, uint16_t section_index, void *data) {
+  return;
+}
+
 static void menu_draw_row_callback(GContext* ctx, const Layer *cell_layer, MenuIndex *cell_index, void *data) {
 
   switch (cell_index->section) {
@@ -171,7 +175,26 @@ static void menu_draw_row_callback(GContext* ctx, const Layer *cell_layer, MenuI
         break;
         case MENU_ROW_VIBRATION:
           strcpy(option, "Vibration");
-          strcpy(value, timer_vibe_str(timer->vibrate, true));
+          switch (timer->vibrate) {
+            case TIMER_VIBRATION_OFF:
+              strcpy(value, "None");
+            break;
+            case TIMER_VIBRATION_SHORT:
+              strcpy(value, "Short");
+            break;
+            case TIMER_VIBRATION_LONG:
+              strcpy(value, "Long");
+            break;
+            case TIMER_VIBRATION_DOUBLE:
+              strcpy(value, "Double");
+            break;
+            case TIMER_VIBRATION_TRIPLE:
+              strcpy(value, "Triple");
+            break;
+            case TIMER_VIBRATION_CONTINUOUS:
+              strcpy(value, "Solid");
+            break;
+          }
           uppercase(value);
         break;
         case MENU_ROW_REPEAT:
@@ -222,14 +245,12 @@ static void menu_select_click_callback(MenuLayer *menu_layer, MenuIndex *cell_in
         return;
       }
       timer_init(timer);
-      timers_add(timer);
+      timers_add(timer_clone(timer));
       if (settings()->timers_start_auto) {
         timer_start(timer);
       }
       win_timers_jump(timers_get_count() - 1);
       window_stack_pop(true);
-      timers_send_list();
-      timer = NULL;
     break;
   }
 }

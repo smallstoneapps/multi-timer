@@ -42,6 +42,7 @@ src/windows/win-controls.c
 #include "win-controls.h"
 #include "../timers.h"
 #include "../timer.h"
+#include "../common.h"
 
 #define MENU_NUM_ROWS 4
 #define MENU_ROW_START 0
@@ -99,29 +100,24 @@ static int16_t menu_get_header_height_callback(MenuLayer *me, uint16_t section_i
 }
 
 static int16_t menu_get_cell_height_callback(MenuLayer* me, MenuIndex* cell_index, void* data) {
-  return 36;
+  return 32;
 }
 
 static void menu_draw_row_callback(GContext* ctx, const Layer *cell_layer, MenuIndex *cell_index, void *data) {
-  char* label = malloc(32);
-
   switch (cell_index->row) {
     case MENU_ROW_START:
-      strcpy(label, "Start All");
+      draw_icon_text_row(ctx, "Start All", bitmaps_get_bitmap(RESOURCE_ID_MENU_ICON_PLAY));
     break;
     case MENU_ROW_PAUSE:
-      strcpy(label, "Pause All");
+      draw_icon_text_row(ctx, "Pause All", bitmaps_get_bitmap(RESOURCE_ID_MENU_ICON_PAUSE));
     break;
     case MENU_ROW_RESET:
-      strcpy(label, "Reset All");
+      draw_icon_text_row(ctx, "Reset All", bitmaps_get_bitmap(RESOURCE_ID_MENU_ICON_RESET));
     break;
     case MENU_ROW_CLEAR:
-      strcpy(label, "Clear Timers");
+      draw_icon_text_row(ctx, "Clear Timers", bitmaps_get_bitmap(RESOURCE_ID_MENU_ICON_CLEAR));
     break;
   }
-  graphics_context_set_text_color(ctx, GColorBlack);
-  graphics_draw_text(ctx, label, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD), GRect(0, 1, 144, 28), GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, NULL);
-  free(label);
 }
 
 static void menu_select_click_callback(MenuLayer *menu_layer, MenuIndex *cell_index, void *callback_context) {

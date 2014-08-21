@@ -61,7 +61,7 @@ src/windows/win-timers.c
 #define MENU_ITEM_FOOTER_ABOUT 3
 
 #define ROW_HEIGHT 32
-#define ROW_HEIGHT_LABEL 50
+#define ROW_HEIGHT_LABEL 46
 
 static void window_load(Window* window);
 static void window_unload(Window* window);
@@ -222,30 +222,20 @@ static void menu_draw_row_callback(GContext* ctx, const Layer *cell_layer, MenuI
 }
 
 static void menu_draw_footer_row(GContext* ctx, const Layer *cell_layer, MenuIndex *cell_index, void *data) {
-  char* row_label = malloc(20);
-  GBitmap* row_icon = NULL;
-
   switch (cell_index->row) {
     case MENU_ITEM_FOOTER_ADD:
-      strcpy(row_label, "Add Timer");
+      draw_icon_text_row(ctx, "Add Timer", bitmaps_get_bitmap(RESOURCE_ID_MENU_ICON_ADD));
     break;
     case MENU_ITEM_FOOTER_CONTROLS:
-      strcpy(row_label, "Controls");
+      draw_icon_text_row(ctx, "Controls", bitmaps_get_bitmap(RESOURCE_ID_MENU_ICON_CONTROLS));
     break;
     case MENU_ITEM_FOOTER_SETTINGS:
-      strcpy(row_label, "Settings");
+      draw_icon_text_row(ctx, "Settings", bitmaps_get_bitmap(RESOURCE_ID_MENU_ICON_SETTINGS));
     break;
     case MENU_ITEM_FOOTER_ABOUT:
-      strcpy(row_label, "About");
+      draw_icon_text_row(ctx, "About", bitmaps_get_bitmap(RESOURCE_ID_MENU_ICON_ABOUT));
     break;
   }
-
-  graphics_context_set_text_color(ctx, GColorBlack);
-  graphics_draw_text(ctx, row_label,
-    fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD),
-    GRect(8, -1, 128, 24), 0, GTextAlignmentLeft, NULL);
-
-  free(row_label);
 }
 
 static void menu_draw_timer_row(GContext* ctx, const Layer *cell_layer, MenuIndex *cell_index, void *data) {

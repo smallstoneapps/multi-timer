@@ -86,6 +86,8 @@ void handle_init() {
   // Show the main window.
   win_timers_show();
 
+  DEBUG("%d bytes free", heap_bytes_free());
+
   // If the persistence test fails, show the error window and point people
   // to the page telling them how to fix the issue.
   StatusCode test_status = test_persist();
@@ -121,7 +123,7 @@ static void message_handler_timers(char* operation, char* data) {
     if (NULL != timer) {
       strcpy(timer->label, label);
     }
-    free(label);
+    free_safe(label);
     win_timers_update();
   }
   else {

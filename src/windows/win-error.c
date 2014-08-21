@@ -58,7 +58,7 @@ void win_error_init(void) {
 
 void win_error_set_text(char* text) {
   if (NULL != message) {
-    free(message);
+    free_safe(message);
   }
   message = malloc(sizeof(char) * strlen(text));
   strncpy(message, text, strlen(text));
@@ -71,7 +71,7 @@ void win_error_show(void) {
 
 void win_error_destroy() {
   if (NULL != message) {
-    free(message);
+    free_safe(message);
   }
   window_destroy(window);
 }

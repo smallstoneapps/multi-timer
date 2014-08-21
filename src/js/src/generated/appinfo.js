@@ -127,8 +127,8 @@ var AppInfo = {
       },
       {
         "type": "png",
-        "name": "ARROWS",
-        "file": "images/arrows.png"
+        "name": "ARROW_DOWN",
+        "file": "images/arrow_down.png"
       },
       {
         "type": "png",

@@ -36,6 +36,7 @@ src/windows/win-timer.c
 
 #include <pebble.h>
 #include "../timer.h"
+#include "../common.h"
 #include "../timers.h"
 #include <pebble-assist.h>
 #include <bitmap-loader.h>
@@ -167,7 +168,7 @@ static int16_t menu_get_header_height_callback(MenuLayer *me, uint16_t section_i
 }
 
 static int16_t menu_get_cell_height_callback(MenuLayer* me, MenuIndex* cell_index, void* data) {
-  return 36;
+  return 32;
 }
 
 static void menu_select_click_callback(MenuLayer *menu_layer, MenuIndex *cell_index, void *callback_context) {
@@ -204,43 +205,29 @@ static void menu_select_click_callback(MenuLayer *menu_layer, MenuIndex *cell_in
 }
 
 static void menu_draw_row_callback(GContext* ctx, const Layer *cell_layer, MenuIndex *cell_index, void *data) {
-  GBitmap* icon = NULL;
-  char* label = malloc(32);
-
   switch (cell_index->row) {
     case MENU_ROW_STARTPAUSE: {
       switch (timer->status) {
         case TIMER_STATUS_FINISHED:
         case TIMER_STATUS_STOPPED:
-          strcpy(label, "Start");
-          icon = bitmaps_get_bitmap(RESOURCE_ID_MENU_ICON_PLAY);
+          draw_icon_text_row(ctx, "Start", bitmaps_get_bitmap(RESOURCE_ID_MENU_ICON_PLAY));
         break;
         case TIMER_STATUS_PAUSED:
-          strcpy(label, "Resume");
-          icon = bitmaps_get_bitmap(RESOURCE_ID_MENU_ICON_PLAY);
+          draw_icon_text_row(ctx, "Resume", bitmaps_get_bitmap(RESOURCE_ID_MENU_ICON_PLAY));
         break;
         case TIMER_STATUS_RUNNING:
-          strcpy(label, "Pause");
-          icon = bitmaps_get_bitmap(RESOURCE_ID_MENU_ICON_PAUSE);
+          draw_icon_text_row(ctx, "Pause", bitmaps_get_bitmap(RESOURCE_ID_MENU_ICON_PAUSE));
         break;
       }
     }
     break;
     case MENU_ROW_RESET:
-      strcpy(label, "Reset");
-      icon = bitmaps_get_bitmap(RESOURCE_ID_MENU_ICON_RESET);
+      draw_icon_text_row(ctx, "Reset", bitmaps_get_bitmap(RESOURCE_ID_MENU_ICON_RESET));
     break;
     case MENU_ROW_CLEAR:
-      strcpy(label, "Destroy");
-      icon = bitmaps_get_bitmap(RESOURCE_ID_MENU_ICON_CLEAR);
+      draw_icon_text_row(ctx, "Destroy", bitmaps_get_bitmap(RESOURCE_ID_MENU_ICON_CLEAR));
     break;
   }
-  graphics_context_set_text_color(ctx, GColorBlack);
-  graphics_draw_text(ctx, label, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD), GRect(36, 1, 104, 28), GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, NULL);
-  if (icon != NULL) {
-    graphics_draw_bitmap_in_rect(ctx, icon, GRect(8, 8, 20, 20));
-  }
-  free(label);
 }
 
 static void layer_timer_update(Layer* layer, GContext* ctx) {

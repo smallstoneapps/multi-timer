@@ -216,6 +216,10 @@ GBitmap* gbitmap_create_with_resource(uint32_t resource_id) {
   return NULL;
 }
 
+GBitmap* gbitmap_create_as_sub_bitmap(const GBitmap *base_bitmap, GRect sub_rect) {
+  return NULL;
+}
+
 void gbitmap_destroy(GBitmap* bitmap) {
 
 }

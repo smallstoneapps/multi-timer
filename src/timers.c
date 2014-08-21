@@ -172,7 +172,7 @@ status_t timers_save(void) {
       timerBlock->timers[u] = *timers_get(t + u);
     }
     persist_write_data(STORAGE_TIMER_START + block, timerBlock, sizeof(TimerBlock));
-    free(timerBlock);
+    free_safe(timerBlock);
     block += 1;
   }
   return 0;
@@ -196,7 +196,7 @@ void timers_send_list(void) {
       strcat(timer_string, OUTER_SEP);
     }
     mqueue_add("TMR", "LIST", timer_string);
-    free(timer_string);
+    free_safe(timer_string);
   }
 }
 

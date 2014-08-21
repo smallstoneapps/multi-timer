@@ -58,3 +58,14 @@ StatusCode test_persist(void) {
   }
   return write_status;
 }
+
+
+void draw_icon_text_row(GContext* ctx, const char* label, GBitmap* icon) {
+  graphics_context_set_text_color(ctx, GColorBlack);
+  graphics_draw_text(ctx, label, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD),
+    GRect(32, -1, 104, 24), GTextOverflowModeTrailingEllipsis,
+    GTextAlignmentLeft, NULL);
+  if (icon != NULL) {
+    graphics_draw_bitmap_in_rect(ctx, icon, GRect(8, 8, 16, 16));
+  }
+}
