@@ -46,7 +46,7 @@ static HandlerQueue* handler_queue = NULL;
 static bool sending = false;
 
 void mqueue_init(void) {
-  app_message_open(256, 512);
+  app_message_open(app_message_inbox_size_maximum(), app_message_outbox_size_maximum());
   app_message_register_inbox_dropped(inbox_dropped_callback);
   app_message_register_outbox_sent(outbox_sent_callback);
   app_message_register_outbox_failed(outbox_failed_callback);
@@ -117,14 +117,13 @@ static void outbox_sent_callback(DictionaryIterator *iterator, void *context) {
 
 static void outbox_failed_callback(DictionaryIterator *iterator, AppMessageResult reason, void *context) {
   sending = false;
-  APP_LOG(APP_LOG_LEVEL_ERROR, "AppMessage Failed: %d", reason);
   send_next_message();
 }
 
 static void inbox_received_callback(DictionaryIterator *iterator, void *context) {
-  char* group = dict_find(iterator, KEY_GROUP) != NULL ? dict_find(iterator, KEY_GROUP)->value->cstring : "";
-  char* operation = dict_find(iterator, KEY_OPERATION) != NULL ? dict_find(iterator, KEY_OPERATION)->value->cstring : "";
-  char* data = dict_find(iterator, KEY_DATA) != NULL ? dict_find(iterator, KEY_DATA)->value->cstring : "";
+  char* group = dict_find(iterator, KEY_GROUP)->value->cstring;
+  char* operation = dict_find(iterator, KEY_OPERATION)->value->cstring;
+  char* data = dict_find(iterator, KEY_DATA)->value->cstring;
 
   HandlerQueue* hq = handler_queue;
   while (hq != NULL) {
@@ -164,8 +163,8 @@ static void send_next_message() {
   DictionaryIterator* dict;
   app_message_outbox_begin(&dict);
   dict_write_cstring(dict, KEY_GROUP, mq->message->group);
-  dict_write_cstring(dict, KEY_OPERATION, mq->message->operation);
   dict_write_cstring(dict, KEY_DATA, mq->message->data);
+  dict_write_cstring(dict, KEY_OPERATION, mq->message->operation);
   app_message_outbox_send();
   mq->attempts_left -= 1;
 }

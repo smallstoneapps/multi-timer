@@ -39,6 +39,7 @@ src/windows/win-vibrate.c
 #include "win-vibrate.h"
 #include <bitmap-loader.h>
 #include <pebble-assist.h>
+#include "../common.h"
 
 void click_config_provider(Window* window);
 void click_handler(ClickRecognizerRef recognizer, void* context);
@@ -68,7 +69,7 @@ void win_vibrate_init(void) {
 }
 
 void win_vibrate_show(void) {
-  window_stack_push(window, true);
+  window_stack_push(window, ANIMATE_WINDOWS);
 }
 
 void win_vibrate_destroy(void) {

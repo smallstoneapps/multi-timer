@@ -38,7 +38,9 @@ src/windows/win-about.c
 #include "win-about.h"
 #include <scroll-text-layer.h>
 #include <pebble-assist.h>
+#include "../analytics.h"
 #include "../generated/appinfo.h"
+#include "../common.h"
 
 static void window_load(Window* window);
 static void window_unload(Window* window);
@@ -48,6 +50,7 @@ static Window* window;
 static ScrollTextLayer* layer;
 static Layer* layer_header;
 static char* text_about = "Multi Timer is a Pebble app developed by Matthew Tole.\n\nIf you like this app, please consider donating to help fund future development.\n\nGo to http://matthewtole.com/pebble/ for details.";
+static time_t time_start;
 
 void win_about_init(void) {
   window = window_create();
@@ -61,13 +64,14 @@ void win_about_destroy(void) {
   window_destroy(window);
 }
 
-void win_about_show(bool animated) {
-  window_stack_push(window, animated);
+void win_about_show(void) {
+  window_stack_push(window, ANIMATE_WINDOWS);
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - //
 
 static void window_load(Window* window) {
+  analytics_tiw_start();
   layer = scroll_text_layer_create(GRect(0, 26, 144, 130));
   scroll_text_layer_set_font(layer, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD));
   scroll_text_layer_set_text(layer, text_about);
@@ -79,6 +83,7 @@ static void window_load(Window* window) {
 }
 
 static void window_unload(Window* window) {
+  analytics_tiw_end("about");
   scroll_text_layer_destroy(layer);
   layer_destroy_safe(layer_header);
 }

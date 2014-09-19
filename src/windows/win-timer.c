@@ -38,17 +38,22 @@ src/windows/win-timer.c
 #include "../timer.h"
 #include "../common.h"
 #include "../timers.h"
+#include "win-add.h"
 #include <pebble-assist.h>
 #include <bitmap-loader.h>
 
-#define FRAME_TOP GRect(0, 0, 144, 40)
-#define FRAME_TOP_LABEL GRect(0, 0, 144, 54)
-#define FRAME_MENU GRect(0, 40, 144, 112)
-#define FRAME_MENU_LABEL GRect(0, 54, 144, 98)
+#define HEIGHT_TOP        36
+#define HEIGHT_TOP_LABEL  50
 
-#define MENU_ROW_STARTPAUSE 0
+#define FRAME_TOP         GRect(0, 0, PEBBLE_WIDTH, HEIGHT_TOP)
+#define FRAME_TOP_LABEL   GRect(0, 0, PEBBLE_WIDTH, HEIGHT_TOP_LABEL)
+#define FRAME_MENU        GRect(0, HEIGHT_TOP, PEBBLE_WIDTH, PEBBLE_HEIGHT - STATUS_HEIGHT - HEIGHT_TOP)
+#define FRAME_MENU_LABEL  GRect(0, HEIGHT_TOP_LABEL, PEBBLE_WIDTH, PEBBLE_HEIGHT - STATUS_HEIGHT - HEIGHT_TOP_LABEL)
+
+#define MENU_ROW_START_PAUSE 0
 #define MENU_ROW_RESET 1
 #define MENU_ROW_CLEAR 2
+#define MENU_ROW_EDIT 3
 
 static void window_load(Window* window);
 static void window_unload(Window* window);
@@ -87,7 +92,7 @@ void win_timer_init(void) {
 void win_timer_show(Timer* tmr, uint8_t pos) {
   timer = tmr;
   timer_pos = pos;
-  window_stack_push(window, true);
+  window_stack_push(window, ANIMATE_WINDOWS);
   if (NULL == layer_timer) {
     return;
   }
@@ -160,7 +165,7 @@ static uint16_t menu_get_num_sections_callback(MenuLayer *me, void *data) {
 }
 
 static uint16_t menu_get_num_rows_callback(MenuLayer *me, uint16_t section_index, void *data) {
-  return 3;
+  return timer->status == TIMER_STATUS_STOPPED ? 4 : 3;
 }
 
 static int16_t menu_get_header_height_callback(MenuLayer *me, uint16_t section_index, void *data) {
@@ -173,7 +178,7 @@ static int16_t menu_get_cell_height_callback(MenuLayer* me, MenuIndex* cell_inde
 
 static void menu_select_click_callback(MenuLayer *menu_layer, MenuIndex *cell_index, void *callback_context) {
   switch (cell_index->row) {
-    case MENU_ROW_STARTPAUSE: {
+    case MENU_ROW_START_PAUSE: {
       switch (timer->status) {
         case TIMER_STATUS_RUNNING:
           timer_pause(timer);
@@ -196,9 +201,12 @@ static void menu_select_click_callback(MenuLayer *menu_layer, MenuIndex *cell_in
     break;
     case MENU_ROW_CLEAR:
       timers_remove(timer_pos);
-      window_stack_pop(true);
+      window_stack_pop(ANIMATE_WINDOWS);
       timers_send_list();
       return;
+    break;
+    case MENU_ROW_EDIT:
+      win_add_show_edit(timer);
     break;
   }
   menu_layer_reload_data(menu_layer);
@@ -206,7 +214,7 @@ static void menu_select_click_callback(MenuLayer *menu_layer, MenuIndex *cell_in
 
 static void menu_draw_row_callback(GContext* ctx, const Layer *cell_layer, MenuIndex *cell_index, void *data) {
   switch (cell_index->row) {
-    case MENU_ROW_STARTPAUSE: {
+    case MENU_ROW_START_PAUSE: {
       switch (timer->status) {
         case TIMER_STATUS_FINISHED:
         case TIMER_STATUS_STOPPED:
@@ -226,6 +234,9 @@ static void menu_draw_row_callback(GContext* ctx, const Layer *cell_layer, MenuI
     break;
     case MENU_ROW_CLEAR:
       draw_icon_text_row(ctx, "Destroy", bitmaps_get_bitmap(RESOURCE_ID_MENU_ICON_CLEAR));
+    break;
+    case MENU_ROW_EDIT:
+      draw_icon_text_row(ctx, "Edit", bitmaps_get_bitmap(RESOURCE_ID_MENU_ICON_EDIT));
     break;
   }
 }

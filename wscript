@@ -72,12 +72,13 @@ def build(ctx):
     '../src/js/src/libs/version.js',
     '../src/js/src/libs/pebble-ga.js',
     '../src/js/src/libs/keen.js',
+    '../src/js/src/libs/js-message-queue.min.js',
   ]
 
   js_sources = [
     '../src/js/src/generated/appinfo.js',
-    '../src/js/src/config.js',
     '../src/js/src/main.js',
+    '../src/js/src/timer.js',
     '../src/js/src/timers.js'
   ]
   built_js = '../src/js/pebble-js-app.js'
@@ -126,8 +127,10 @@ def generate_appinfo_h(task):
   write_comment_header(f, 'src/generated/appinfo.h', appinfo)
   f.write('#pragma once\n\n')
   f.write('#define VERSION_LABEL "{0}"\n'.format(appinfo["versionLabel"]))
-  f.write('#define VERSION_CODE {0}\n'.format(appinfo["versionCode"]))
   f.write('#define UUID "{0}"\n'.format(appinfo["uuid"]))
+  f.write('#define DEBUG_MODE {0}\n'.format('true' if appinfo["debug"] else 'false'))
+  f.write('#define DELIMITER_INNER \'{0}\'\n'.format(appinfo['delimiters']['inner']))
+  f.write('#define DELIMITER_OUTER \'{0}\'\n'.format(appinfo['delimiters']['outer']))
   for key in appinfo['appKeys']:
     f.write('#define APP_KEY_{0} {1}\n'.format(key.upper(), appinfo['appKeys'][key]))
   f.close()

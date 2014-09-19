@@ -87,6 +87,7 @@ Timer* timer_create(void);
 
 char* timer_vibe_str(TimerVibration vibe, bool shortStr);
 char* timer_serialize(Timer* timer, char delim);
+Timer* timer_deserialize(char* data, char delim);
 void timer_draw(Timer* timer, GContext* ctx);
 // char* timer_describe(Timer* timer);
 void timer_duration_str(int duration, bool showHours, char* str, int str_len);

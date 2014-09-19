@@ -63,9 +63,15 @@ StatusCode test_persist(void) {
 void draw_icon_text_row(GContext* ctx, const char* label, GBitmap* icon) {
   graphics_context_set_text_color(ctx, GColorBlack);
   graphics_draw_text(ctx, label, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD),
-    GRect(32, -1, 104, 24), GTextOverflowModeTrailingEllipsis,
+    GRect(34, 0, 104, 24), GTextOverflowModeTrailingEllipsis,
     GTextAlignmentLeft, NULL);
   if (icon != NULL) {
-    graphics_draw_bitmap_in_rect(ctx, icon, GRect(8, 8, 16, 16));
+    graphics_draw_bitmap_in_rect(ctx, icon, GRect(10, 9, 16, 16));
   }
+}
+
+void menu_draw_option(GContext* ctx, char* option, char* value) {
+  graphics_context_set_text_color(ctx, GColorBlack);
+  graphics_draw_text(ctx, option, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD), GRect(4, 0, 136, 28), GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, NULL);
+  graphics_draw_text(ctx, value, fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD), GRect(4, 5, 136, 20), GTextOverflowModeTrailingEllipsis, GTextAlignmentRight, NULL);
 }

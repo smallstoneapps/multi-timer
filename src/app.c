@@ -41,17 +41,18 @@ src/app.c
 #include <pebble-assist.h>
 #include <message-queue.h>
 #include <data-processor.h>
-#include "windows/win-timers.h"
+#include "windows/win-main.h"
 #include "windows/win-error.h"
 #include "windows/win-vibration.h"
 #include "settings.h"
 #include "timers.h"
 #include "common.h"
+#include "analytics.h"
 
 static void handle_init(void);
 static void handle_deinit(void);
 static void message_handler_timers(char* operation, char* data);
-// static void message_handler_ops(char* operation, char* data);
+static void message_handler_ops(char* operation, char* data);
 
 //! Program main entry point.
 int main(void) {
@@ -71,7 +72,7 @@ void handle_init() {
   mqueue_init();
   bitmaps_init();
   settings_load();
-  win_timers_init();
+  win_main_init();
   win_vibration_init();
 
   // Register some message queue handler functions.
@@ -84,9 +85,7 @@ void handle_init() {
   }
 
   // Show the main window.
-  win_timers_show();
-
-  DEBUG("%d bytes free", heap_bytes_free());
+  win_main_show();
 
   // If the persistence test fails, show the error window and point people
   // to the page telling them how to fix the issue.
@@ -97,6 +96,7 @@ void handle_init() {
 your watch, so timers and settings will not be saved by this app.\n\
 Please factory reset your watch and reload apps from the locker to \
 correct the issue. For more information visit:\nbit.ly/pblstorage");
+    analytics_track_event("error", "persistence_failed");
     win_error_show();
   }
 }
@@ -112,23 +112,34 @@ void handle_deinit() {
 }
 
 static void message_handler_timers(char* operation, char* data) {
-  if (0 == strcmp(operation, "LIST")) {
-    timers_send_list();
+  if (0 == strcmp(operation, "LIST?")) {
+    if (timers_are_blank()) {
+      timers_get_list();
+    }
+    else {
+      timers_send_list();
+    }
+  }
+  else if (0 == strcmp(operation, "LIST!")) {
+    timers_load_list(data);
+    win_main_update();
   }
   else if (0 == strcmp(operation, "LABEL")) {
-    data_processor_init(data, OUTER_SEP[0]);
-    uint16_t id = data_processor_get_int();
-    char* label = data_processor_get_string();
+    ProcessingState* ps = data_processor_create(data, DELIMITER_OUTER);
+    uint16_t id = data_processor_get_int(ps);
+    char* label = data_processor_get_string(ps);
     Timer* timer = timers_find(id);
     if (NULL != timer) {
       strcpy(timer->label, label);
     }
     free_safe(label);
-    win_timers_update();
+    win_main_update();
+    data_processor_destroy(ps);
   }
   else {
     DEBUG("TMR :: %s :: %s", operation, data);
   }
+  DEBUG("TMR :: %s :: %s", operation, data);
 }
 
 static void message_handler_ops(char* operation, char* data) {

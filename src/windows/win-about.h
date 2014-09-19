@@ -40,4 +40,4 @@ src/windows/win-about.h
 
 void win_about_init(void);
 void win_about_destroy(void);
-void win_about_show(bool animated);
+void win_about_show(void);

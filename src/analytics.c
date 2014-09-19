@@ -1,6 +1,7 @@
 /*
 
 Multi Timer v3.0
+
 http://matthewtole.com/pebble/multi-timer/
 
 ----------------------
@@ -29,24 +30,35 @@ THE SOFTWARE.
 
 --------------------
 
-src/js/src/config.js
+src/analytics.c
 
 */
 
-/* exported Config */
+#include <pebble.h>
+#include "analytics.h"
+#include "generated/appinfo.h"
+#include <message-queue.h>
+#include <pebble-assist.h>
 
-var Config = {
+time_t tiw_start;
+char analytics_str[64];
 
-  settingsUrl: 'http://192.168.0.8:6006/multi-timer/config/',
-  socketUrl: 'http://192.168.0.8:6006/multi-timer',
-  keen: {
-    projectId: '53a84295bcb79c58c7000002',
-    writeKey: 'f91165f494c5bff28908caf75bf0a07ded19fe01ec813985c3ad466fe8e7799879e3a5246b0e504ea97fc80b10d39faeda96e1a5811af406a203721ce92d8a97c9f1d4bebf53b80a60b57f78784fac3880b888062084a3a3070650f650777ed3a1048d941ac76f3b6ad739e32931bf6c'
-  },
-  googleAnalytics: 'UA-48246810-3',
-  delimiters: {
-    inner: '`',
-    outer: '~'
-  }
+void analytics_track_event(char* name, char* data) {
+  mqueue_add("ANL", name, data);
+}
 
-};
+void analytics_tiw_start(void) {
+  tiw_start = time(NULL);
+}
+
+void analytics_tiw_end(char* window) {
+  snprintf(analytics_str, 64, "window%c%s%cduration%c%d",
+    DELIMITER_INNER,
+    window,
+    DELIMITER_OUTER,
+    DELIMITER_INNER,
+    (uint16_t) (time(NULL) - tiw_start));
+  analytics_track_event("tiw", analytics_str);
+}
+
+

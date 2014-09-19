@@ -36,6 +36,7 @@ src/windows/win-vibration.c
 #include "win-vibration.h"
 #include <pebble.h>
 #include "../timer.h"
+#include "../common.h"
 #include <pebble-assist.h>
 #include <bitmap-loader.h>
 
@@ -68,7 +69,7 @@ void win_vibration_init(void) {
 }
 
 void win_vibration_show(VibrationCallback callback, TimerVibration vibration) {
-  window_stack_push(window, true);
+  window_stack_push(window, ANIMATE_WINDOWS);
   MenuIndex index;
   index.section = 0;
   index.row = vibration;

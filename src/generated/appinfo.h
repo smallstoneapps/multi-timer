@@ -37,8 +37,10 @@ src/generated/appinfo.h
 #pragma once
 
 #define VERSION_LABEL "3.0"
-#define VERSION_CODE 1
 #define UUID "0db6a55e-b32a-4b03-b037-95637bf306ff"
+#define DEBUG_MODE true
+#define DELIMITER_INNER '`'
+#define DELIMITER_OUTER '~'
 #define APP_KEY_DATA 2
 #define APP_KEY_OPERATION 1
 #define APP_KEY_GROUP 0

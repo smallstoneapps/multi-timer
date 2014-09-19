@@ -38,9 +38,9 @@ src/common.h
 
 #include <pebble.h>
 
-#define OUTER_SEP "~"
-#define INNER_SEP '`'
+#define ANIMATE_WINDOWS false
 
 void uppercase(char* str);
 StatusCode test_persist(void);
 void draw_icon_text_row(const GContext* ctx, const char* label, const GBitmap* icon);
+void menu_draw_option(GContext* ctx, char* option, char* value);

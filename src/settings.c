@@ -46,7 +46,8 @@ Settings _settings = {
   .resume_timers = true,
   .timers_start_auto = false,
   .timers_vibration = TIMER_VIBRATION_SHORT,
-  .timers_hours = false
+  .timers_hours = false,
+  .show_clock = false
 };
 
 void settings_load(void) {

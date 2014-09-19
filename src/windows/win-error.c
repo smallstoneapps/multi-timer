@@ -38,6 +38,7 @@ src/windows/win-error.c
 #include "win-error.h"
 #include <scroll-text-layer.h>
 #include <pebble-assist.h>
+#include "../common.h"
 
 static void window_load(Window* window);
 static void window_unload(Window* window);
@@ -66,7 +67,7 @@ void win_error_set_text(char* text) {
 }
 
 void win_error_show(void) {
-  window_stack_push(window, true);
+  window_stack_push(window, ANIMATE_WINDOWS);
 }
 
 void win_error_destroy() {

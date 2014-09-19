@@ -33,84 +33,111 @@ src/js/src/timers.js
 
 */
 
+/* global Timer */
+/* global MessageQueue */
 /* exported Timers */
 
 var Timers = (function () {
 
-  function Timers(config, socket) {
-    this.config = config;
-    this.timers = [];
-    this.socket = socket;
-    this.socket.on('connect', function () {
-      this.socket.emit('id', { token: Pebble.getAccountToken(), type: 'app' });
-    }.bind(this));
-    this.socket.on('label', function (data) {
-      Pebble.sendAppMessage({ group: 'TMR', operation: 'LABEL', data: [ data.id, data.label ].join(this.config.delimiters.outer) });
-    }.bind(this));
+  var timers = [];
+  var updateTime = 0;
+  var delimInner = '';
+  var delimOuter = '';
+  var socket = null;
+
+  function init(options) {
+    delimOuter = options.delimiters.outer;
+    delimInner = options.delimiters.inner;
+    Pebble.addEventListener('appmessage', handleMessage);
+    socket = options.socket;
+    socket.on('connect', socketConnect);
+    socket.on('label', socketLabel);
+
+    loadTimers();
+    getTimers();
   }
 
-  Timers.prototype.handleMessage = function(operation, data) {
+  return {
+    init: init
+  };
+
+  function handleMessage(event) {
+    if (event.data.group !== 'TMR') {
+      return;
+    }
+    switch (event.data.operation) {
+      case 'LIST?':
+        sendTimers();
+        break;
+      case 'LIST!':
+        setTimers(event.data.data);
+        break;
+    }
+  }
+
+  function loadTimers() {
+    var timerString;
+    if (! (timerString = localStorage.getItem('timers'))) {
+      return;
+    }
+    timers = [];
     try {
-      switch (operation) {
-        case 'LIST':
-          var timerStrings = data.split(this.config.delimiters.outer);
-          this.timers = [];
-          timerStrings.forEach(function (str) {
-            if (! str.length) {
-              return;
-            }
-            var timer = parseTimer.call(this, str);
-            if (null !== timer) {
-              this.timers.push(timer);
-            }
-          }.bind(this));
-          this.socket.emit('timers!', this.timers);
-          break;
-      }
+      var storedTimers = JSON.parse(timerString);
+      console.log(timerString);
+      storedTimers.forEach(function (timer) {
+        timers.push(new Timer(timer));
+      });
     }
     catch (ex) {
-      console.log(ex);
+      console.log(JSON.stringify(ex));
     }
-  };
-
-  Timers.prototype.getTimers = function() {
-    return this.timers;
-  };
-
-  function parseTimer(str) {
-    var bits = str.split(this.config.delimiters.inner);
-    if (bits.length <= 1) {
-      return null;
-    }
-    var timer = {};
-    timer.id = parseInt(bits[0], 16);
-    timer.direction = bits[1] === '0' ? 'up' : 'down';
-    switch (timer.direction) {
-      case 'up':
-        timer.label = bits[2];
-        break;
-      case 'down':
-        timer.length = parseInt(bits[2], 10);
-        timer.repeat = bits[3] === '1';
-        timer.vibrate = vibrationString(parseInt(bits[4], 10));
-        timer.label = bits[5];
-        break;
-    }
-    return timer;
   }
 
-  function vibrationString(vibe) {
-    var vibeStrings = [
-      'off',
-      'short',
-      'long',
-      'double',
-      'triple',
-      'continuous'
-    ];
-    return vibeStrings[vibe];
+  function saveTimers() {
+    localStorage.setItem('timers', JSON.stringify(timers.map(function (timer) {
+      return timer.toObject();
+    })));
   }
 
-  return Timers;
+  function getTimers() {
+    MessageQueue.sendAppMessage({ group: 'TMR', operation: 'LIST?', data: '' });
+  }
+
+  function sendTimers() {
+    var timerStr = timers.map(function (timer) {
+      return timer.toString(delimInner);
+    }).join(delimOuter);
+    var message = [ updateTime.toString(), timers.length, timerStr ].join(delimOuter);
+    MessageQueue.sendAppMessage({ group: 'TMR', operation: 'LIST!', data: message });
+  }
+
+  function setTimers(data) {
+    timers = [];
+    var pieces = data.split(delimOuter);
+    pieces.forEach(function (piece) {
+      var timer = Timer.parse(piece, delimInner);
+      if (timer) {
+        timers.push(timer);
+      }
+    });
+    saveTimers();
+    uploadTimers();
+  }
+
+  function uploadTimers() {
+    socket.emit('timers!', timers);
+  }
+
+  function socketConnect() {
+    socket.emit('id', { token: Pebble.getAccountToken(), type: 'app' });
+  }
+
+  function socketLabel(data) {
+    Pebble.sendAppMessage({
+      group: 'TMR',
+      operation: 'LABEL',
+      data: [ data.id, data.label ].join(delimOuter)
+    });
+  }
 
 }());

@@ -34,12 +34,16 @@ src/timers.c
 
 */
 
+// TODO: Fix the is_blank thing because I'm an idiot.
+
 #include <pebble.h>
 #include "globals.h"
 #include "timers.h"
 #include "common.h"
 #include "settings.h"
+#include "generated/appinfo.h"
 #include <pebble-assist.h>
+#include <data-processor.h>
 #include <linked-list.h>
 #include <message-queue.h>
 
@@ -52,6 +56,7 @@ typedef struct TimerBlock {
 } TimerBlock;
 
 static LinkedRoot* timers = NULL;
+static bool is_blank = true;
 
 void timers_init(void) {
   timers = linked_list_create_root();
@@ -67,6 +72,7 @@ int timers_get_count() {
 
 void timers_add(Timer* timer) {
   linked_list_append(timers, timer);
+  is_blank = false;
 }
 
 void timers_clear() {
@@ -97,6 +103,8 @@ status_t timers_restore(void) {
   if (! persist_exists(STORAGE_TIMER_START)) {
     return 0;
   }
+
+  is_blank = false;
 
   int block = 0;
   TimerBlock* timerBlock = malloc(sizeof(TimerBlock));
@@ -158,7 +166,10 @@ status_t timers_save(void) {
   int block = 0;
   uint8_t num_timers = timers_get_count();
   if (num_timers == 0) {
-    persist_delete(STORAGE_TIMER_START);
+    TimerBlock* timer_block = malloc(sizeof(TimerBlock));
+    timer_block->count = 0;
+    persist_write_data(STORAGE_TIMER_START, timer_block, sizeof(TimerBlock));
+    free_safe(timer_block);
     return 0;
   }
   for (int t = 0; t < num_timers; t += TIMER_BLOCK_SIZE) {
@@ -181,7 +192,7 @@ status_t timers_save(void) {
 void timers_send_list(void) {
   const uint8_t timer_count = timers_get_count();
   if (0 == timer_count) {
-    mqueue_add("TMR", "LIST", " ");
+    mqueue_add("TMR", "LIST!", " ");
   }
   else {
     size_t timer_string_size = (TIMER_STR_LENGTH * timer_count) + timer_count;
@@ -192,11 +203,33 @@ void timers_send_list(void) {
     }
     timer_string[0] = 0;
     for (uint8_t t = 0; t < timer_count; t += 1) {
-      strcat(timer_string, timer_serialize(timers_get(t), INNER_SEP));
-      strcat(timer_string, OUTER_SEP);
+      strcat(timer_string, timer_serialize(timers_get(t), DELIMITER_INNER));
+      if (t < timer_count - 1) {
+        timer_string[strlen(timer_string)] = DELIMITER_OUTER;
+      }
     }
-    mqueue_add("TMR", "LIST", timer_string);
+    mqueue_add("TMR", "LIST!", timer_string);
     free_safe(timer_string);
   }
 }
 
+void timers_load_list(char* data) {
+  timers_clear();
+  ProcessingState* ps = data_processor_create(data, DELIMITER_OUTER);
+  data_processor_get_int(ps);
+  uint8_t num_timers = data_processor_get_int(ps);
+  for (uint8_t t = 0; t < num_timers; t += 1) {
+    Timer* timer = timer_deserialize(data_processor_get_string(ps), DELIMITER_INNER);
+    timers_add(timer);
+    timer_reset(timer);
+  }
+  data_processor_destroy(ps);
+}
+
+void timers_get_list(void) {
+  mqueue_add("TMR", "LIST?", " ");
+}
+
+bool timers_are_blank(void) {
+  return is_blank;
+}

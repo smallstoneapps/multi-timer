@@ -83,7 +83,7 @@ void win_add_duration_init(void) {
 
 void win_add_duration_show(Timer* tmr) {
   timer = tmr;
-  window_stack_push(window, true);
+  window_stack_push(window, ANIMATE_WINDOWS);
   mode = settings()->timers_hours ? MODE_HOURS : MODE_MINUTES;
   hours = timer->length / 3600;
   minutes = settings()->timers_hours ? ((timer->length % 3600) / 60) : (timer->length / 60);

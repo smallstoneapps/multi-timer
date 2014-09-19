@@ -1,6 +1,6 @@
 /*
 
-Linked List v0.2.3
+Linked List v0.3
 A Pebble library for working with linked lists.
 http://smallstoneapps.github.io/linked-list/
 
@@ -37,14 +37,16 @@ src/linked-list.h
 #include <pebble.h>
 #include "linked-list.h"
 
-struct LinkedRoot {
-  LinkedList* head;
-};
+typedef struct LinkedList LinkedList;
 
 struct LinkedList {
   LinkedList* next;
   LinkedList* prev;
   void* object;
+};
+
+struct LinkedRoot {
+  LinkedList* head;
 };
 
 static LinkedList* create_list_item(void* object);
@@ -63,7 +65,7 @@ uint16_t linked_list_count(LinkedRoot* root) {
   }
   LinkedList* list = root->head;
   uint16_t size = 0;
-  while (list != NULL) {
+  while (NULL != list) {
     list = list->next;
     size += 1;
   }
@@ -86,14 +88,6 @@ void linked_list_append(LinkedRoot* root, void* object) {
     tail->next = child;
     child->prev = tail;
   }
-}
-
-void* linked_list_get(LinkedRoot* root, uint16_t index) {
-  if (NULL == root) {
-    return NULL;
-  }
-  LinkedList* list = list_get(root, index);
-  return NULL == list ? NULL : list->object;
 }
 
 void linked_list_prepend(LinkedRoot* root, void* object) {
@@ -124,6 +118,14 @@ void linked_list_insert(LinkedRoot* root, void* object, uint16_t after) {
   }
 }
 
+void* linked_list_get(LinkedRoot* root, uint16_t index) {
+  if (NULL == root) {
+    return NULL;
+  }
+  LinkedList* list = list_get(root, index);
+  return NULL == list ? NULL : list->object;
+}
+
 void linked_list_remove(LinkedRoot* root, uint16_t index) {
   if (NULL == root) {
     return;
@@ -144,7 +146,6 @@ void linked_list_remove(LinkedRoot* root, uint16_t index) {
     }
     list->prev->next = list->next;
   }
-  // free(list);
 }
 
 void linked_list_clear(LinkedRoot* root) {
@@ -181,8 +182,9 @@ int16_t linked_list_find_compare(LinkedRoot* root, void* object, ObjectCompare c
   return -1;
 }
 
-// -----
+//----------------------------------------------------------------------------//
 
+// Create a new LinkedList with the specified object.
 static LinkedList* create_list_item(void* object) {
   LinkedList* item = malloc(sizeof(LinkedList));
   item->next = NULL;
@@ -191,6 +193,7 @@ static LinkedList* create_list_item(void* object) {
   return item;
 }
 
+// Returns the LinkedList at a given position within a list.
 static LinkedList* list_get(LinkedRoot* root, uint16_t index) {
   LinkedList* list = root->head;
   uint16_t pos = 0;
@@ -204,6 +207,8 @@ static LinkedList* list_get(LinkedRoot* root, uint16_t index) {
   return NULL;
 }
 
+// ObjectCompare function used for comparing the pointers of two objects.
+// Used by the find/contains functions that look for identical objects.
 static bool pointer_compare(void* p1, void* p2) {
   return p1 == p2;
 }

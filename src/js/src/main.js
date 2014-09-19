@@ -34,60 +34,86 @@ src/js/src/main.js
 */
 
 /* global Pebble */
-/* global Analytics */
 /* global Keen */
 /* global http */
 /* global io */
-/* global Config */
 /* global AppInfo */
 /* global Timers */
 
 (function () {
 
-  var ga = null;
   var socket = null;
-  var timers = null;
-  var firstTime = localStorage.getItem('run-check') === null;
-  localStorage.setItem('run-check', true);
+  // var timers = null;
 
-  Pebble.addEventListener('ready', function () {
+  try {
+    Pebble.addEventListener('ready', ready);
+    Pebble.addEventListener('showConfiguration', showConfiguration);
+    Pebble.addEventListener('webviewclosed', webviewClosed);
+    Pebble.addEventListener('appmessage', appMessage);
+  }
+  catch (ex) {
+    handleError(ex);
+  }
+
+  function ready() {
     try {
-      ga = new Analytics(Config.googleAnalytics, AppInfo.shortName, AppInfo.versionLabel);
-      Keen.init(http, Pebble, Config.keen, AppInfo);
-      socket = io.connect(Config.socketUrl);
-      timers = new Timers(Config, socket);
-      ga.trackEvent('app', 'run');
+      Keen.init(http, Pebble, AppInfo.config.keen, AppInfo, AppInfo.debug);
+      socket = io.connect(AppInfo.config.socketUrl);
+      Timers.init({
+        delimiters: AppInfo.delimiters,
+        socket: socket
+      });
     }
     catch (ex) {
-      Keen.sendEvent('error', { message: ex.toString() });
+      handleError(ex);
     }
-  });
+  }
 
-  Pebble.addEventListener('showConfiguration', function () {
+  function showConfiguration() {
     try {
-      Pebble.sendAppMessage({ group: 'TMR', operation: 'LIST', data: '' });
-      Pebble.openURL(Config.settingsUrl + Pebble.getAccountToken() + '?version=' + AppInfo.versionLabel + '&firstTime=' + firstTime);
+      Pebble.openURL(AppInfo.config.settingsUrl + Pebble.getAccountToken() + '?version=' + AppInfo.versionLabel);
     }
     catch (ex) {
-      Keen.sendEvent('error', { message: ex.toString() });
-      console.log(ex);
+      handleError(ex);
     }
-  });
+  }
 
-  Pebble.addEventListener('webviewclosed', function () {
-    firstTime = false;
-  });
+  function webviewClosed() {
+  }
 
-  Pebble.addEventListener('appmessage', function (event) {
+  function appMessage(event) {
     switch (event.data.group) {
-      case 'TMR':
-        if (timers) {
-          timers.handleMessage(event.data.operation, event.data.data);
-        }
+      case 'ANL':
+        handleAnalytics(event.data.operation, event.data.data);
         break;
       default:
         console.log(JSON.stringify(event.data));
     }
-  });
+  }
+
+  function handleAnalytics(operation, dataStr) {
+    try {
+      var data = {};
+      dataStr.split(AppInfo.delimiters.outer).forEach(function (str) {
+        if (! str.length) {
+          return;
+        }
+        var item = str.split(AppInfo.delimiters.inner);
+        if (item.length < 2) {
+          return;
+        }
+        data[item[0]] = item[1];
+      });
+      Keen.sendEvent(operation, data);
+    }
+    catch (ex) {
+      handleError(ex);
+    }
+  }
+
+  function handleError(exception) {
+    console.log(JSON.stringify(exception));
+    Keen.sendEvent('error', { message: exception.toString() });
+  }
 
 }());

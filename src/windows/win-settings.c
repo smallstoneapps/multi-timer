@@ -43,18 +43,23 @@ src/windows/win-settings.c
 #include "../timers.h"
 #include "../common.h"
 
-#define MENU_NUM_SECTIONS 2
-#define MENU_SECTION_SAVE 0
+#define MENU_NUM_SECTIONS   3
+#define MENU_SECTION_SAVE   0
 #define MENU_SECTION_TIMERS 1
+#define MENU_SECTION_OTHER  2
 
-#define MENU_SECTION_ROWS_SAVE 2
-#define MENU_SECTION_ROWS_TIMERS 3
+#define MENU_SECTION_ROWS_SAVE    2
+#define MENU_SECTION_ROWS_TIMERS  3
+#define MENU_SECTION_ROWS_OTHER   1
 
-#define MENU_ROW_SAVE_AUTO 0
-#define MENU_ROW_SAVE_RESUME 1
-#define MENU_ROW_TIMERS_START 0
+#define MENU_ROW_SAVE_AUTO      0
+#define MENU_ROW_SAVE_RESUME    1
+
+#define MENU_ROW_TIMERS_START   0
 #define MENU_ROW_TIMERS_VIBRATE 1
-#define MENU_ROW_TIMERS_HOURS 2
+#define MENU_ROW_TIMERS_HOURS   2
+
+#define MENU_ROW_OTHER_CLOCK    0
 
 static uint16_t menu_get_num_sections_callback(MenuLayer *me, void *data);
 static uint16_t menu_get_num_rows_callback(MenuLayer *me, uint16_t section_index, void *data);
@@ -86,7 +91,7 @@ void win_settings_init(void) {
 }
 
 void win_settings_show(void) {
-  window_stack_push(window, true);
+  window_stack_push(window, ANIMATE_WINDOWS);
 }
 
 void win_settings_destroy(void) {
@@ -105,10 +110,10 @@ static uint16_t menu_get_num_rows_callback(MenuLayer *me, uint16_t section_index
   switch (section_index) {
     case MENU_SECTION_SAVE:
       return MENU_SECTION_ROWS_SAVE;
-    break;
     case MENU_SECTION_TIMERS:
       return MENU_SECTION_ROWS_TIMERS;
-    break;
+    case MENU_SECTION_OTHER:
+      return MENU_SECTION_ROWS_OTHER;
   }
   return 0;
 }
@@ -118,49 +123,51 @@ static int16_t menu_get_header_height_callback(MenuLayer *me, uint16_t section_i
 }
 
 static int16_t menu_get_cell_height_callback(MenuLayer* me, MenuIndex* cell_index, void* data) {
-  return 36;
+  return 32;
 }
 
 static void menu_draw_row_callback(GContext* ctx, const Layer *cell_layer, MenuIndex *cell_index, void *data) {
-  char label[32] = "";
   char value[16] = "";
 
   switch (cell_index->section) {
     case MENU_SECTION_SAVE:
       switch (cell_index->row) {
         case MENU_ROW_SAVE_AUTO:
-          strcpy(label, "Auto Save");
-          strcpy(value, settings()->save_timers_auto ? "ON": "OFF");
-        break;
+          menu_draw_option(ctx, "Auto Save", settings()->save_timers_auto ? "ON": "OFF");
+          break;
         case MENU_ROW_SAVE_RESUME:
-          strcpy(label, "Auto Resume");
-          strcpy(value, settings()->resume_timers ? "ON": "OFF");
-        break;
+          menu_draw_option(ctx, "Auto Resume", settings()->resume_timers ? "ON": "OFF");
+          break;
       }
-    break;
+      break;
     case MENU_SECTION_TIMERS:
       switch (cell_index->row) {
         case MENU_ROW_TIMERS_START:
-          strcpy(label, "Auto-Start");
-          strcpy(value, settings()->timers_start_auto ? "ON": "OFF");
-        break;
+          menu_draw_option(ctx, "Auto Start", settings()->timers_start_auto ? "ON": "OFF");
+          break;
         case MENU_ROW_TIMERS_VIBRATE:
-          strcpy(label, "Vibration");
           strcpy(value, timer_vibe_str(settings()->timers_vibration, true));
           uppercase(value);
-        break;
+          menu_draw_option(ctx, "Vibration", value);
+          break;
         case MENU_ROW_TIMERS_HOURS:
-          strcpy(label, "Hours");
-          strcpy(value, settings()->timers_hours ? "ON": "OFF");
-        break;
+          menu_draw_option(ctx, "Show Hours", settings()->timers_hours ? "ON": "OFF");
+          break;
       }
-    break;
+      break;
+    case MENU_SECTION_OTHER:
+      switch (cell_index->row) {
+        case MENU_ROW_OTHER_CLOCK:
+          menu_draw_option(ctx, "Show Clock", settings()->show_clock ? "ON": "OFF");
+          break;
+      }
+      break;
   }
-  graphics_context_set_text_color(ctx, GColorBlack);
-  graphics_draw_text(ctx, label, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD), GRect(4, 2, 136, 28), GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, NULL);
-  if (strlen(value) > 0) {
-    graphics_draw_text(ctx, value, fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD), GRect(4, 6, 136, 24), GTextOverflowModeTrailingEllipsis, GTextAlignmentRight, NULL);
-  }
+  // graphics_context_set_text_color(ctx, GColorBlack);
+  // graphics_draw_text(ctx, label, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD), GRect(4, 0, 136, 28), GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, NULL);
+  // if (strlen(value) > 0) {
+  //   graphics_draw_text(ctx, value, fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD), GRect(4, 4, 136, 24), GTextOverflowModeTrailingEllipsis, GTextAlignmentRight, NULL);
+  // }
 }
 
 static void menu_draw_header_callback(GContext* ctx, const Layer *cell_layer, uint16_t section_index , void *data) {
@@ -170,6 +177,9 @@ static void menu_draw_header_callback(GContext* ctx, const Layer *cell_layer, ui
     break;
     case MENU_SECTION_TIMERS:
       menu_cell_basic_header_draw(ctx, cell_layer, "Timer Defaults");
+    break;
+    case MENU_SECTION_OTHER:
+      menu_cell_basic_header_draw(ctx, cell_layer, "Other Settings");
     break;
   }
 }
@@ -187,7 +197,7 @@ static void menu_select_click_callback(MenuLayer *menu_layer, MenuIndex *cell_in
           menu_layer_reload_data(layer_menu);
         break;
       }
-    break;
+      break;
     case MENU_SECTION_TIMERS:
       switch (cell_index->row) {
         case MENU_ROW_TIMERS_START:
@@ -202,7 +212,15 @@ static void menu_select_click_callback(MenuLayer *menu_layer, MenuIndex *cell_in
           menu_layer_reload_data(layer_menu);
         break;
       }
-    break;
+      break;
+    case MENU_SECTION_OTHER:
+      switch (cell_index->row) {
+        case MENU_ROW_OTHER_CLOCK:
+          settings()->show_clock = ! settings()->show_clock;
+          menu_layer_reload_data(layer_menu);
+          break;
+      }
+      break;
   }
 }
 

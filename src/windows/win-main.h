@@ -30,12 +30,12 @@ THE SOFTWARE.
 
 --------------------
 
-src/windows/win-timers.h
+src/windows/win-main.h
 
 */
 
-void win_timers_init(void);
-void win_timers_show(void);
-void win_timers_update(void);
-void win_timers_destroy(void);
-void win_timers_jump(int pos);
+void win_main_init(void);
+void win_main_show(void);
+void win_main_update(void);
+void win_main_destroy(void);
+void win_main_jump(int pos);

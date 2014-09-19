@@ -52,3 +52,6 @@ status_t timers_restore(void);
 status_t timers_save(void);
 
 void timers_send_list(void);
+void timers_load_list(char* data);
+void timers_get_list(void);
+bool timers_are_blank(void);

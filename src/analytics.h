@@ -30,12 +30,16 @@ THE SOFTWARE.
 
 --------------------
 
-src/windows/win-controls.h
+src/analytics.h
 
 */
 
 #pragma once
 
-void win_controls_init(void);
-void win_controls_show(void);
-void win_controls_destroy(void);
+#include <pebble.h>
+
+void analytics_track_event(char* name, char* data);
+void analytics_tiw_start(void);
+void analytics_tiw_end(char* window);
+
+extern char analytics_str[64];

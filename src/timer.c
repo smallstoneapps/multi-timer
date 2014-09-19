@@ -40,7 +40,7 @@ src/timer.c
 
 #include "timer.h"
 
-#include "windows/win-timers.h"
+#include "windows/win-main.h"
 #include "windows/win-vibrate.h"
 #include "common.h"
 #include "settings.h"
@@ -132,18 +132,41 @@ char* timer_vibe_str(TimerVibration vibe, bool shortStr) {
 char* timer_serialize(Timer* timer, char delim) {
   char* str = malloc(TIMER_STR_LENGTH);
   if (timer->direction == TIMER_DIRECTION_UP) {
-    snprintf(str, TIMER_STR_LENGTH, "%X%c%d%c%s", timer->id, delim,
+    snprintf(str, TIMER_STR_LENGTH, "%d%c%d%c%s", timer->id, delim,
       timer->direction, delim, timer->label);
   }
   else {
-    snprintf(str, TIMER_STR_LENGTH, "%X%c%d%c%d%c%d%c%d%c%s", timer->id, delim,
+    snprintf(str, TIMER_STR_LENGTH, "%d%c%d%c%d%c%d%c%d%c%s", timer->id, delim,
       timer->direction, delim, (int)timer->length, delim, timer->repeat,
       delim, timer->vibrate, delim, timer->label);
   }
   return str;
 }
 
-/*char* timer_describe(Timer* timer) {
+Timer* timer_deserialize(char* data, char delim) {
+  ProcessingState* ps = data_processor_create(data, delim);
+  Timer* timer = malloc(sizeof(Timer));
+  timer->id = data_processor_get_int(ps);
+  timer->direction = data_processor_get_int(ps);
+  if (timer->direction == TIMER_DIRECTION_DOWN) {
+    timer->length = data_processor_get_int(ps);
+    timer->repeat = data_processor_get_bool(ps);
+    timer->vibrate = data_processor_get_int(ps);
+  }
+  char* label_tmp = data_processor_get_string(ps);
+  strncpy(timer->label, label_tmp, 24);
+  free(label_tmp);
+  data_processor_destroy(ps);
+  return timer;
+}
+
+/*
+
+This function is often used when trying to debug strange issues with persistent
+storage. It is not needed most of the time, which is why I am keeping it
+commented out.
+
+char* timer_describe(Timer* timer) {
   static char description[512];
   char type[16];
   char status[16];
@@ -175,13 +198,14 @@ char* timer_serialize(Timer* timer, char delim) {
   }
 
   strcpy(repeat, timer->repeat ? "repeating" : "not repeating");
-
   strcpy(vibrate, timer_vibe_str(timer->vibrate, true));
-
-  snprintf(description, 512, "%d: I am a %s that is %s, length %d, %d left, %s, %s", timer->id, type, status, (int)timer->length, (int)timer->time_left, repeat, vibrate);
-
+  snprintf(description, 512, 
+    "%d: I am a %s that is %s, length %d, %d left, %s, %s", timer->id, type, 
+    status, (int)timer->length, (int)timer->time_left, repeat, vibrate);
   return description;
-}*/
+}
+
+*/
 
 void timer_draw(Timer* timer, GContext* ctx) {
   char* time_left = malloc(32);
@@ -219,15 +243,15 @@ void timer_draw(Timer* timer, GContext* ctx) {
 
   graphics_context_set_text_color(ctx, GColorBlack);
   if (row_bmp != NULL) {
-    graphics_draw_bitmap_in_rect(ctx, row_bmp, GRect(8, 8, 16, 16));
+    graphics_draw_bitmap_in_rect(ctx, row_bmp, GRect(10, 10, 16, 16));
   }
-  graphics_draw_text(ctx, time_left, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD), GRect(32, -1, 88, 24), 0, GTextAlignmentLeft, NULL);
+  graphics_draw_text(ctx, time_left, fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD), GRect(36, -1, 88, 28), 0, GTextAlignmentLeft, NULL);
   if (dir_bmp != NULL) {
-    graphics_draw_bitmap_in_rect(ctx, dir_bmp, GRect(128, 8, 8, 16));
+    graphics_draw_bitmap_in_rect(ctx, dir_bmp, GRect(128, 10, 8, 16));
   }
 
   if (strlen(timer->label) > 0) {
-    graphics_draw_text(ctx, timer->label, fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD), GRect(8, 22, 120, 18), GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, NULL);
+    graphics_draw_text(ctx, timer->label, fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD), GRect(10, 24, 120, 18), GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, NULL);
   }
 
   free_safe(time_left);
@@ -262,9 +286,7 @@ Timer* timer_create(void) {
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - //
 
 static void timer_callback(void* data) {
-  DEBUG("%d bytes free", heap_bytes_free());
-
-  if (! data) {
+  if (NULL == data) {
     return;
   }
 
@@ -288,7 +310,7 @@ static void timer_callback(void* data) {
   }
 
   timer_set_app_timer(timer);
-  win_timers_update();
+  win_main_update();
 }
 
 static void timer_set_app_timer(Timer* timer) {

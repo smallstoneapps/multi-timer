@@ -52,6 +52,19 @@ var AppInfo = {
     "data": 2
   },
   "capabilities": [ "configurable" ],
+  "config": {
+    "settingsUrl": "http://192.168.0.8:6006/multi-timer/config/",
+    "socketUrl": "http://192.168.0.8:6006/multi-timer",
+    "keen": {
+      "projectId": "53a84295bcb79c58c7000002",
+      "writeKey": "f91165f494c5bff28908caf75bf0a07ded19fe01ec813985c3ad466fe8e7799879e3a5246b0e504ea97fc80b10d39faeda96e1a5811af406a203721ce92d8a97c9f1d4bebf53b80a60b57f78784fac3880b888062084a3a3070650f650777ed3a1048d941ac76f3b6ad739e32931bf6c"
+    }
+  },
+  "delimiters": {
+    "inner": "`",
+    "outer": "~"
+  },
+  "debug": true,
   "resources": {
     "media": [
       {
@@ -112,6 +125,16 @@ var AppInfo = {
       },
       {
         "type": "png",
+        "name": "MENU_ICON_CLOCK",
+        "file": "images/icon_clock.png"
+      },
+      {
+        "type": "png",
+        "name": "MENU_ICON_EDIT",
+        "file": "images/icon_edit.png"
+      },
+      {
+        "type": "png",
         "name": "MENU_ICON_MED_TICK",
         "file": "images/icon_med_tick.png"
       },
@@ -144,11 +167,6 @@ var AppInfo = {
         "type": "png",
         "name": "ACTION_OK",
         "file": "images/action_ok.png"
-      },
-      {
-        "type": "png",
-        "name": "ICON_ALARM",
-        "file": "images/icon_alarm.png"
       },
       {
         "characterRegex": "[0-9]",

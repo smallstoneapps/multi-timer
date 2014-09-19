@@ -44,13 +44,16 @@ CINCLUDES=-I tests/include/ -I tests/ \
 	-I build/
 
 TEST_FILES=tests/timers.c
-SRC_FILES=src/timers.c src/timer.c src/libs/bitmap-loader/bitmap-loader.c src/libs/linked-list/linked-list.c
+SRC_FILES=src/timers.c src/timer.c \
+	src/libs/bitmap-loader/bitmap-loader.c \
+	src/libs/linked-list/linked-list.c  \
+	src/libs/data-processor/data-processor.c
 TEST_EXTRAS=tests/src/pebble.c tests/src/code.c
 
 all: test
 
 test:
-	$(CC) $(CFLAGS) $(CINCLUDES) $(TEST_FILES) $(SRC_FILES) $(TEST_EXTRAS) -o tests/run
-	tests/run || (echo 'Multi Timer tests failed' | terminal-notifier; exit 1)
+	@$(CC) $(CFLAGS) $(CINCLUDES) $(TEST_FILES) $(SRC_FILES) $(TEST_EXTRAS) -o tests/run
+	@tests/run || (echo 'Multi Timer tests failed' | terminal-notifier; exit 1)
 	@rm tests/run
 	@printf "\x1B[0m"

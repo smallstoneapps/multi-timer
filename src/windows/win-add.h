@@ -37,5 +37,6 @@ src/windows/win-add.h
 #pragma once
 
 void win_add_init(void);
-void win_add_show(void);
+void win_add_show_new(void);
+void win_add_show_edit(Timer* timer);
 void win_add_destroy(void);

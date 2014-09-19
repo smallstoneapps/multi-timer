@@ -35,6 +35,7 @@ tests/timers.c
 
 #include "include/pebble_extra.h"
 #include "unit.h"
+#include "code.h"
 #include "../src/timers.h"
 #include "../src/settings.h"
 #include "../src/generated/appinfo.h"
@@ -52,11 +53,11 @@ tests/timers.c
 // Keep track of how many tests have run, and how many have passed.
 int tests_run = 0;
 int tests_passed = 0;
-const int NUM_TESTS = 8;
 
 static void before_each(void) {
   timers_init();
   persist_init();
+  mqueue_reset();
 }
 
 static void after_each(void) {
@@ -256,8 +257,8 @@ static char* test_persist_after_clear(void) {
 // When a timer is added
 // And the timer is running
 // And the timers are saved and loaded
-// And the "auto resume" setting is enable
-// The timer should still be running
+// And the "auto resume" setting is enabled
+// The timer should still be running.
 static char* test_resume_running_timer(void) {
   settings()->resume_timers = true;
   mu_assert(settings()->resume_timers == true, "Resume timers setting is not on.");
@@ -277,8 +278,8 @@ static char* test_resume_running_timer(void) {
 // When a timer is added
 // And the timer is stopped
 // And the timers are saved and loaded
-// And the "auto resume" setting is enable
-// The timer should not be running
+// And the "auto resume" setting is enabled
+// The timer should not be running.
 static char* test_resume_stopped_timer(void) {
   mu_assert(settings()->resume_timers == true, "Resume timers setting is not on.");
   timers_add(create_timer_down(2 * 60));
@@ -298,7 +299,7 @@ static char* test_resume_stopped_timer(void) {
 // And the timer is running
 // And the timers are saved and loaded
 // And the "auto resume" setting is disabled
-// The timer should still be running
+// The timer should not be running.
 static char* test_dont_resume_running_timer(void) {
   settings()->resume_timers = false;
   mu_assert(settings()->resume_timers == false, "Resume timers setting is not off.");
@@ -317,11 +318,80 @@ static char* test_dont_resume_running_timer(void) {
 
 // When a timer is added
 // And we search for it by id
-// The timer should be returned
+// The timer should be returned.
 static char* test_find_valid(void) {
-  Timer* tmr = create_timer_down(50);
+  Timer* tmr = create_timer_down(60);
   timers_add(tmr);
   mu_assert(timers_find(tmr->id)->id == tmr->id, "Could not find timer by id");
+  return 0;
+}
+
+// When the timers are sent to the phone
+// The MessageQueue should have received a message
+// And the group should be TMR
+// And the operation should be LIST!
+// And the data should be the serialized form of all of the timers.
+static char* test_send_timers(void) {
+  Timer* tmr1 = create_timer_down(60);
+  timers_add(tmr1);
+  Timer* tmr2 = create_timer_down(600);
+  timers_add(tmr2);
+  timers_send_list();
+
+  mu_assert(0 == strcmp(mqueue_get_top_group(), "TMR"), "Message sent wasn't in TMR group");
+  mu_assert(0 == strcmp(mqueue_get_top_operation(), "LIST!"), "Message sent didn't have LIST! operation");
+  char timer_str[200];
+  snprintf(timer_str, 200, "%s%c%s", timer_serialize(tmr1, DELIMITER_INNER), DELIMITER_OUTER, timer_serialize(tmr2, DELIMITER_INNER));
+  mu_assert(0 == strcmp(mqueue_get_top_data(), timer_str), "Message sent didn't the correct DATA");
+
+  return 0;
+}
+
+// When a string of timers is loaded
+// The timers should have been loaded correctly.
+static char* test_load_list(void) {
+  char timer_str[200];
+  snprintf(timer_str, 200, "%d%c%d%c%d%c%d%c%s%c%d%c%d%c%d%c%d%c%d%c%s", 0,
+    DELIMITER_OUTER, 2, DELIMITER_OUTER,
+      100, DELIMITER_INNER,
+      TIMER_DIRECTION_UP, DELIMITER_INNER,
+      "Label #1",
+    DELIMITER_OUTER,
+      200, DELIMITER_INNER,
+      TIMER_DIRECTION_DOWN, DELIMITER_INNER,
+      600, DELIMITER_INNER,
+      true, DELIMITER_INNER,
+      TIMER_VIBRATION_DOUBLE, DELIMITER_INNER,
+      "Label #2"
+  );
+  timers_load_list(timer_str);
+
+  mu_assert(2 == timers_get_count(), "Timers didn't load correct amount");
+  Timer* tmr1 = timers_get(0);
+  Timer* tmr2 = timers_get(1);
+
+  mu_assert(tmr1->id == 100, "TImer 1 didn't load correct ID");
+  mu_assert(tmr1->direction == TIMER_DIRECTION_UP, "TImer 1 didn't load correct direction");
+  mu_assert(0 == strcmp(tmr1->label, "Label #1"), "TImer 1 didn't load correct label");
+
+  mu_assert(tmr2->id == 200, "TImer 2 didn't load correct ID");
+  mu_assert(tmr2->direction == TIMER_DIRECTION_DOWN, "TImer 2 didn't load correct direction");
+  mu_assert(tmr2->vibrate == TIMER_VIBRATION_DOUBLE, "TImer 2 didn't load correct vibrate");
+  mu_assert(tmr2->repeat == true, "TImer 2 didn't load correct repeat");
+  mu_assert(tmr2->direction == TIMER_DIRECTION_DOWN, "TImer 2 didn't load correct direction");
+  mu_assert(0 == strcmp(tmr2->label, "Label #2"), "TImer 2 didn't load correct label");
+
+  return 0;
+}
+
+// When the list of timers has been requested
+// The MessageQueue should have received a message
+// And the message group should be TMR
+// And the message operation should be LIST?.
+static char* test_get_list(void) {
+  timers_get_list();
+  mu_assert(0 == strcmp(mqueue_get_top_group(), "TMR"), "MessageQueue didn't get message in TMR group.");
+  mu_assert(0 == strcmp(mqueue_get_top_operation(), "LIST?"), "MessageQueue didn't get message with LIST? operation.");
   return 0;
 }
 
@@ -341,22 +411,25 @@ static char* all_tests() {
   mu_run_test(test_resume_stopped_timer);
   mu_run_test(test_dont_resume_running_timer);
   mu_run_test(test_find_valid);
+  mu_run_test(test_send_timers);
+  mu_run_test(test_load_list);
+  mu_run_test(test_get_list);
   return 0;
 }
 
 // Test application entry point.
 // Executes all the tests and prints the results in pretty colours.
 int main(int argc, char **argv) {
-  printf("%s-----------------------------------\n", KCYN);
-  printf("| Running Multi Timer %s Tests |\n", VERSION_LABEL);
-  printf("-----------------------------------\n%s", KNRM);
+  printf("%s----------------------------------\n", KCYN);
+  printf("| Running Multi Timer v%s Tests |\n", VERSION_LABEL);
+  printf("----------------------------------\n%s", KNRM);
   char* result = all_tests();
   if (0 != result) {
     printf("%s- Failed Test:%s %s\n", KRED, KNRM, result);
   }
-  printf("- Tests Run: %s%d%s\n", (tests_run == tests_passed) ? KGRN : KRED, tests_run, KNRM);
+  printf("- Tests Run:    %s%d%s\n", (tests_run == tests_passed) ? KGRN : KRED, tests_run, KNRM);
   printf("- Tests Passed: %s%d%s\n", (tests_run == tests_passed) ? KGRN : KRED, tests_passed, KNRM);
 
-  printf("%s-----------------------------------%s\n", KCYN, KNRM);
+  printf("%s----------------------------------%s\n", KCYN, KNRM);
   return result != 0;
 }
