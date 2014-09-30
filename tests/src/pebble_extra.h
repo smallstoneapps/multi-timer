@@ -30,41 +30,9 @@ THE SOFTWARE.
 
 --------------------
 
-unit.h
-
-This file is based on minunit.h, which was found here
-http://www.jera.com/techinfo/jtns/jtn002.html
-and has been modified for my purposes.
+tests/pebble-extra.h
 
 */
 
-#define mu_assert(test, message) do { \
-  if (!(test)) { \
-    return message; \
-  } \
-} while (0)
-
-#define mu_run_test_group(group) do { \
-  char* message = group(); \
-  if (message) { \
-    return message; \
-  } \
-} while(0)
-
-#define mu_run_test(test) do { \
-  before_each(); \
-  char *message = test(); \
-  after_each(); \
-  tests_run++; \
-  if (message) { \
-    return message; \
-  } \
-  tests_passed++; \
-} while (0)
-
-extern int tests_run;
-extern int tests_passed;
-
-void none(void);
-void before_each(void);
-void after_each(void);
+void persist_reset(void);
+void persist_init(void);

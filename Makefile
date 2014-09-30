@@ -1,5 +1,7 @@
-# Multi Timer v2.0.0
-# http://matthewtole.com/pebble/multi-timer/
+#
+# Pebble Tests v0.1.0
+# A Pebble library for doing unit tests.
+# http://smallstoneapps.github.io/pebble-tests/
 #
 # ----------------------
 #
@@ -28,32 +30,30 @@
 # --------------------
 #
 # Makefile
+#
 
 CC=gcc
 ifeq ($(TRAVIS), true)
-CFLAGS=-std=c99
+CFLAGS=
 else
 CFLAGS=-std=c11
 endif
-CINCLUDES=-I tests/include/ -I tests/ \
-	-I src/libs/pebble-assist/ \
-	-I src/libs/message-queue/ \
-	-I src/libs/linked-list/ \
-	-I src/libs/data-processor/ \
-	-I src/libs/bitmap-loader/ \
-	-I build/
+CINCLUDES=-I tests/include/ -I tests/ -I src/ -I src/libs/linked-list/
 
-TEST_FILES=tests/timers.c
-SRC_FILES=src/timers.c src/timer.c \
-	src/libs/bitmap-loader/bitmap-loader.c \
-	src/libs/linked-list/linked-list.c  \
-	src/libs/data-processor/data-processor.c
+TEST_FILES=tests/tests.c tests/timers.c
+SRC_FILES=src/timers.c src/timer.c
+LIB_FILES=src/libs/linked-list/linked-list.c
 TEST_EXTRAS=tests/src/pebble.c tests/src/code.c
 
 all: test
 
 test:
-	@$(CC) $(CFLAGS) $(CINCLUDES) $(TEST_FILES) $(SRC_FILES) $(TEST_EXTRAS) -o tests/run
-	@tests/run || (echo 'Multi Timer tests failed' | terminal-notifier; exit 1)
+	@printf "\n"
+	@$(CC) $(CFLAGS) $(CINCLUDES) $(TEST_FILES) $(SRC_FILES) $(LIB_FILES) $(TEST_EXTRAS) -o tests/run
+	@tests/run || (echo 'Multi Timer test suite failed.' | terminal-notifier; exit 1)
 	@rm tests/run
 	@printf "\x1B[0m"
+	@printf "\n"
+
+lint:
+	oclint src/windows/win-main.c -- -c -std=c11 -I tests/include/ -I tests/ -I src/libs/pebble-assist/

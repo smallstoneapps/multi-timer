@@ -169,19 +169,19 @@ AppMessageResult app_message_open(const uint32_t size_inbound, const uint32_t si
 }
 
 AppMessageInboxReceived app_message_register_inbox_received(AppMessageInboxReceived received_callback) {
-  return APP_MSG_OK;
+  return NULL;
 }
 
 AppMessageInboxDropped app_message_register_inbox_dropped(AppMessageInboxDropped dropped_callback) {
-  return APP_MSG_OK;
+  return NULL;
 }
 
 AppMessageOutboxSent app_message_register_outbox_sent(AppMessageOutboxSent sent_callback) {
-  return APP_MSG_OK;
+  return NULL;
 }
 
 AppMessageOutboxFailed app_message_register_outbox_failed(AppMessageOutboxFailed failed_callback) {
-  return APP_MSG_OK;
+  return NULL;
 }
 
 AppMessageResult app_message_outbox_begin(DictionaryIterator **iterator) {
@@ -216,10 +216,6 @@ GBitmap* gbitmap_create_with_resource(uint32_t resource_id) {
   return NULL;
 }
 
-GBitmap* gbitmap_create_as_sub_bitmap(const GBitmap *base_bitmap, GRect sub_rect) {
-  return NULL;
-}
-
 void gbitmap_destroy(GBitmap* bitmap) {
 
 }
@@ -246,4 +242,16 @@ void vibes_long_pulse(void) {
 
 void vibes_short_pulse(void) {
   
+}
+
+WakeupId wakeup_schedule(time_t timestamp, int32_t reason, bool notify_if_missed)  {
+  return 0;
+}
+
+void wakeup_cancel(WakeupId id) {
+
+}
+
+bool wakeup_query(WakeupId id, time_t *timestamp) {
+  return true;
 }

@@ -10,4 +10,6 @@ build
 src/js/pebble-js-app.js
 src/js/coverage/
 
+tests/include/
+
 node_modules/

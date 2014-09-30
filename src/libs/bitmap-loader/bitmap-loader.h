@@ -51,5 +51,7 @@ GBitmap* bitmaps_get_bitmap(uint32_t res_id);
 // unloaded.
 GBitmap* bitmaps_get_bitmap_in_group(uint32_t res_id, uint8_t group);
 
+GBitmap* bitmaps_get_sub_bitmap(uint32_t res_id, GRect rect);
+
 // Unload all the bitmaps from memory.
 void bitmaps_cleanup(void);

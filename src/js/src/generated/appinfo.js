@@ -64,7 +64,8 @@ var AppInfo = {
     "inner": "`",
     "outer": "~"
   },
-  "debug": true,
+  "debug": false,
+  "googleAnalytics": { "trackingId": "UA-48246810-3" },
   "resources": {
     "media": [
       {
@@ -75,104 +76,24 @@ var AppInfo = {
       },
       {
         "type": "png",
-        "name": "MENU_ICON_PLAY",
-        "file": "images/icon_play.png"
+        "name": "ICONS_16",
+        "file": "images/icons.png"
       },
       {
         "type": "png",
-        "name": "MENU_ICON_PAUSE",
-        "file": "images/icon_pause.png"
+        "name": "IMAGE_ALARM",
+        "file": "images/alarm.png"
       },
       {
-        "type": "png",
-        "name": "MENU_ICON_STOP",
-        "file": "images/icon_stop.png"
-      },
-      {
-        "type": "png",
-        "name": "MENU_ICON_DONE",
-        "file": "images/icon_done.png"
-      },
-      {
-        "type": "png",
-        "name": "MENU_ICON_CLEAR",
-        "file": "images/icon_clear.png"
-      },
-      {
-        "type": "png",
-        "name": "MENU_ICON_RESET",
-        "file": "images/icon_reset.png"
-      },
-      {
-        "type": "png",
-        "name": "MENU_ICON_ADD",
-        "file": "images/icon_add.png"
-      },
-      {
-        "type": "png",
-        "name": "MENU_ICON_CONTROLS",
-        "file": "images/icon_controls.png"
-      },
-      {
-        "type": "png",
-        "name": "MENU_ICON_SETTINGS",
-        "file": "images/icon_settings.png"
-      },
-      {
-        "type": "png",
-        "name": "MENU_ICON_ABOUT",
-        "file": "images/icon_about.png"
-      },
-      {
-        "type": "png",
-        "name": "MENU_ICON_CLOCK",
-        "file": "images/icon_clock.png"
-      },
-      {
-        "type": "png",
-        "name": "MENU_ICON_EDIT",
-        "file": "images/icon_edit.png"
-      },
-      {
-        "type": "png",
-        "name": "MENU_ICON_MED_TICK",
-        "file": "images/icon_med_tick.png"
-      },
-      {
-        "type": "png",
-        "name": "IMG_ALARM",
-        "file": "images/img_alarm.png"
-      },
-      {
-        "type": "png",
-        "name": "ARROW_UP",
-        "file": "images/arrow_up.png"
-      },
-      {
-        "type": "png",
-        "name": "ARROW_DOWN",
-        "file": "images/arrow_down.png"
-      },
-      {
-        "type": "png",
-        "name": "ACTION_DEC",
-        "file": "images/action_dec.png"
-      },
-      {
-        "type": "png",
-        "name": "ACTION_INC",
-        "file": "images/action_inc.png"
-      },
-      {
-        "type": "png",
-        "name": "ACTION_OK",
-        "file": "images/action_ok.png"
+        "type": "raw",
+        "name": "TEXT_ABOUT",
+        "file": "about.txt"
       },
       {
         "characterRegex": "[0-9]",
         "type": "font",
         "name": "FONT_AUDI_70_BOLD",
-        "file": "fonts/AUDIMB__.ttf"
+        "file": "fonts/audi.ttf"
       }
     ]
   }

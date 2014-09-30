@@ -1,7 +1,8 @@
 /*
 
-Multi Timer v3.0
-http://matthewtole.com/pebble/multi-timer/
+Multi Timer 3.0
+A Pebble watch app for running multiple simultaneous timers and stopwatches.
+http://github.com/smallstoneapps/multi-timer/
 
 ----------------------
 
@@ -33,403 +34,192 @@ tests/timers.c
 
 */
 
-#include "include/pebble_extra.h"
+#include <pebble.h>
 #include "unit.h"
-#include "code.h"
+#include "groups.h"
 #include "../src/timers.h"
-#include "../src/settings.h"
-#include "../src/generated/appinfo.h"
 
-// Colour code definitions to make the output all pretty.
-#define KNRM  "\x1B[0m"
-#define KRED  "\x1B[31m"
-#define KGRN  "\x1B[32m"
-#define KYEL  "\x1B[33m"
-#define KBLU  "\x1B[34m"
-#define KMAG  "\x1B[35m"
-#define KCYN  "\x1B[36m"
-#define KWHT  "\x1B[37m"
-
-// Keep track of how many tests have run, and how many have passed.
-int tests_run = 0;
-int tests_passed = 0;
-
-static void before_each(void) {
+void timers_before(void) {
   timers_init();
-  persist_init();
-  mqueue_reset();
 }
 
-static void after_each(void) {
-  persist_reset();
-}
-
-// Helper function that creates a new down timer.
-static Timer* create_timer_down(uint16_t duration) {
-  Timer* tmr = malloc(sizeof(Timer));
-  tmr->id = rand() % 1000;
-  tmr->direction = TIMER_DIRECTION_DOWN;
-  tmr->length = duration;
-  tmr->vibrate = TIMER_VIBRATION_SHORT;
-  tmr->time_left = duration;
-  tmr->label[0] = 0;
-  tmr->repeat = false;
-  tmr->status = TIMER_STATUS_STOPPED;
-  return tmr;
-}
-
-// Helper function that creates a new up timer.
-static Timer* create_timer_up(void) {
-  Timer* tmr = malloc(sizeof(Timer));
-  tmr->id = rand() % 1000;
-  tmr->label[0] = 0;
-  tmr->direction = TIMER_DIRECTION_UP;
-  tmr->length = 0;
-  tmr->vibrate = TIMER_VIBRATION_SHORT;
-  tmr->time_left = 0;
-  tmr->repeat = false;
-  tmr->status = TIMER_STATUS_STOPPED;
-  return tmr;
-}
-
-// Helper function that returns true if the timers are identical.
-static bool compare_timers(Timer* left, Timer* right) {
-  if (left->direction != right->direction) { return false; }
-  if (left->id != right->id) { return false; }
-  if (left->length != right->length) { return false; }
-  if (left->time_left != right->time_left) { return false; }
-  if (left->vibrate != right->vibrate) { return false; }
-  if (left->repeat != right->repeat) { return false; }
-  if (0 != strcmp(left->label, right->label)) { return false; }
-  return true;
-}
-
-// When no timers have been added
-// The timer count should be 0
-static char* test_empty(void) {
-  bool pass = (0 == timers_get_count());
-  mu_assert(pass, "Timers reporting not empty.");
+char* count_zero_when_empty(void) {
+  mu_assert(0 == timers_count(), "timers_count was not 0 when no timers added");
   return 0;
 }
 
-// When a single timer has been added
-// The timer count should be 1.
-static char* test_one(void) {
-  timers_add(create_timer_down(60));
-  mu_assert(1 == timers_get_count(), "Timers not reporting size of 1");
+char* count_one_when_added_single_timer(void) {
+  Timer* timer = malloc(sizeof(Timer));
+  timers_add(timer);
+  mu_assert(1 == timers_count(), "timers_count was not 1 when a timer was added");
   return 0;
 }
 
-// When a timer has been added
-// And a timer has been removed
-// The timer count should be 0.
-static char* test_add_remove_one(void) {
-  Timer* t = malloc(sizeof(Timer));
-  timers_add(t);
-  timers_remove(0);
-  mu_assert(0 == timers_get_count(), "Timers not reporting size of 0");
-  return 0;
-}
-
-// When 100 timers are added
-// And 100 timers are removed
-// The timer count should be 0.
-static char* test_fill_empty(void) {
-  const int num_timers = 100;
-  for (int t = 0; t < num_timers; t += 1) {
-    Timer* t = malloc(sizeof(Timer));
-    timers_add(t);
+char* count_10_when_added_ten_timers(void) {
+  for (uint8_t t = 0; t < 10; t += 1) {
+    Timer* timer = malloc(sizeof(Timer));
+    timers_add(timer);
   }
-  for (int t = (num_timers - 1); t >= 0; t -= 1) {
-    timers_remove(t);
-  }
-  mu_assert(0 == timers_get_count(), "Timers not reporting size of 0");
+  mu_assert(10 == timers_count(), "timers_count was not 10 when ten timers were added");
   return 0;
 }
 
-// When a timer is added
-// And a invalid index is removed
-// The timer count should be 1.
-static char* test_remove_missing(void) {
-  timers_remove(0);
+char* get_timer_null_when_empty(void) {
+  mu_assert(NULL == timers_get(0), "timers_get was not null when empty at position 0");
+  mu_assert(NULL == timers_get(100), "timers_get was not null when empty at position 100");
+  return 0;
+}
+
+char* get_timer_returns_item(void) {
+  Timer* timer = malloc(sizeof(Timer));
+  timers_add(timer);
+  mu_assert(NULL != timers_get(0), "timers_get was null with one item at position 0");
+  mu_assert(NULL == timers_get(1), "timers_get was not null with one item at position 1");
+  return 0;
+}
+
+char* find_null_when_empty(void) {
+  mu_assert(NULL == timers_find(1), "timers_find was not null when empty with id 1");
+  mu_assert(NULL == timers_find(8888), "timers_get was not null when empty with id 8888");
+  return 0;
+}
+
+char* find_timer_when_exists(void) {
+  Timer* timer = malloc(sizeof(Timer));
+  timer->id = 1;
+  timers_add(timer);
+  mu_assert(NULL != timers_find(1), "timers_find was null when exists with id 1");
+  return 0;
+}
+
+char* timer_remove_false_when_empty(void) {
+  mu_assert(false == timers_remove(0), "timers_remove failed when empty");
+  return 0;
+}
+
+char* timer_remove_true_when_single_timer(void) {
+  Timer* timer = malloc(sizeof(Timer));
+  timers_add(timer);
+  mu_assert(true == timers_remove(0), "timers_remvoe succeeds when single timer");
+  return 0;
+}
+
+char* timer_remove_false_when_not_existant(void) {
+  Timer* timer = malloc(sizeof(Timer));
+  timers_add(timer);
+  mu_assert(false == timers_remove(5), "timers_remvoe fails when invalid position");
+  return 0;
+}
+
+char* timer_remove_reduces_count(void) {
   timers_add(malloc(sizeof(Timer)));
-  timers_remove(100);
-  mu_assert(1 == timers_get_count(), "Attempting to remove timers that don't exist caused error.");
+  timers_add(malloc(sizeof(Timer)));
+  timers_remove(0);
+  mu_assert(1 == timers_count(), "timers_remove did not reduce timers count");
   return 0;
 }
 
-// When a timer is added
-// The timer retrieved should match the one added.
-static char* test_get_timers(void) {
-  Timer* none1 = timers_get(0);
-  mu_assert(NULL == none1, "Get on empty wasn't NULL");
-  Timer* tmr = malloc(sizeof(Timer));
-  timers_add(tmr);
-  Timer* get = timers_get(0);
-  mu_assert(compare_timers(tmr, get), "Get timer doesn't match");
-  Timer* none2 = timers_get(1);
-  mu_assert(NULL == none1, "Get on invalid position wasn't NULL");
-  return 0;
-}
-
-// When there are no timers.
-// And the timers are saved
-// And the timers are loaded
-// The timers count should be 0.
-static char* test_persist_none(void) {
-  mu_assert(0 == timers_get_count(), "test_persist_none() failed to have no timers [1].");
-  status_t status = timers_save();
-  mu_assert(0 >= status, "test_persist_none() failed to save timers");
-  timers_clear();
-  timers_restore();
-  mu_assert(0 == timers_get_count(), "test_persist_none() failed to have no timers [2].");
-  return 0;
-}
-
-// When a timer has been added.
-// And the timers are saved
-// And the timers are loaded
-// The timers count should be 0.
-// And the timer retrieved should match the one added.
-static char* test_persist_one(void) {
-  Timer* tmr = create_timer_down(10 * 60);
-  timers_add(tmr);
-  mu_assert(1 == timers_get_count(), "test_persist_one() didn't correctly save a timer.");
+char* timers_save_persists_zero_timers(void) {
   timers_save();
   timers_clear();
-  mu_assert(0 == timers_get_count(), "test_persist_one() didn't correctly clear the timers.");
   timers_restore();
-  mu_assert(1 == timers_get_count(), "test_persist_one() didn't correctly restore the timers.");
-  mu_assert(compare_timers(timers_get(0), tmr), "test_persist_one() didn't load the timer correctly.");
+  mu_assert(0 == timers_count(), "timers_save with no timers did not restore to zero timers");
   return 0;
 }
 
-// When 6 timers has been added.
-// And the timers are saved
-// And the timers are loaded
-// The timers count should be 6
-// And the timers retrieved should match the ones added.
-static char* test_persist_multiple(void) {
-  Timer* tmr1 = create_timer_down(10 * 60);
-  Timer* tmr2 = create_timer_up();
-  Timer* tmr3 = create_timer_down(5 * 60);
-  Timer* tmr4 = create_timer_down(1 * 60);
-  Timer* tmr5 = create_timer_down(2 * 60);
-  Timer* tmr6 = create_timer_down(3 * 60);
-  timers_add(timer_clone(tmr1));
-  timers_add(timer_clone(tmr2));
-  timers_add(timer_clone(tmr3));
-  timers_add(timer_clone(tmr4));
-  timers_add(timer_clone(tmr5));
-  timers_add(timer_clone(tmr6));
-  mu_assert(6 == timers_get_count(), "test_persist_multiple() didn't correctly save the timers.");
-  timers_save();
-  timers_clear();
-  mu_assert(0 == timers_get_count(), "test_persist_multiple() didn't correctly clear the timers.");
-  timers_restore();
-  mu_assert(6 == timers_get_count(), "test_persist_multiple() didn't correctly restore the timers.");
-  bool pass = compare_timers(timers_get(0), tmr1);
-  pass = pass && compare_timers(timers_get(1), tmr2);
-  pass = pass && compare_timers(timers_get(2), tmr3);
-  pass = pass && compare_timers(timers_get(3), tmr4);
-  pass = pass && compare_timers(timers_get(4), tmr5);
-  pass = pass && compare_timers(timers_get(5), tmr6);
-  mu_assert(pass, "test_persist_multiple() didn't load the timers correctly.");
-  return 0;
-}
 
-// When a timer has been added
-// And the timers are saved
-// And the timers are cleared
-// And the timers are saved
-// And the timers are loaded
-// The timers count should be 0.
-static char* test_persist_after_clear(void) {
-  timers_add(create_timer_down(10 * 60));
+char* timers_save_persists_zero_timers_after_lots(void) {
+  timers_add(malloc(sizeof(Timer)));
+  timers_add(malloc(sizeof(Timer)));
   timers_save();
   timers_clear();
   timers_save();
   timers_restore();
-  mu_assert(0 == timers_get_count(), "Timers exist when none should.");
+  mu_assert(0 == timers_count(), "timers_save with no timers (after lots) did not restore to zero timers");
   return 0;
 }
 
-// When a timer is added
-// And the timer is running
-// And the timers are saved and loaded
-// And the "auto resume" setting is enabled
-// The timer should still be running.
-static char* test_resume_running_timer(void) {
-  settings()->resume_timers = true;
-  mu_assert(settings()->resume_timers == true, "Resume timers setting is not on.");
-  timers_add(create_timer_down(2 * 60));
-  Timer* tmr = timers_get(0);
-  timer_resume(tmr);
-  mu_assert(TIMER_STATUS_RUNNING == tmr->status, "Created timer is not running.");
+
+char* timers_save_persists_one_timer(void) {
+  Timer* timer = malloc(sizeof(Timer));
+  timer->id = 10;
+  timers_add(timer);
   timers_save();
   timers_clear();
-  mu_assert(0 == timers_get_count(), "Sanity check that timers are gone.");
   timers_restore();
-  tmr = timers_get(0);
-  mu_assert(TIMER_STATUS_RUNNING == tmr->status, "Loaded timer is not running.");
+  mu_assert(1 == timers_count(), "timers_save with one timer did not restore a timer");
+  mu_assert(timer->id == timers_get(0)->id, "timers_save with one timer did not restore the timer correctly");
   return 0;
 }
 
-// When a timer is added
-// And the timer is stopped
-// And the timers are saved and loaded
-// And the "auto resume" setting is enabled
-// The timer should not be running.
-static char* test_resume_stopped_timer(void) {
-  mu_assert(settings()->resume_timers == true, "Resume timers setting is not on.");
-  timers_add(create_timer_down(2 * 60));
-  Timer* tmr = timers_get(0);
-  timer_reset(tmr);
-  mu_assert(TIMER_STATUS_STOPPED == tmr->status, "Created timer is not stopped.");
+char* timers_save_persists_multiple_timers(void) {
+  Timer* timer1 = malloc(sizeof(Timer));
+  timer1->id = 10;
+  timers_add(timer_clone(timer1));
+
+  Timer* timer2 = malloc(sizeof(Timer));
+  timer2->id = 20;
+  timers_add(timer_clone(timer2));
+
+  Timer* timer3 = malloc(sizeof(Timer));
+  timer3->id = 30;
+  timers_add(timer_clone(timer3));
+
+  Timer* timer4 = malloc(sizeof(Timer));
+  timer4->id = 40;
+  timers_add(timer_clone(timer4));
+
+  Timer* timer5 = malloc(sizeof(Timer));
+  timer5->id = 50;
+  timers_add(timer_clone(timer5));
+
   timers_save();
   timers_clear();
-  mu_assert(0 == timers_get_count(), "Sanity check that timers are gone.");
   timers_restore();
-  tmr = timers_get(0);
-  mu_assert(TIMER_STATUS_STOPPED == tmr->status, "Loaded timer is not stopped.");
+  mu_assert(5 == timers_count(), "timers_save with multiple timer did not restore the timers");
+  mu_assert(timer1->id == timers_get(0)->id, "timers_save with multiple timer did not restore timer 1 correctly");
+  mu_assert(timer2->id == timers_get(1)->id, "timers_save with multiple timer did not restore timer 2 correctly");
+  mu_assert(timer3->id == timers_get(2)->id, "timers_save with multiple timer did not restore timer 3 correctly");
+  mu_assert(timer4->id == timers_get(3)->id, "timers_save with multiple timer did not restore timer 4 correctly");
+  mu_assert(timer5->id == timers_get(4)->id, "timers_save with multiple timer did not restore timer 5 correctly");
   return 0;
 }
 
-// When a timer is added
-// And the timer is running
-// And the timers are saved and loaded
-// And the "auto resume" setting is disabled
-// The timer should not be running.
-static char* test_dont_resume_running_timer(void) {
-  settings()->resume_timers = false;
-  mu_assert(settings()->resume_timers == false, "Resume timers setting is not off.");
-  timers_add(create_timer_down(2 * 60));
-  Timer* tmr = timers_get(0);
-  timer_resume(tmr);
-  mu_assert(TIMER_STATUS_RUNNING == tmr->status, "Created timer is not running.");
-  timers_save();
-  timers_clear();
-  mu_assert(0 == timers_get_count(), "Sanity check that timers are gone.");
-  timers_restore();
-  tmr = timers_get(0);
-  mu_assert(TIMER_STATUS_STOPPED == tmr->status, "Loaded timer is not stopped.");
-  return 0;
-}
+char* timer_str(void) {
+  Timer* timer = malloc(sizeof(Timer));
+  char str[16];
 
-// When a timer is added
-// And we search for it by id
-// The timer should be returned.
-static char* test_find_valid(void) {
-  Timer* tmr = create_timer_down(60);
-  timers_add(tmr);
-  mu_assert(timers_find(tmr->id)->id == tmr->id, "Could not find timer by id");
-  return 0;
-}
+  timer_time_str(0, false, str, 16);
+  mu_assert(0 == strcmp("00:00", str), "timer_str did not display 0 correctly (no hours)");
 
-// When the timers are sent to the phone
-// The MessageQueue should have received a message
-// And the group should be TMR
-// And the operation should be LIST!
-// And the data should be the serialized form of all of the timers.
-static char* test_send_timers(void) {
-  Timer* tmr1 = create_timer_down(60);
-  timers_add(tmr1);
-  Timer* tmr2 = create_timer_down(600);
-  timers_add(tmr2);
-  timers_send_list();
+  timer_time_str(60, false, str, 16);
+  mu_assert(0 == strcmp("01:00", str), "timer_str did not display 60 correctly (no hours)");
 
-  mu_assert(0 == strcmp(mqueue_get_top_group(), "TMR"), "Message sent wasn't in TMR group");
-  mu_assert(0 == strcmp(mqueue_get_top_operation(), "LIST!"), "Message sent didn't have LIST! operation");
-  char timer_str[200];
-  snprintf(timer_str, 200, "%s%c%s", timer_serialize(tmr1, DELIMITER_INNER), DELIMITER_OUTER, timer_serialize(tmr2, DELIMITER_INNER));
-  mu_assert(0 == strcmp(mqueue_get_top_data(), timer_str), "Message sent didn't the correct DATA");
+  timer_time_str(3600, false, str, 16);
+  mu_assert(0 == strcmp("60:00", str), "timer_str did not display 3600 correctly (no hours)");
+
+  timer_time_str(3600, true, str, 16);
+  mu_assert(0 == strcmp("01:00:00", str), "timer_str did not display 3600 correctly (hours)");
 
   return 0;
 }
 
-// When a string of timers is loaded
-// The timers should have been loaded correctly.
-static char* test_load_list(void) {
-  char timer_str[200];
-  snprintf(timer_str, 200, "%d%c%d%c%d%c%d%c%s%c%d%c%d%c%d%c%d%c%d%c%s", 0,
-    DELIMITER_OUTER, 2, DELIMITER_OUTER,
-      100, DELIMITER_INNER,
-      TIMER_DIRECTION_UP, DELIMITER_INNER,
-      "Label #1",
-    DELIMITER_OUTER,
-      200, DELIMITER_INNER,
-      TIMER_DIRECTION_DOWN, DELIMITER_INNER,
-      600, DELIMITER_INNER,
-      true, DELIMITER_INNER,
-      TIMER_VIBRATION_DOUBLE, DELIMITER_INNER,
-      "Label #2"
-  );
-  timers_load_list(timer_str);
-
-  mu_assert(2 == timers_get_count(), "Timers didn't load correct amount");
-  Timer* tmr1 = timers_get(0);
-  Timer* tmr2 = timers_get(1);
-
-  mu_assert(tmr1->id == 100, "TImer 1 didn't load correct ID");
-  mu_assert(tmr1->direction == TIMER_DIRECTION_UP, "TImer 1 didn't load correct direction");
-  mu_assert(0 == strcmp(tmr1->label, "Label #1"), "TImer 1 didn't load correct label");
-
-  mu_assert(tmr2->id == 200, "TImer 2 didn't load correct ID");
-  mu_assert(tmr2->direction == TIMER_DIRECTION_DOWN, "TImer 2 didn't load correct direction");
-  mu_assert(tmr2->vibrate == TIMER_VIBRATION_DOUBLE, "TImer 2 didn't load correct vibrate");
-  mu_assert(tmr2->repeat == true, "TImer 2 didn't load correct repeat");
-  mu_assert(tmr2->direction == TIMER_DIRECTION_DOWN, "TImer 2 didn't load correct direction");
-  mu_assert(0 == strcmp(tmr2->label, "Label #2"), "TImer 2 didn't load correct label");
-
+char* timers_tests(void) {
+  mu_run_test(count_zero_when_empty);
+  mu_run_test(count_one_when_added_single_timer);
+  mu_run_test(count_10_when_added_ten_timers);
+  mu_run_test(get_timer_null_when_empty);
+  mu_run_test(get_timer_returns_item);
+  mu_run_test(find_null_when_empty);
+  mu_run_test(find_timer_when_exists);
+  mu_run_test(timer_remove_false_when_empty);
+  mu_run_test(timer_remove_true_when_single_timer);
+  mu_run_test(timer_remove_false_when_not_existant);
+  mu_run_test(timer_remove_reduces_count);
+  mu_run_test(timers_save_persists_zero_timers);
+  mu_run_test(timers_save_persists_zero_timers_after_lots);
+  mu_run_test(timers_save_persists_one_timer);
+  mu_run_test(timers_save_persists_multiple_timers);
+  mu_run_test(timer_str);
   return 0;
-}
-
-// When the list of timers has been requested
-// The MessageQueue should have received a message
-// And the message group should be TMR
-// And the message operation should be LIST?.
-static char* test_get_list(void) {
-  timers_get_list();
-  mu_assert(0 == strcmp(mqueue_get_top_group(), "TMR"), "MessageQueue didn't get message in TMR group.");
-  mu_assert(0 == strcmp(mqueue_get_top_operation(), "LIST?"), "MessageQueue didn't get message with LIST? operation.");
-  return 0;
-}
-
-// Run all the tests!
-static char* all_tests() {
-  mu_run_test(test_empty);
-  mu_run_test(test_one);
-  mu_run_test(test_add_remove_one);
-  mu_run_test(test_fill_empty);
-  mu_run_test(test_remove_missing);
-  mu_run_test(test_get_timers);
-  mu_run_test(test_persist_none);
-  mu_run_test(test_persist_one);
-  mu_run_test(test_persist_multiple);
-  mu_run_test(test_persist_after_clear);
-  mu_run_test(test_resume_running_timer);
-  mu_run_test(test_resume_stopped_timer);
-  mu_run_test(test_dont_resume_running_timer);
-  mu_run_test(test_find_valid);
-  mu_run_test(test_send_timers);
-  mu_run_test(test_load_list);
-  mu_run_test(test_get_list);
-  return 0;
-}
-
-// Test application entry point.
-// Executes all the tests and prints the results in pretty colours.
-int main(int argc, char **argv) {
-  printf("%s----------------------------------\n", KCYN);
-  printf("| Running Multi Timer v%s Tests |\n", VERSION_LABEL);
-  printf("----------------------------------\n%s", KNRM);
-  char* result = all_tests();
-  if (0 != result) {
-    printf("%s- Failed Test:%s %s\n", KRED, KNRM, result);
-  }
-  printf("- Tests Run:    %s%d%s\n", (tests_run == tests_passed) ? KGRN : KRED, tests_run, KNRM);
-  printf("- Tests Passed: %s%d%s\n", (tests_run == tests_passed) ? KGRN : KRED, tests_passed, KNRM);
-
-  printf("%s----------------------------------%s\n", KCYN, KNRM);
-  return result != 0;
 }

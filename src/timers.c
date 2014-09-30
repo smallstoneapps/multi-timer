@@ -1,235 +1,290 @@
-/*
-
-Multi Timer v3.0
-
-http://matthewtole.com/pebble/multi-timer/
-
-----------------------
-
-The MIT License (MIT)
-
-Copyright © 2013 - 2014 Matthew Tole
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in
-all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-THE SOFTWARE.
-
---------------------
-
-src/timers.c
-
-*/
-
-// TODO: Fix the is_blank thing because I'm an idiot.
-
 #include <pebble.h>
-#include "globals.h"
-#include "timers.h"
-#include "common.h"
-#include "settings.h"
-#include "generated/appinfo.h"
-#include <pebble-assist.h>
-#include <data-processor.h>
+
 #include <linked-list.h>
-#include <message-queue.h>
 
-#define TIMER_BLOCK_SIZE 5
+#include "timers.h"
 
-typedef struct TimerBlock {
+#include "timer.h"
+#include "persist.h"
+#include "migration.h"
+
+typedef struct {
   Timer timers[TIMER_BLOCK_SIZE];
-  uint8_t count;
-  int time;
+  uint8_t total_timers;
+  time_t save_time;
 } TimerBlock;
 
-static LinkedRoot* timers = NULL;
-static bool is_blank = true;
+static void timers_cleanup(void);
+
+LinkedRoot* timers = NULL;
+LinkedRoot* update_handlers = NULL;
 
 void timers_init(void) {
+  timers_cleanup();
   timers = linked_list_create_root();
+  update_handlers = linked_list_create_root();
 }
 
-Timer* timers_get(uint8_t pos) {
-  return (Timer*) linked_list_get(timers, pos);
-}
-
-int timers_get_count() {
+uint8_t timers_count(void) {
   return linked_list_count(timers);
 }
 
-void timers_add(Timer* timer) {
-  linked_list_append(timers, timer);
-  is_blank = false;
-}
-
-void timers_clear() {
-  while (timers_get_count() > 0) {
-    timers_remove(0);
+Timer* timers_get(uint8_t index) {
+  if (! timers) {
+    return NULL;
   }
+  return linked_list_get(timers, index);
 }
 
-void timers_remove(uint8_t pos) {
-  Timer* tmr = timers_get(pos);
-  free_safe(tmr);
-  linked_list_remove(timers, pos);
-}
-
-Timer* timers_find(const uint16_t id) {
-  uint8_t count = timers_get_count();
-  for (uint8_t t = 0; t < count; t += 1) {
-    if (id == timers_get(t)->id) {
-      return timers_get(t);
+Timer* timers_find(uint16_t id) {
+  uint8_t count = timers_count();
+  for (uint8_t c = 0; c < count; c += 1) {
+    Timer* timer = timers_get(c);
+    if (timer->id == id) {
+      return timer;
     }
   }
   return NULL;
 }
 
-status_t timers_restore(void) {
+int16_t timers_index_of(uint16_t id) {
+  uint8_t count = timers_count();
+  for (uint8_t c = 0; c < count; c += 1) {
+    Timer* timer = timers_get(c);
+    if (timer->id == id) {
+      return c;
+    }
+  }
+  return -1;
+}
+
+bool timers_add(Timer* timer) {
+  linked_list_append(timers, timer);
+  return true;
+}
+
+bool timers_remove(uint8_t position) {
+  Timer* timer = timers_get(position);
+  if (NULL == timer) {
+    return false;
+  }
+  timer_pause(timer);
+  linked_list_remove(timers, position);
+  free(timer);
+  timers_mark_updated();
+  return true;
+}
+
+Timer* timers_find_last_wakeup(void) {
+  Timer* last = NULL;
+  uint16_t last_wakeup_time = 0;
+  uint8_t count = timers_count();
+  for (uint8_t c = 0; c < count; c += 1) {
+    Timer* timer = timers_get(c);
+    if (timer->wakeup_id < 0) {
+      continue;
+    }
+    if (timer->current_time > last_wakeup_time) {
+      last = timer;
+      last_wakeup_time = timer->current_time;
+    }
+  }
+  return last;
+}
+
+Timer* timers_find_wakeup_collision(Timer* timer) {
+  time_t wakeup_time;
+  wakeup_query(timer->wakeup_id, &wakeup_time);
+  uint8_t count = timers_count();
+  for (uint8_t c = 0; c < count; c += 1) {
+    Timer* timer_to_check = timers_get(c);
+    if (timer_to_check->wakeup_id < 0) {
+      continue;
+    }
+    if (timer_to_check->id == timer->id) {
+      continue;
+    }
+    time_t check_time;
+    wakeup_query(timer_to_check->wakeup_id, &check_time);
+    if (abs(check_time - wakeup_time) <= 60) {
+      return timer_to_check;
+    }
+  }
+  return NULL;
+}
+
+void timers_clear(void) {
+  if (! timers) {
+    return;
+  }
+  while (linked_list_count(timers) > 0) {
+    Timer* timer = (Timer*) linked_list_get(timers, 0);
+    linked_list_remove(timers, 0);
+    free(timer);
+  }
+}
+
+void timers_mark_updated(void) {
+  uint8_t handler_count = linked_list_count(update_handlers);
+  for (uint8_t h = 0; h < handler_count; h += 1) {
+    TimersUpdatedHandler handler = linked_list_get(update_handlers, h);
+    handler();
+  }
+}
+
+void timers_register_update_handler(TimersUpdatedHandler handler) {
+  linked_list_append(update_handlers, handler);
+}
+
+static void timers_cleanup(void) {
+  timers_clear();
+  free(timers);
+  timers = NULL;
+}
+
+void timers_save(void) {
+  if (timers_count() == 0) {
+    persist_delete(PERSIST_TIMER_START);
+    return;
+  }
+  TimerBlock* block = NULL;
+  uint8_t block_count = 0;
+  for (uint8_t b = 0; b < timers_count(); b += 1) {
+    if (! block) {
+      block = malloc(sizeof(Timer));
+      block->total_timers = timers_count();
+      block->save_time = time(NULL);
+    }
+    block->timers[b % TIMER_BLOCK_SIZE] = *timers_get(b);
+    if (b % TIMER_BLOCK_SIZE == (TIMER_BLOCK_SIZE - 1)) {
+      persist_write_data(PERSIST_TIMER_START + block_count, block, sizeof(TimerBlock));
+      block_count += 1;
+      free(block);
+      block = NULL;
+    }
+  }
+  if (block) {
+    persist_write_data(PERSIST_TIMER_START + block_count, block, sizeof(TimerBlock));
+  }
+  persist_write_int(PERSIST_TIMERS_VERSION, 2);
+}
+
+void timers_restore(void) {
   timers_clear();
 
-  if (! persist_exists(STORAGE_TIMER_START)) {
-    return 0;
-  }
+  time_t now = time(NULL);
+  uint16_t seconds_elapsed = 0;
 
-  is_blank = false;
+  TimerBlock* block = NULL;
+  if (persist_exists(PERSIST_TIMER_START)) {
+    block = malloc(sizeof(TimerBlock));
+    persist_read_data(PERSIST_TIMER_START, block, sizeof(TimerBlock));
+    uint8_t num_timers = block->total_timers;
+    uint8_t block_offset = 0;
+    seconds_elapsed = now - block->save_time;
+
+    for (uint8_t t = 0; t < num_timers; t += 1) {
+      if (! block) {
+        block = malloc(sizeof(TimerBlock));
+        persist_read_data(PERSIST_TIMER_START + block_offset, block, sizeof(TimerBlock));
+      }
+      Timer* timer = timer_clone(&block->timers[t % TIMER_BLOCK_SIZE]);
+      timers_add(timer);
+      timer_restore(timer, seconds_elapsed);
+      if (t % TIMER_BLOCK_SIZE == (TIMER_BLOCK_SIZE - 1)) {
+        free(block);
+        block = NULL;
+        block_offset += 1;
+      }
+    }
+    if (block) {
+      free(block);
+      block = NULL;
+    }
+  }
+}
+
+void timers_migrate(void) {
+
+  if (! persist_exists(PERSIST_TIMER_START)) {
+    return;
+  }
 
   int block = 0;
-  TimerBlock* timerBlock = malloc(sizeof(TimerBlock));
-  persist_read_data(STORAGE_TIMER_START, timerBlock, sizeof(TimerBlock));
+  OldTimerBlock* timerBlock = malloc(sizeof(OldTimerBlock));
+  persist_read_data(PERSIST_TIMER_START, timerBlock, sizeof(OldTimerBlock));
 
   uint8_t timer_count = timerBlock->count;
-  int seconds_elapsed = 0;
-  if (settings()->resume_timers) {
-    int save_time = timerBlock->time;
-    seconds_elapsed = time(NULL) - save_time;
-  }
 
   for (int t = 0; t < timer_count; t += 1) {
 
     if (t > 0 && t % TIMER_BLOCK_SIZE == 0) {
       block += 1;
-      free_safe(timerBlock);
-      timerBlock = malloc(sizeof(TimerBlock));
-      persist_read_data(STORAGE_TIMER_START + block, timerBlock, sizeof(TimerBlock));
-    }
-
-    Timer* timer = timer_clone(&timerBlock->timers[t % TIMER_BLOCK_SIZE]);
-    timers_add(timer);
-
-    timer->app_timer = NULL;
-    if (! settings()->resume_timers) {
-      timer_reset(timer);
-      continue;
-    }
-    if (TIMER_STATUS_RUNNING != timer->status) {
-      continue;
-    }
-    if (TIMER_DIRECTION_UP == timer->direction) {
-      timer->time_left += seconds_elapsed;
-    }
-    else {
-      if (true == timer->repeat) {
-        timer->time_left -= (seconds_elapsed % timer->length);
-        if (timer->time_left <= 0) {
-          timer->time_left += timer->length;
-        }
+      if (NULL != timerBlock) {
+        free(timerBlock);
+        timerBlock = NULL;
       }
-      else {
-        timer->time_left -= seconds_elapsed;
-        if (0 >= timer->time_left) {
-          timer->time_left = 0;
-          timer->status = TIMER_STATUS_FINISHED;
-          continue;
-        }
-      }
+      timerBlock = malloc(sizeof(OldTimerBlock));
+      persist_read_data(PERSIST_TIMER_START + block, timerBlock, sizeof(OldTimerBlock));
     }
-    timer_resume(timer);
-  }
-  free_safe(timerBlock);
-  return 0;
-}
 
-status_t timers_save(void) {
-  int block = 0;
-  uint8_t num_timers = timers_get_count();
-  if (num_timers == 0) {
-    TimerBlock* timer_block = malloc(sizeof(TimerBlock));
-    timer_block->count = 0;
-    persist_write_data(STORAGE_TIMER_START, timer_block, sizeof(TimerBlock));
-    free_safe(timer_block);
-    return 0;
-  }
-  for (int t = 0; t < num_timers; t += TIMER_BLOCK_SIZE) {
-    TimerBlock* timerBlock = malloc(sizeof(TimerBlock));
-    timerBlock->count = num_timers;
-    timerBlock->time = time(NULL);
-    for (int u = 0; u < TIMER_BLOCK_SIZE; u += 1) {
-      if (t + u >= num_timers) {
+    OldTimer* old_timer = &timerBlock->timers[t % TIMER_BLOCK_SIZE];
+
+    int seconds_elapsed = time(NULL) - timerBlock->time;
+
+    Timer* timer = malloc(sizeof(Timer));
+    timer->id = old_timer->id;
+    timer->current_time = old_timer->time_left;
+    timer->length = old_timer->length;
+    timer->repeat = old_timer->repeat ? TIMER_REPEAT_INFINITE : 0;
+    switch (old_timer->status) {
+      case OLD_TIMER_STATUS_STOPPED:
+        timer->status = TIMER_STATUS_STOPPED;
         break;
-      }
-      timerBlock->timers[u] = *timers_get(t + u);
+      case OLD_TIMER_STATUS_RUNNING:
+        timer->status = TIMER_STATUS_RUNNING;
+        break;
+      case OLD_TIMER_STATUS_PAUSED:
+        timer->status = TIMER_STATUS_PAUSED;
+        break;
+      case OLD_TIMER_STATUS_FINISHED:
+        timer->status = TIMER_STATUS_DONE;
+        break;
     }
-    persist_write_data(STORAGE_TIMER_START + block, timerBlock, sizeof(TimerBlock));
-    free_safe(timerBlock);
-    block += 1;
-  }
-  return 0;
-}
-
-void timers_send_list(void) {
-  const uint8_t timer_count = timers_get_count();
-  if (0 == timer_count) {
-    mqueue_add("TMR", "LIST!", " ");
-  }
-  else {
-    size_t timer_string_size = (TIMER_STR_LENGTH * timer_count) + timer_count;
-    char* timer_string = malloc(sizeof(char) * timer_string_size);
-    if (NULL == timer_string) {
-      ERROR("Could not allocate enough memory for the timer string!");
-      return;
+    switch (old_timer->vibrate) {
+      case OLD_TIMER_VIBRATION_OFF:
+        timer->vibration = TIMER_VIBE_NONE;
+        break;
+      case OLD_TIMER_VIBRATION_SHORT:
+        timer->vibration = TIMER_VIBE_SHORT;
+        break;
+      case OLD_TIMER_VIBRATION_LONG:
+        timer->vibration = TIMER_VIBE_LONG;
+        break;
+      case OLD_TIMER_VIBRATION_DOUBLE:
+        timer->vibration = TIMER_VIBE_DOUBLE;
+        break;
+      case OLD_TIMER_VIBRATION_TRIPLE:
+        timer->vibration = TIMER_VIBE_TRIPLE;
+        break;
+      case OLD_TIMER_VIBRATION_CONTINUOUS:
+        timer->vibration = TIMER_VIBE_SOLID;
+        break;
     }
-    timer_string[0] = 0;
-    for (uint8_t t = 0; t < timer_count; t += 1) {
-      strcat(timer_string, timer_serialize(timers_get(t), DELIMITER_INNER));
-      if (t < timer_count - 1) {
-        timer_string[strlen(timer_string)] = DELIMITER_OUTER;
-      }
+    switch (old_timer->direction) {
+      case OLD_TIMER_DIRECTION_DOWN:
+        timer->type = TIMER_TYPE_TIMER;
+        break;
+      case OLD_TIMER_DIRECTION_UP:
+        timer->type = TIMER_TYPE_STOPWATCH;
+        break;
     }
-    mqueue_add("TMR", "LIST!", timer_string);
-    free_safe(timer_string);
-  }
-}
-
-void timers_load_list(char* data) {
-  timers_clear();
-  ProcessingState* ps = data_processor_create(data, DELIMITER_OUTER);
-  data_processor_get_int(ps);
-  uint8_t num_timers = data_processor_get_int(ps);
-  for (uint8_t t = 0; t < num_timers; t += 1) {
-    Timer* timer = timer_deserialize(data_processor_get_string(ps), DELIMITER_INNER);
+    timer->wakeup_id = -1;
+    timer->timer = NULL;
+    timer_restore(timer, seconds_elapsed);
     timers_add(timer);
-    timer_reset(timer);
   }
-  data_processor_destroy(ps);
-}
-
-void timers_get_list(void) {
-  mqueue_add("TMR", "LIST?", " ");
-}
-
-bool timers_are_blank(void) {
-  return is_blank;
+  if (NULL != timerBlock) {
+    free(timerBlock);
+  }
 }

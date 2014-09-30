@@ -1,63 +1,26 @@
-/*
-
-Multi Timer v3.0
-
-http://matthewtole.com/pebble/multi-timer/
-
-----------------------
-
-The MIT License (MIT)
-
-Copyright © 2013 - 2014 Matthew Tole
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in
-all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-THE SOFTWARE.
-
---------------------
-
-src/windows/win-settings.c
-
-*/
-
 #include <pebble.h>
 
 #include <pebble-assist.h>
+
 #include "win-settings.h"
 #include "win-vibration.h"
+#include "win-duration.h"
+
 #include "../settings.h"
 #include "../timers.h"
 #include "../common.h"
 
-#define MENU_NUM_SECTIONS   3
-#define MENU_SECTION_SAVE   0
-#define MENU_SECTION_TIMERS 1
-#define MENU_SECTION_OTHER  2
+#define MENU_NUM_SECTIONS   2
+#define MENU_SECTION_TIMERS 0
+#define MENU_SECTION_OTHER  1
 
-#define MENU_SECTION_ROWS_SAVE    2
-#define MENU_SECTION_ROWS_TIMERS  3
+#define MENU_SECTION_ROWS_TIMERS  4
 #define MENU_SECTION_ROWS_OTHER   1
 
-#define MENU_ROW_SAVE_AUTO      0
-#define MENU_ROW_SAVE_RESUME    1
-
-#define MENU_ROW_TIMERS_START   0
-#define MENU_ROW_TIMERS_VIBRATE 1
-#define MENU_ROW_TIMERS_HOURS   2
+#define MENU_ROW_TIMERS_START    0
+#define MENU_ROW_TIMERS_VIBRATE  1
+#define MENU_ROW_TIMERS_DURATION 2
+#define MENU_ROW_TIMERS_HOURS    3
 
 #define MENU_ROW_OTHER_CLOCK    0
 
@@ -69,6 +32,7 @@ static void menu_draw_row_callback(GContext* ctx, const Layer *cell_layer, MenuI
 static void menu_draw_header_callback(GContext* ctx, const Layer *cell_layer, uint16_t section_index , void *data);
 static void menu_select_click_callback(MenuLayer *menu_layer, MenuIndex *cell_index, void *callback_context);
 static void vibration_callback(TimerVibration vibration);
+static void duration_callback(uint16_t duration);
 
 static Window* window;
 static MenuLayer* layer_menu;
@@ -91,7 +55,7 @@ void win_settings_init(void) {
 }
 
 void win_settings_show(void) {
-  window_stack_push(window, ANIMATE_WINDOWS);
+  window_stack_push(window, true);
 }
 
 void win_settings_destroy(void) {
@@ -108,8 +72,6 @@ static uint16_t menu_get_num_sections_callback(MenuLayer *me, void *data) {
 
 static uint16_t menu_get_num_rows_callback(MenuLayer *me, uint16_t section_index, void *data) {
   switch (section_index) {
-    case MENU_SECTION_SAVE:
-      return MENU_SECTION_ROWS_SAVE;
     case MENU_SECTION_TIMERS:
       return MENU_SECTION_ROWS_TIMERS;
     case MENU_SECTION_OTHER:
@@ -130,16 +92,6 @@ static void menu_draw_row_callback(GContext* ctx, const Layer *cell_layer, MenuI
   char value[16] = "";
 
   switch (cell_index->section) {
-    case MENU_SECTION_SAVE:
-      switch (cell_index->row) {
-        case MENU_ROW_SAVE_AUTO:
-          menu_draw_option(ctx, "Auto Save", settings()->save_timers_auto ? "ON": "OFF");
-          break;
-        case MENU_ROW_SAVE_RESUME:
-          menu_draw_option(ctx, "Auto Resume", settings()->resume_timers ? "ON": "OFF");
-          break;
-      }
-      break;
     case MENU_SECTION_TIMERS:
       switch (cell_index->row) {
         case MENU_ROW_TIMERS_START:
@@ -149,6 +101,10 @@ static void menu_draw_row_callback(GContext* ctx, const Layer *cell_layer, MenuI
           strcpy(value, timer_vibe_str(settings()->timers_vibration, true));
           uppercase(value);
           menu_draw_option(ctx, "Vibration", value);
+          break;
+        case MENU_ROW_TIMERS_DURATION:
+          timer_time_str(settings()->timers_duration, settings()->timers_hours, value, 16);
+          menu_draw_option(ctx, "Duration", value);
           break;
         case MENU_ROW_TIMERS_HOURS:
           menu_draw_option(ctx, "Show Hours", settings()->timers_hours ? "ON": "OFF");
@@ -163,18 +119,10 @@ static void menu_draw_row_callback(GContext* ctx, const Layer *cell_layer, MenuI
       }
       break;
   }
-  // graphics_context_set_text_color(ctx, GColorBlack);
-  // graphics_draw_text(ctx, label, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD), GRect(4, 0, 136, 28), GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, NULL);
-  // if (strlen(value) > 0) {
-  //   graphics_draw_text(ctx, value, fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD), GRect(4, 4, 136, 24), GTextOverflowModeTrailingEllipsis, GTextAlignmentRight, NULL);
-  // }
 }
 
 static void menu_draw_header_callback(GContext* ctx, const Layer *cell_layer, uint16_t section_index , void *data) {
   switch (section_index) {
-    case MENU_SECTION_SAVE:
-      menu_cell_basic_header_draw(ctx, cell_layer, "Save Options");
-    break;
     case MENU_SECTION_TIMERS:
       menu_cell_basic_header_draw(ctx, cell_layer, "Timer Defaults");
     break;
@@ -186,18 +134,6 @@ static void menu_draw_header_callback(GContext* ctx, const Layer *cell_layer, ui
 
 static void menu_select_click_callback(MenuLayer *menu_layer, MenuIndex *cell_index, void *callback_context) {
   switch (cell_index->section) {
-    case MENU_SECTION_SAVE:
-      switch (cell_index->row) {
-        case MENU_ROW_SAVE_AUTO:
-          settings()->save_timers_auto = ! settings()->save_timers_auto;
-          menu_layer_reload_data(layer_menu);
-        break;
-        case MENU_ROW_SAVE_RESUME:
-          settings()->resume_timers = ! settings()->resume_timers;
-          menu_layer_reload_data(layer_menu);
-        break;
-      }
-      break;
     case MENU_SECTION_TIMERS:
       switch (cell_index->row) {
         case MENU_ROW_TIMERS_START:
@@ -206,6 +142,9 @@ static void menu_select_click_callback(MenuLayer *menu_layer, MenuIndex *cell_in
         break;
         case MENU_ROW_TIMERS_VIBRATE:
           win_vibration_show(vibration_callback, settings()->timers_vibration);
+        break;
+        case MENU_ROW_TIMERS_DURATION:
+          win_duration_show(settings()->timers_duration, duration_callback);
         break;
         case MENU_ROW_TIMERS_HOURS:
           settings()->timers_hours = ! settings()->timers_hours;
@@ -222,8 +161,13 @@ static void menu_select_click_callback(MenuLayer *menu_layer, MenuIndex *cell_in
       }
       break;
   }
+  timers_mark_updated();
 }
 
 static void vibration_callback(TimerVibration vibration) {
   settings()->timers_vibration = vibration;
+}
+
+static void duration_callback(uint16_t duration) {
+  settings()->timers_duration = duration;
 }

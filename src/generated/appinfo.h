@@ -38,7 +38,7 @@ src/generated/appinfo.h
 
 #define VERSION_LABEL "3.0"
 #define UUID "0db6a55e-b32a-4b03-b037-95637bf306ff"
-#define DEBUG_MODE true
+#define DEBUG_MODE false
 #define DELIMITER_INNER '`'
 #define DELIMITER_OUTER '~'
 #define APP_KEY_DATA 2
