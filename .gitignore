@@ -13,3 +13,6 @@ src/js/coverage/
 tests/include/
 
 node_modules/
+
+src/generated/
+src/js/src/generated/
