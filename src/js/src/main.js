@@ -7,7 +7,7 @@ var MultiTimer = (function () {
   var analytics = null;
 
   function start() {
-    analytics = new Analytics(AppInfo.googleAnalytics.trackingId, AppInfo.shortName, AppInfo.versionLabel);
+    analytics = new Analytics(AppInfo.config.googleAnalytics.trackingId, AppInfo.shortName, AppInfo.versionLabel);
     if (! AppInfo.debug) { analytics.trackEvent('app', 'start'); }
   }
 
