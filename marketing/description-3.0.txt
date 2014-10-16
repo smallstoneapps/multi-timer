@@ -1,0 +1,5 @@
+Multi Timer is simply the best timer and stopwatch app for Pebble.
+
+You can create as many independent timers and stopwatches as you need.
+
+With the release of 3.0, timers will now launch the app when they finish, meaning you can quit Multi Timer while timers are running and still be notified.
