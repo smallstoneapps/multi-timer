@@ -18,11 +18,13 @@ static void timers_cleanup(void);
 
 LinkedRoot* timers = NULL;
 LinkedRoot* update_handlers = NULL;
+LinkedRoot* highlight_handlers = NULL;
 
 void timers_init(void) {
   timers_cleanup();
   timers = linked_list_create_root();
   update_handlers = linked_list_create_root();
+  highlight_handlers = linked_list_create_root();
 }
 
 uint8_t timers_count(void) {
@@ -132,8 +134,20 @@ void timers_mark_updated(void) {
   }
 }
 
+void timers_highlight(Timer* timer) {
+  uint8_t handler_count = linked_list_count(highlight_handlers);
+  for (uint8_t h = 0; h < handler_count; h += 1) {
+    TimerHighlightHandler handler = linked_list_get(highlight_handlers, h);
+    handler(timer);
+  }
+}
+
 void timers_register_update_handler(TimersUpdatedHandler handler) {
   linked_list_append(update_handlers, handler);
+}
+
+void timers_register_highlight_handler(TimerHighlightHandler handler) {
+  linked_list_append(highlight_handlers, handler);
 }
 
 static void timers_cleanup(void) {

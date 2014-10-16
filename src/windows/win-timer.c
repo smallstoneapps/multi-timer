@@ -158,4 +158,3 @@ static void timers_update_handler(void) {
   layer_mark_dirty(s_layer_header);
   menu_layer_reload_data(s_layer_menu);
 }
-

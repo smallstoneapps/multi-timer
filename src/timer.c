@@ -119,6 +119,7 @@ char* timer_vibe_str(TimerVibration vibe, bool shortStr) {
 
 Timer* timer_create_timer(void) {
   Timer* timer = malloc(sizeof(Timer));
+  timer->type = TIMER_TYPE_TIMER;
   timer->vibration = settings()->timers_vibration;
   timer->length = settings()->timers_duration;
   timer->wakeup_id = -1;
@@ -289,4 +290,5 @@ static void timer_completed_action(Timer* timer) {
   if (timer->repeat == TIMER_REPEAT_INFINITE) {
     timer_start(timer);
   }
+  timers_highlight(timer);
 }

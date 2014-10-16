@@ -44,6 +44,7 @@ static void menu_select_timers(uint16_t row_index);
 static void menu_select_other(uint16_t row_index);
 static void menu_select_long(struct MenuLayer* menu, MenuIndex* cell_index, void* callback_context);
 static void timers_update_handler(void);
+static void timer_highlight_handler(Timer* timer);
 
 static Window*    s_window;
 static MenuLayer* s_menu;
@@ -55,6 +56,7 @@ void win_main_init(void) {
     .unload = window_unload
   });
   timers_register_update_handler(timers_update_handler);
+  timers_register_highlight_handler(timer_highlight_handler);
   win_timer_add_init();
   win_timer_init();
   win_about_init();
@@ -227,7 +229,7 @@ static void menu_select_other(uint16_t row_index) {
       }
       timers_add(stopwatch);
       timers_mark_updated();
-      menu_layer_set_selected_index(s_menu, (MenuIndex) { .section = 1, .row = timers_index_of(stopwatch->id) }, MenuRowAlignCenter, true);
+      timers_highlight(stopwatch);
       break;
     }
     case MENU_ROW_OTHER_ABOUT:
@@ -252,4 +254,9 @@ static void menu_select_long(struct MenuLayer* menu, MenuIndex* cell_index, void
 
 static void timers_update_handler(void) {
   menu_layer_reload_data(s_menu);
+}
+
+static void timer_highlight_handler(Timer* timer) {
+  uint16_t index = timers_index_of(timer->id);
+  menu_layer_set_selected_index(s_menu, (MenuIndex) { .section = 1, .row = index }, MenuRowAlignCenter, true);
 }

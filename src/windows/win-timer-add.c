@@ -190,6 +190,7 @@ static void menu_select_footer(void) {
   timers_add(timer);
   window_stack_pop(true);
   timers_mark_updated();
+  timers_highlight(timer);
 }
 
 static void vibration_callback(TimerVibration vibration) {

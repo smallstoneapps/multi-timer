@@ -147,6 +147,9 @@ static void action_bar_layer_up_handler(ClickRecognizerRef recognizer, void *con
       if (s_minutes >= 60 && settings()->timers_hours) {
         s_minutes -= 60;
       }
+      if (s_minutes >= 100) {
+        s_minutes = 99;
+      }
     break;
     case MODE_SECONDS:
       s_seconds += 1;

@@ -4,6 +4,7 @@
 #define TIMER_BLOCK_SIZE 4
 
 typedef void (*TimersUpdatedHandler)(void);
+typedef void (*TimerHighlightHandler)(Timer* timer);
 
 // Setup the timers module and its associated data objects.
 // Must be called before all other operations.
@@ -39,7 +40,9 @@ Timer* timers_find_wakeup_collision(Timer* timer);
 void timers_clear(void);
 
 void timers_mark_updated(void);
+void timers_highlight(Timer* timer);
 void timers_register_update_handler(TimersUpdatedHandler handler);
+void timers_register_highlight_handler(TimerHighlightHandler handler);
 
 void timers_save(void);
 void timers_restore(void);
