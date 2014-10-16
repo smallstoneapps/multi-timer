@@ -4,14 +4,16 @@
 #include "win-about.h"
 #include "../generated/appinfo.h"
 
+#define ABOUT_LENGTH 187
+
 static void window_load(Window* window);
 static void window_unload(Window* window);
 static void layer_header_update(Layer* layer, GContext* ctx);
 
-static Window* s_window;
-static Layer* s_layer_header;
+static Window*          s_window;
+static Layer*           s_layer_header;
 static ScrollTextLayer* s_layer_scroll;
-char* s_text;
+char*                   s_text;
 
 void win_about_init(void) {
   s_window = window_create();
@@ -30,8 +32,8 @@ static void window_load(Window* window) {
   layer_set_update_proc(s_layer_header, layer_header_update);
   layer_add_to_window(s_layer_header, s_window);
 
-  s_text = malloc(448);
-  resource_load(resource_get_handle(RESOURCE_ID_TEXT_ABOUT), (uint8_t*)s_text, 448);
+  s_text = malloc(ABOUT_LENGTH);
+  resource_load(resource_get_handle(RESOURCE_ID_TEXT_ABOUT), (uint8_t*)s_text, ABOUT_LENGTH);
 
   s_layer_scroll = scroll_text_layer_create(GRect(0, 24, PEBBLE_WIDTH, PEBBLE_HEIGHT - STATUS_HEIGHT - 24));
   scroll_text_layer_add_to_window(s_layer_scroll, s_window);
