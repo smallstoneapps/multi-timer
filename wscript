@@ -147,7 +147,6 @@ def write_comment_header(f, filename, appinfo):
   f.write('/*\n')
   f.write('\n')
   f.write('Multi Timer v{0}\n'.format(appinfo['versionLabel']))
-  f.write('\n')
   f.write('http://matthewtole.com/pebble/multi-timer/\n')
   f.write('\n')
   f.write('----------------------\n')
