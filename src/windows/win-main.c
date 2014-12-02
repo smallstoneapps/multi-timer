@@ -146,8 +146,8 @@ static void menu_draw_row(GContext* ctx, const Layer* cell_layer, MenuIndex* cel
 }
 
 static void menu_draw_row_clock(GContext* ctx, const Layer* cell_layer) {
-  char time_str[8];
-  clock_copy_time_string(time_str, 8);
+  char time_str[10];
+  clock_copy_time_string(time_str, 10);
 
   graphics_context_set_text_color(ctx, GColorBlack);
   graphics_draw_text(ctx, time_str,
