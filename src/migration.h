@@ -38,3 +38,25 @@ typedef struct {
   uint8_t count;
   int time;
 } OldTimerBlock;
+
+typedef struct TimerTiny {
+  uint16_t id;
+  TimerType type;
+  uint16_t length;
+  uint16_t current_time;
+  TimerStatus status;
+  TimerVibration vibration;
+  uint8_t repeat;
+  uint8_t repeat_count;
+  AppTimer* timer;
+  WakeupId wakeup_id;
+  char label[24];
+} TimerTiny;
+
+typedef struct {
+  bool timers_start_auto; // Should timers start immediately when you add them?
+  TimerVibration timers_vibration; // Default timer vibration pattern
+  uint16_t timers_duration; // Default timer duration
+  bool timers_hours; // Use hours in timers?
+  bool show_clock; // Display a clock row in the main screen?
+} SettingsTiny;

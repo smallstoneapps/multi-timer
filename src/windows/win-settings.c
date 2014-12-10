@@ -32,7 +32,7 @@ static void menu_draw_row_callback(GContext* ctx, const Layer *cell_layer, MenuI
 static void menu_draw_header_callback(GContext* ctx, const Layer *cell_layer, uint16_t section_index , void *data);
 static void menu_select_click_callback(MenuLayer *menu_layer, MenuIndex *cell_index, void *callback_context);
 static void vibration_callback(TimerVibration vibration);
-static void duration_callback(uint16_t duration);
+static void duration_callback(uint32_t duration);
 
 static Window* window;
 static MenuLayer* layer_menu;
@@ -168,6 +168,6 @@ static void vibration_callback(TimerVibration vibration) {
   settings()->timers_vibration = vibration;
 }
 
-static void duration_callback(uint16_t duration) {
+static void duration_callback(uint32_t duration) {
   settings()->timers_duration = duration;
 }

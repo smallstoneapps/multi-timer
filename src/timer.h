@@ -26,8 +26,8 @@ typedef enum {
 typedef struct Timer {
   uint16_t id;
   TimerType type;
-  uint16_t length;
-  uint16_t current_time;
+  uint32_t length;
+  uint32_t current_time;
   TimerStatus status;
   TimerVibration vibration;
   uint8_t repeat;
@@ -39,7 +39,7 @@ typedef struct Timer {
 
 #define TIMER_REPEAT_INFINITE 100
 
-void timer_time_str(uint16_t timer_time, bool showHours, char* str, int str_len);
+void timer_time_str(uint32_t timer_time, bool showHours, char* str, int str_len);
 void timer_start(Timer* timer);
 void timer_pause(Timer* timer);
 void timer_resume(Timer* timer);

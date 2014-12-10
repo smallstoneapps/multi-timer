@@ -29,7 +29,7 @@ static void menu_select_click_callback(MenuLayer *menu_layer, MenuIndex *cell_in
 static void menu_select_main(uint16_t row);
 static void menu_select_footer(void);
 static void vibration_callback(TimerVibration vibration);
-static void duration_callback(uint16_t duration);
+static void duration_callback(uint32_t duration);
 
 static Window* s_window;
 static MenuLayer* s_menu;
@@ -197,6 +197,6 @@ static void vibration_callback(TimerVibration vibration) {
   s_timer->vibration = vibration;
 }
 
-static void duration_callback(uint16_t duration) {
+static void duration_callback(uint32_t duration) {
   s_timer->length = duration;
 }

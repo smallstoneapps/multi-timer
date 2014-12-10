@@ -26,7 +26,7 @@ static void update_timer_length(void);
 static Window* s_window;
 static Layer* s_layer;
 static ActionBarLayer* s_action_bar;
-static uint16_t s_duration = 0;
+static uint32_t s_duration = 0;
 static DurationCallback s_callback;
 
 static int s_mode = MODE_MINUTES;

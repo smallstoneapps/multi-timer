@@ -14,7 +14,7 @@ static void timer_cancel_wakeup(Timer* timer);
 static void timer_set_id(Timer* timer);
 static void timer_completed_action(Timer* timer);
 
-void timer_time_str(uint16_t timer_time, bool showHours, char* str, int str_len) {
+void timer_time_str(uint32_t timer_time, bool showHours, char* str, int str_len) {
   int hours = timer_time / 3600;
   int minutes = (showHours ? (timer_time % 3600) : timer_time) / 60;
   int seconds = (showHours ? (timer_time % 3600) : timer_time) % 60;
