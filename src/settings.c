@@ -4,17 +4,11 @@
 #include "settings.h"
 
 #include "timer.h"
+#include "migration.h"
 #include "persist.h"
 
-typedef struct {
-  bool save_timers_auto; // Automatically save timers on exit and load them when the app restarts?
-  bool resume_timers; // Automatically resume running timers when app starts?
-  bool timers_start_auto; // Should timers start immediately when you add them?
-  TimerVibration timers_vibration; // Default timer vibration pattern
-  bool timers_hours; // Use hours in timers?
-} OldSettings;
-
-static void migrate_settings(OldSettings old);
+static void migrate_settings_01(OldSettings old);
+static void migrate_settings_02(SettingsTiny tiny);
 
 // Set the default settings for the app.
 Settings _settings = {
@@ -26,12 +20,22 @@ Settings _settings = {
 };
 
 void settings_load(void) {
-  OldSettings old_settings;
   if (persist_exists(PERSIST_SETTINGS)) {
     if (! persist_exists(PERSIST_SETTINGS_VERSION)) {
+      DEBUG("Migrating settings from 2.X to 3.X");
+      OldSettings old_settings;
       int res = persist_read_data(PERSIST_SETTINGS, &old_settings, sizeof(old_settings));
       if (res >= 0) {
-        migrate_settings(old_settings);
+        migrate_settings_01(old_settings);
+        return;
+      }
+    }
+    else if (persist_read_int(PERSIST_SETTINGS_VERSION) == SETTINGS_VERSION_TINY) {
+      DEBUG("Migrating settings from 3.2 to 3.3+");
+      SettingsTiny settings_tiny;
+      int res = persist_read_data(PERSIST_SETTINGS, &settings_tiny, sizeof(settings_tiny));
+      if (res >= 0) {
+        migrate_settings_02(settings_tiny);
         return;
       }
     }
@@ -51,11 +55,19 @@ void settings_save(void) {
   if (res < 0) {
     LOG("Settings load failed: %d", res);
   }
-  persist_write_int(PERSIST_SETTINGS_VERSION, 2);
+  persist_write_int(PERSIST_SETTINGS_VERSION, SETTINGS_VERSION_CURRENT);
 }
 
-static void migrate_settings(OldSettings old) {
+static void migrate_settings_01(OldSettings old) {
   _settings.timers_hours = old.timers_hours;
   _settings.timers_vibration = old.timers_vibration;
   _settings.timers_start_auto = old.timers_start_auto;
+}
+
+static void migrate_settings_02(SettingsTiny tiny) {
+  _settings.timers_hours = tiny.timers_hours;
+  _settings.timers_vibration = tiny.timers_vibration;
+  _settings.timers_start_auto = tiny.timers_start_auto;
+  _settings.timers_duration = tiny.timers_duration;
+  _settings.show_clock = tiny.show_clock;
 }

@@ -2,6 +2,9 @@
 
 #include "timer.h"
 
+#define SETTINGS_VERSION_CURRENT 3
+#define SETTINGS_VERSION_TINY 2
+
 typedef struct {
   bool timers_start_auto; // Should timers start immediately when you add them?
   TimerVibration timers_vibration; // Default timer vibration pattern

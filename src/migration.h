@@ -53,6 +53,16 @@ typedef struct TimerTiny {
   char label[24];
 } TimerTiny;
 
+// Struct of the original settings.
+typedef struct {
+  bool save_timers_auto; // Automatically save timers on exit and load them when the app restarts?
+  bool resume_timers; // Automatically resume running timers when app starts?
+  bool timers_start_auto; // Should timers start immediately when you add them?
+  TimerVibration timers_vibration; // Default timer vibration pattern
+  bool timers_hours; // Use hours in timers?
+} OldSettings;
+
+// Struct of the fucked up settings where the timers_duration field was too small
 typedef struct {
   bool timers_start_auto; // Should timers start immediately when you add them?
   TimerVibration timers_vibration; // Default timer vibration pattern

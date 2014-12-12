@@ -19,12 +19,7 @@ static void init(void) {
   timers_init();
   bitmaps_init();
   settings_load();
-  if (! persist_exists(PERSIST_TIMERS_VERSION)) {
-    timers_migrate();
-  }
-  else {
-    timers_restore();
-  }
+  timers_restore();
   app_message_open(app_message_inbox_size_maximum(), app_message_outbox_size_maximum());
   win_main_init();
   win_main_show();

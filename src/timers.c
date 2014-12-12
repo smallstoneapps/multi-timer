@@ -180,10 +180,16 @@ void timers_save(void) {
   if (block) {
     persist_write_data(PERSIST_TIMER_START + block_count, block, sizeof(TimerBlock));
   }
-  persist_write_int(PERSIST_TIMERS_VERSION, 2);
+  persist_write_int(PERSIST_TIMERS_VERSION, TIMERS_VERSION_CURRENT);
 }
 
 void timers_restore(void) {
+
+  if (! persist_exists(PERSIST_TIMERS_VERSION)) {
+    timers_migrate();
+    return;
+  }
+
   timers_clear();
 
   time_t now = time(NULL);
