@@ -38,6 +38,8 @@ tests/timers.c
 #include "unit.h"
 #include "groups.h"
 #include "../src/timers.h"
+#include "../src/migration.h"
+#include "../src/persist.h"
 
 void timers_before(void) {
   timers_init();
@@ -204,6 +206,91 @@ char* timer_str(void) {
   return 0;
 }
 
+char* timers_migrate_from_1_to_3(void) {
+  OldTimerBlock* block = malloc(sizeof(OldTimerBlock));
+  block->count = 2;
+  block->time = time(NULL);
+  block->timers[0].direction = OLD_TIMER_DIRECTION_DOWN;
+  block->timers[0].length = 3000;
+  block->timers[0].time_left = 200;
+  block->timers[0].status = OLD_TIMER_STATUS_PAUSED;
+  block->timers[0].repeat = true;
+  block->timers[0].vibrate = OLD_TIMER_VIBRATION_DOUBLE;
+  block->timers[1].direction = OLD_TIMER_DIRECTION_UP;
+  block->timers[1].time_left = 50;
+  block->timers[1].status = OLD_TIMER_STATUS_RUNNING;
+  persist_write_data(PERSIST_TIMER_START, block, sizeof(OldTimerBlock));
+  free(block);
+
+  timers_restore();
+  mu_assert(2 == timers_count(), "Migrate 1->3: Incorrect number of timers");
+
+  Timer* tmr1 = timers_get(0);
+  Timer* tmr2 = timers_get(1);
+
+  mu_assert(tmr1->type == TIMER_TYPE_TIMER, "Migrate 1->3: Timer 1 wrong type");
+  mu_assert(tmr1->length == 3000, "Migrate 1->3: Timer 1 wrong length");
+  mu_assert(tmr1->current_time == 200, "Migrate 1->3: Timer 1 wrong time");
+  mu_assert(tmr1->status == TIMER_STATUS_PAUSED, "Migrate 1->3: Timer 1 wrong status");
+  mu_assert(tmr1->repeat == TIMER_REPEAT_INFINITE, "Migrate 1->3: Timer 1 wrong repeat");
+  mu_assert(tmr1->vibration == TIMER_VIBE_DOUBLE , "Migrate 1->3: Timer 1 wrong vibration");
+  mu_assert(tmr2->type == TIMER_TYPE_STOPWATCH , "Migrate 1->3: Timer 2 wrong type");
+  mu_assert(tmr2->current_time == 50, "Migrate 1->3: Timer 2 wrong time");
+  mu_assert(tmr2->status == TIMER_STATUS_RUNNING , "Migrate 1->3: Timer 2 wrong status");
+
+  return 0;
+}
+
+char* timers_migrate_from_2_to_3(void) {
+  TimerBlockTiny* block = malloc(sizeof(TimerBlockTiny));
+  block->total_timers = 2;
+  block->save_time = time(NULL);
+  block->timers[0].type = TIMER_TYPE_TIMER;
+  block->timers[0].length = 60;
+  block->timers[0].current_time = 45;
+  block->timers[0].id = 5;
+  strcpy(block->timers[0].label, "LABEL #1");
+  block->timers[0].repeat = TIMER_REPEAT_INFINITE;
+  block->timers[0].vibration = TIMER_VIBE_SOLID;
+  block->timers[0].status = TIMER_STATUS_PAUSED;
+  block->timers[0].wakeup_id = 70;
+  block->timers[1].type = TIMER_TYPE_STOPWATCH;
+  block->timers[1].current_time = 500;
+  block->timers[1].id = 10;
+  strcpy(block->timers[1].label, "LABEL #2");
+  block->timers[1].status = TIMER_STATUS_RUNNING;
+  block->timers[1].wakeup_id = 60;
+
+  persist_write_data(PERSIST_TIMER_START, block, sizeof(TimerBlockTiny));
+  persist_write_int(PERSIST_TIMERS_VERSION, TIMERS_VERSION_TINY);
+  free(block);
+
+  timers_restore();
+  mu_assert(2 == timers_count(), "Migrate 2->3: Incorrect number of timers");
+
+  Timer* tmr1 = timers_get(0);
+  Timer* tmr2 = timers_get(1);
+
+  mu_assert(tmr1->type == TIMER_TYPE_TIMER, "Migrate 2->3: Timer 1 wrong type");
+  mu_assert(tmr1->length == 60, "Migrate 2->3: Timer 1 wrong length");
+  mu_assert(tmr1->current_time == 45, "Migrate 2->3: Timer 1 wrong current time");
+  mu_assert(tmr1->id == 5, "Migrate 2->3: Timer 1 wrong ID");
+  mu_assert(0 == strcmp(tmr1->label, "LABEL #1"), "Migrate 2->3: Timer 1 wrong label");
+  mu_assert(tmr1->repeat == TIMER_REPEAT_INFINITE, "Migrate 2->3: Timer 1 wrong repeat");
+  mu_assert(tmr1->vibration == TIMER_VIBE_SOLID, "Migrate 2->3: Timer 1 wrong vibration");
+  mu_assert(tmr1->status == TIMER_STATUS_PAUSED, "Migrate 2->3: Timer 1 wrong status");
+  mu_assert(tmr1->wakeup_id == 70, "Migrate 2->3: Timer 1 wrong wakeup ID");
+
+  mu_assert(tmr2->type == TIMER_TYPE_STOPWATCH, "Migrate 2->3: Timer 2 wrong wakeup type");
+  mu_assert(tmr2->current_time == 500, "Migrate 2->3: Timer 2 wrong current time");
+  mu_assert(tmr2->id == 10, "Migrate 2->3: Timer 2 wrong id");
+  mu_assert(0 == strcmp(tmr2->label, "LABEL #2"), "Migrate 2->3: Timer 2 wrong label");
+  mu_assert(tmr2->status == TIMER_STATUS_RUNNING, "Migrate 2->3: Timer 2 wrong status");
+  mu_assert(tmr2->wakeup_id == 60, "Migrate 2->3: Timer 2 wrong wakeup ID");
+
+  return 0;
+}
+
 char* timers_tests(void) {
   mu_run_test(count_zero_when_empty);
   mu_run_test(count_one_when_added_single_timer);
@@ -221,5 +308,7 @@ char* timers_tests(void) {
   mu_run_test(timers_save_persists_one_timer);
   mu_run_test(timers_save_persists_multiple_timers);
   mu_run_test(timer_str);
+  mu_run_test(timers_migrate_from_1_to_3);
+  mu_run_test(timers_migrate_from_2_to_3);
   return 0;
 }

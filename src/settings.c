@@ -31,7 +31,6 @@ void settings_load(void) {
       }
     }
     else if (persist_read_int(PERSIST_SETTINGS_VERSION) == SETTINGS_VERSION_TINY) {
-      DEBUG("Migrating settings from 3.2 to 3.3+");
       SettingsTiny settings_tiny;
       int res = persist_read_data(PERSIST_SETTINGS, &settings_tiny, sizeof(settings_tiny));
       if (res >= 0) {

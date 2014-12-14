@@ -1,4 +1,7 @@
+#pragma once
+
 #include <pebble.h>
+#include "timers.h"
 
 typedef enum {
   OLD_TIMER_STATUS_STOPPED,
@@ -52,6 +55,12 @@ typedef struct TimerTiny {
   WakeupId wakeup_id;
   char label[24];
 } TimerTiny;
+
+typedef struct {
+  TimerTiny timers[TIMER_BLOCK_SIZE];
+  uint8_t total_timers;
+  time_t save_time;
+} TimerBlockTiny;
 
 // Struct of the original settings.
 typedef struct {

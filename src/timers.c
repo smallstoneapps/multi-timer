@@ -15,6 +15,8 @@ typedef struct {
 } TimerBlock;
 
 static void timers_cleanup(void);
+static void timers_migrate_1(void);
+static void timers_migrate_2(void);
 
 LinkedRoot* timers = NULL;
 LinkedRoot* update_handlers = NULL;
@@ -164,13 +166,17 @@ void timers_save(void) {
   TimerBlock* block = NULL;
   uint8_t block_count = 0;
   for (uint8_t b = 0; b < timers_count(); b += 1) {
-    if (! block) {
-      block = malloc(sizeof(Timer));
+    if (NULL == block) {
+      block = malloc(sizeof(TimerBlock));
       block->total_timers = timers_count();
       block->save_time = time(NULL);
     }
-    block->timers[b % TIMER_BLOCK_SIZE] = *timers_get(b);
-    if (b % TIMER_BLOCK_SIZE == (TIMER_BLOCK_SIZE - 1)) {
+
+    uint8_t timer_block_pos = b % TIMER_BLOCK_SIZE;
+    block->timers[timer_block_pos] = *timers_get(b);
+
+    bool is_last_timer_in_block = timer_block_pos == (TIMER_BLOCK_SIZE - 1);
+    if (is_last_timer_in_block) {
       persist_write_data(PERSIST_TIMER_START + block_count, block, sizeof(TimerBlock));
       block_count += 1;
       free(block);
@@ -186,7 +192,12 @@ void timers_save(void) {
 void timers_restore(void) {
 
   if (! persist_exists(PERSIST_TIMERS_VERSION)) {
-    timers_migrate();
+    timers_migrate_1();
+    return;
+  }
+
+  if (TIMERS_VERSION_TINY == persist_read_int(PERSIST_TIMERS_VERSION)) {
+    timers_migrate_2();
     return;
   }
 
@@ -224,7 +235,7 @@ void timers_restore(void) {
   }
 }
 
-void timers_migrate(void) {
+static void timers_migrate_1(void) {
 
   if (! persist_exists(PERSIST_TIMER_START)) {
     return;
@@ -306,5 +317,53 @@ void timers_migrate(void) {
   }
   if (NULL != timerBlock) {
     free(timerBlock);
+  }
+}
+
+static void timers_migrate_2(void) {
+
+  if (! persist_exists(PERSIST_TIMER_START)) {
+    return;
+  }
+
+  int block_number = 0;
+  TimerBlockTiny* block = malloc(sizeof(TimerBlockTiny));
+  persist_read_data(PERSIST_TIMER_START, block, sizeof(TimerBlockTiny));
+
+  uint8_t timer_count = block->total_timers;
+
+  for (int t = 0; t < timer_count; t += 1) {
+
+    if (t > 0 && t % TIMER_BLOCK_SIZE == 0) {
+      block_number += 1;
+      if (NULL != block) {
+        free(block);
+        block = NULL;
+      }
+      block = malloc(sizeof(TimerBlockTiny));
+      persist_read_data(PERSIST_TIMER_START + block_number, block, sizeof(TimerBlockTiny));
+    }
+
+    TimerTiny* timer_tiny = &block->timers[t % TIMER_BLOCK_SIZE];
+
+    int seconds_elapsed = time(NULL) - block->save_time;
+
+    Timer* timer = malloc(sizeof(Timer));
+    timer->id = timer_tiny->id;
+    timer->current_time = timer_tiny->current_time;
+    timer->length = timer_tiny->length;
+    timer->repeat = timer_tiny->repeat;
+    timer->repeat_count = timer_tiny->repeat_count;
+    timer->status = timer_tiny->status;
+    timer->vibration = timer_tiny->vibration;
+    timer->type = timer_tiny->type;
+    timer->wakeup_id = timer_tiny->wakeup_id;
+    timer->timer = NULL;
+    strcpy(timer->label, timer_tiny->label);
+    timer_restore(timer, seconds_elapsed);
+    timers_add(timer);
+  }
+  if (NULL != block) {
+    free(block);
   }
 }
