@@ -17,7 +17,7 @@
     "inner": "`",
     "outer": "~"
   },
-  "debug": true,
+  "debug": false,
   "resources": {
     "media": [
       {
