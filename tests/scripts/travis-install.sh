@@ -6,6 +6,7 @@ SDK_ZIP_NAME=$PACKAGE_NAME.tar.gz
 
 wget http://assets.getpebble.com.s3-website-us-east-1.amazonaws.com/sdk2/$SDK_ZIP_NAME
 tar -zxf $SDK_ZIP_NAME
+mkdir $INCLUDE_FOLDER
 mv $SDK_INCLUDE_FOLDER/pebble.h $INCLUDE_FOLDER
 mv $SDK_INCLUDE_FOLDER/pebble_fonts.h $INCLUDE_FOLDER
 mv $SDK_INCLUDE_FOLDER/pebble_app_info.h $INCLUDE_FOLDER
