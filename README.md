@@ -19,12 +19,16 @@ With the release of 3.0, timers will now launch the app when they finish, meanin
 
 The recommended method for downloading Multi Timer is to use the Pebble appstore on your Android or iOS device.
 
+You can also download the PBW file [directly from GitHub][download-pbw].
+
 ## Tests
 
 Tests are automatically run using [Travis CI][2].
 
-[![Build Status](https://travis-ci.org/smallstoneapps/multi-timer.png?branch=master)][3]
+
+[![Tests Status](https://img.shields.io/travis/smallstoneapps/multi-timer.svg?style=flat-square&label=tests)][3]
 
 [1]: https://apps.getpebble.com/applications/52d30a1d19412b4d84000025
 [2]: https://travis-ci.org/
 [3]: https://travis-ci.org/smallstoneapps/multi-timer/
+[download-pbw]: https://github.com/smallstoneapps/multi-timer/releases/download/v2.3/multi-timer.pbw
