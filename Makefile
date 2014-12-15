@@ -34,7 +34,7 @@
 
 CC=gcc
 ifeq ($(TRAVIS), true)
-CFLAGS=
+CFLAGS=-std=c99
 else
 CFLAGS=-std=c11
 endif
