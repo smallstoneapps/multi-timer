@@ -15,7 +15,7 @@ tests/run
 
 node_modules/
 
-src/generated/
-src/js/src/generated/
+# src/generated/
+# src/js/src/generated/
 
 *.sublime-*
