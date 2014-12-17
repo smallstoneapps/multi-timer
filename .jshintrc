@@ -1,0 +1,17 @@
+{
+  "globals": { "Pebble" : true },
+  "browser": true,
+  "devel": true,
+  "freeze": true,
+  "evil": false,
+  "camelcase": true,
+  "curly": true,
+  "immed": true,
+  "indent": 2,
+  "latedef": "nofunc",
+  "undef": true,
+  "unused": true,
+  "strict": false,
+  "trailing": true,
+  "eqeqeq": true
+}
