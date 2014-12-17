@@ -190,7 +190,7 @@ def make_test(task):
 
 def js_jshint(task):
   inputs = (input.abspath() for input in task.inputs)
-  jshint(*inputs, config="../pebble-jshintrc")
+  jshint(*inputs, config=".jshintrc")
 
 def js_karma(task):
   ext_out = '.js'
