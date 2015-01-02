@@ -25,4 +25,4 @@ You can also download the PBW file [directly from GitHub][download-pbw].
 
 [appstore]: https://apps.getpebble.com/applications/52d30a1d19412b4d84000025
 [travis]: https://travis-ci.org/smallstoneapps/multi-timer/
-[download-pbw]: https://github.com/smallstoneapps/multi-timer/releases/download/v2.3/multi-timer.pbw
+[download-pbw]: https://github.com/smallstoneapps/multi-timer/releases/download/v3.3/multi-timer.pbw
