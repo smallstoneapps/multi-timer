@@ -88,6 +88,7 @@ void win_timer_add_show_new(void) {
 void win_timer_add_show_edit(Timer* tmr) {
   window_stack_push(s_window, true);
   s_mode_edit = true;
+  s_timer = timer_clone(tmr);
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - //
@@ -151,7 +152,7 @@ static void menu_draw_row_callback(GContext* ctx, const Layer *cell_layer, MenuI
       break;
     case MENU_SECTION_FOOTER:
       graphics_context_set_text_color(ctx, GColorBlack);
-      graphics_draw_text(ctx, "Add Timer",
+      graphics_draw_text(ctx, s_mode_edit ? "Save Timer" : "Add Timer",
         fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD), GRect(4, 5, 136, 28),
         GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, NULL);
       break;
@@ -213,15 +214,27 @@ static void menu_select_footer(void) {
     menu_layer_set_selected_index(s_menu, (MenuIndex) { MENU_SECTION_MAIN, MENU_ROW_DURATION }, MenuRowAlignCenter, true);
     return;
   }
-  Timer* timer = timer_clone(s_timer);
-  timer_reset(timer);
-  if (settings()->timers_start_auto) {
-    timer_start(timer);
+  if (s_mode_edit) {
+    Timer* timer = timers_find(s_timer->id);
+    timer->length = s_timer->length;
+    timer->repeat = s_timer->repeat;
+    timer->vibration = s_timer->vibration;
+    timer->type = s_timer->type;
+    timer_reset(timer);
+    window_stack_pop(true);
+    timers_mark_updated();
   }
-  timers_add(timer);
-  window_stack_pop(true);
-  timers_mark_updated();
-  timers_highlight(timer);
+  else {
+    Timer* timer = timer_clone(s_timer);
+    timer_reset(timer);
+    if (settings()->timers_start_auto) {
+      timer_start(timer);
+    }
+    timers_add(timer);
+    window_stack_pop(true);
+    timers_mark_updated();
+    timers_highlight(timer);
+  }
 }
 
 static void vibration_callback(TimerVibration vibration) {

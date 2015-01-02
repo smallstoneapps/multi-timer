@@ -33,6 +33,7 @@ src/windows/win-timer.c
 #include <pebble-assist.h>
 #include <bitmap-loader.h>
 #include "win-timer.h"
+#include "win-timer-add.h"
 #include "../timer.h"
 #include "../common.h"
 #include "../icons.h"
@@ -54,6 +55,7 @@ static void menu_draw_row(GContext* ctx, const Layer* cell_layer, MenuIndex* cel
 static void menu_select(struct MenuLayer* menu, MenuIndex* cell_index, void* callback_context);
 
 static void timers_update_handler(void);
+static bool can_edit(void);
 
 static Window* s_window;
 static Timer* s_timer;
@@ -116,7 +118,7 @@ static uint16_t menu_num_sections(struct MenuLayer* menu, void* callback_context
 }
 
 static uint16_t menu_num_rows(struct MenuLayer* menu, uint16_t section_index, void* callback_context) {
-  return 3;
+  return can_edit() ? 4 : 3;
 }
 
 static int16_t menu_cell_height(struct MenuLayer *menu, MenuIndex *cell_index, void *callback_context) {
@@ -177,7 +179,7 @@ static void menu_select(struct MenuLayer* menu, MenuIndex* cell_index, void* cal
       window_stack_pop(false);
       break;
     case MENU_ROW_EDIT:
-      // TODO: Implmenent me!
+      win_timer_add_show_edit(s_timer);
       break;
   }
 }
@@ -188,4 +190,14 @@ static void timers_update_handler(void) {
   }
   layer_mark_dirty(s_layer_header);
   menu_layer_reload_data(s_layer_menu);
+}
+
+static bool can_edit(void) {
+  if (s_timer->type == TIMER_TYPE_STOPWATCH) {
+    return false;
+  }
+  if (s_timer->status == TIMER_STATUS_STOPPED) {
+    return true;
+  }
+  return false;
 }
