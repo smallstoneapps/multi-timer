@@ -1,13 +1,13 @@
 /*
 
-Multi Timer v3.3
+Multi Timer v3.4
 http://matthewtole.com/pebble/multi-timer/
 
 ----------------------
 
 The MIT License (MIT)
 
-Copyright © 2013 - 2014 Matthew Tole
+Copyright © 2013 - 2015 Matthew Tole
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -35,7 +35,7 @@ src/generated/appinfo.h
 
 #pragma once
 
-#define VERSION_LABEL "3.3"
+#define VERSION_LABEL "3.4"
 #define UUID "0db6a55e-b32a-4b03-b037-95637bf306ff"
 #define DEBUG_MODE false
 #define DELIMITER_INNER '`'

@@ -1,6 +1,6 @@
 ![Multi Timer Banner](https://raw.githubusercontent.com/smallstoneapps/multi-timer/master/marketing/banner_03.png)
 
-[![Tests Status](https://img.shields.io/travis/smallstoneapps/multi-timer.svg?style=flat-square&label=tests)][travis] [![Version 3.3](https://img.shields.io/badge/version-3.3-blue.svg?style=flat-square)][appstore]
+[![Tests Status](https://img.shields.io/travis/smallstoneapps/multi-timer.svg?style=flat-square&label=tests)][travis] [![Version 3.4](https://img.shields.io/badge/version-3.4-blue.svg?style=flat-square)][appstore]
 
 Multi Timer is simply the best timer and stopwatch app for Pebble.
 
@@ -25,4 +25,4 @@ You can also download the PBW file [directly from GitHub][download-pbw].
 
 [appstore]: https://apps.getpebble.com/applications/52d30a1d19412b4d84000025
 [travis]: https://travis-ci.org/smallstoneapps/multi-timer/
-[download-pbw]: https://github.com/smallstoneapps/multi-timer/releases/download/v3.3/multi-timer.pbw
+[download-pbw]: https://github.com/smallstoneapps/multi-timer/releases/download/v3.4/multi-timer.pbw

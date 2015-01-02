@@ -1,6 +1,6 @@
 /*
 
-Multi Timer v3.3
+Multi Timer v3.4
 http://matthewtole.com/pebble/multi-timer/
 
 ----------------------

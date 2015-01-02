@@ -1,13 +1,13 @@
 /*
 
-Multi Timer v3.3
+Multi Timer v3.4
 http://matthewtole.com/pebble/multi-timer/
 
 ----------------------
 
 The MIT License (MIT)
 
-Copyright © 2013 - 2014 Matthew Tole
+Copyright © 2013 - 2015 Matthew Tole
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -41,7 +41,7 @@ var AppInfo = {
   "longName": "Multi Timer",
   "companyName": "Matthew Tole",
   "versionCode": 1,
-  "versionLabel": "3.3",
+  "versionLabel": "3.4",
   "watchapp": {
     "watchface": false
   },
