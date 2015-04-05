@@ -96,7 +96,7 @@ void win_main_init(void) {
   win_vibration_init();
   win_duration_init();
   win_vibrate_init();
-  tick_timer_service_subscribe(MINUTE_UNIT, tick_handler);
+  tick_timer_service_subscribe(SECOND_UNIT, tick_handler);
 }
 
 void win_main_show(void) {
@@ -121,9 +121,8 @@ static void window_unload(Window* window) {
 }
 
 static void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
-  if (settings()->show_clock) {
-    menu_layer_reload_data(s_menu);
-  }
+  timers_update_timestamp();
+  menu_layer_reload_data(s_menu);
 }
 
 static uint16_t menu_num_sections(struct MenuLayer* menu, void* callback_context) {
@@ -193,7 +192,7 @@ static void menu_draw_row_clock(GContext* ctx, const Layer* cell_layer) {
 static void menu_draw_row_timers(GContext* ctx, const Layer* cell_layer, uint16_t row_index) {
   Timer* timer = timers_get(row_index);
   if (! timer) { return; }
-  timer_draw_row(timer, ctx);
+  timer_draw_row(timer, timers_current_timestamp(), ctx);
 }
 
 static void menu_draw_row_other(GContext* ctx, const Layer* cell_layer, uint16_t row_index) {
@@ -229,18 +228,19 @@ static void menu_select(struct MenuLayer* menu, MenuIndex* cell_index, void* cal
 
 static void menu_select_timers(uint16_t row_index) {
   Timer* timer = timers_get(row_index);
+  TimerTimestamp timestamp = timers_current_timestamp();
   if (! timer) { return; }
 
   switch (timer->status) {
     case TIMER_STATUS_STOPPED: {
-      timer_start(timer);
+      timer_start(timer, timestamp);
       break;
     }
     case TIMER_STATUS_RUNNING:
-      timer_pause(timer);
+      timer_pause(timer, timestamp);
       break;
     case TIMER_STATUS_PAUSED:
-      timer_resume(timer);
+      timer_resume(timer, timestamp);
       break;
     case TIMER_STATUS_DONE:
       timer_reset(timer);
@@ -249,6 +249,7 @@ static void menu_select_timers(uint16_t row_index) {
 }
 
 static void menu_select_other(uint16_t row_index) {
+  TimerTimestamp timestamp = timers_current_timestamp();
   switch (row_index) {
     case MENU_ROW_OTHER_ADD_TIMER:
       win_timer_add_show_new();
@@ -256,7 +257,7 @@ static void menu_select_other(uint16_t row_index) {
     case MENU_ROW_OTHER_ADD_STOPWATCH: {
       Timer* stopwatch = timer_create_stopwatch();
       if (settings()->timers_start_auto) {
-        timer_start(stopwatch);
+        timer_start(stopwatch, timestamp);
       }
       timers_add(stopwatch);
       timers_mark_updated();

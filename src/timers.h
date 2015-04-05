@@ -78,6 +78,9 @@ Timer* timers_find_wakeup_collision(Timer* timer);
 // Empty list the timers.
 void timers_clear(void);
 
+void timers_update_timestamp(void);
+TimerTimestamp timers_current_timestamp();
+
 void timers_mark_updated(void);
 void timers_highlight(Timer* timer);
 void timers_register_update_handler(TimersUpdatedHandler handler);

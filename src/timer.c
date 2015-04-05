@@ -36,14 +36,62 @@ src/timer.c
 #include "settings.h"
 #include "windows/win-vibrate.h"
 
-static void timer_tick(void* context);
-static void timer_finish(Timer* timer);
-static void timer_schedule_tick(Timer* timer);
-static void timer_cancel_tick(Timer* timer);
+static void timer_finish(Timer* timer, TimerTimestamp reference);
 static void timer_schedule_wakeup(Timer* timer, uint16_t offset);
 static void timer_cancel_wakeup(Timer* timer);
 static void timer_set_id(Timer* timer);
 static void timer_completed_action(Timer* timer);
+static void timer_transition_to_stop(Timer* timer, TimerTimestamp reference_time);
+static void timer_transition_to_start(Timer* timer, TimerTimestamp reference_time);
+static void timer_transition_to(Timer* timer, TimerTimestamp reference_time, TimerStatus new_status);
+static void timer_set_running_time(Timer* timer, TimerTimestamp reference_time, int32_t running_time);
+static bool timer_has_finished(Timer* timer, TimerTimestamp reference);
+
+TimerTimestamp timer_get_end_timestamp(Timer* timer) {
+  switch (timer->type) {
+    case TIMER_TYPE_TIMER: return timer->start_timestamp + timer->length - timer->paused_offset;
+    default: return 0;
+  }
+}
+
+uint32_t timer_get_running_time(Timer* timer, TimerTimestamp reference_time) {
+  if (TIMER_STATUS_RUNNING == timer->status) {
+    return reference_time - timer->start_timestamp + timer->paused_offset;
+  } else {
+    // Both reference_time and timer->start_timestamp are meaningless.
+    return timer->paused_offset;
+  }
+}
+
+static void timer_transition_to_stop(Timer* timer, TimerTimestamp reference_time) {
+  timer->paused_offset += reference_time - timer->start_timestamp;
+}
+
+static void timer_transition_to_start(Timer* timer, TimerTimestamp reference_time) {
+  timer->start_timestamp = reference_time;
+}
+
+static void timer_transition_to(Timer* timer, TimerTimestamp reference_time, TimerStatus new_status) {
+  if (TIMER_STATUS_RUNNING != timer->status && TIMER_STATUS_RUNNING == new_status) {
+    timer_transition_to_start(timer, reference_time);
+  } else if (TIMER_STATUS_RUNNING == timer-> status && TIMER_STATUS_RUNNING != new_status) {
+    timer_transition_to_stop(timer, reference_time);
+  }
+  timer->status = new_status;
+}
+
+static void timer_set_running_time(Timer* timer, TimerTimestamp reference_time, int32_t running_time) {
+  timer->start_timestamp = reference_time;
+  timer->paused_offset = running_time;
+}
+
+int32_t timer_get_display_time(Timer* timer, TimerTimestamp reference_time) {
+  switch (timer->type) {
+    case TIMER_TYPE_TIMER: return timer->length - timer_get_running_time(timer, reference_time);
+    case TIMER_TYPE_STOPWATCH: return timer_get_running_time(timer, reference_time);
+    default: return 0;
+ }
+}
 
 void timer_time_str(uint32_t timer_time, bool showHours, char* str, int str_len) {
   int hours = timer_time / 3600;
@@ -57,70 +105,53 @@ void timer_time_str(uint32_t timer_time, bool showHours, char* str, int str_len)
   }
 }
 
-void timer_start(Timer* timer) {
-  switch (timer->type) {
-    case TIMER_TYPE_TIMER:
-      timer->current_time = timer->length;
-      break;
-    case TIMER_TYPE_STOPWATCH:
-      timer->current_time = 0;
-      break;
-  }
-  timer->status = TIMER_STATUS_RUNNING;
-  timer_schedule_tick(timer);
-  timer_schedule_wakeup(timer, 0);
-  timers_mark_updated();
+void timer_display_str(Timer* timer, TimerTimestamp reference, bool showHours, char* str, int str_len) {
+  int32_t current_time = timer_get_display_time(timer, reference);
+  return timer_time_str(current_time, showHours, str, str_len);
 }
 
-void timer_pause(Timer* timer) {
-  timer->status = TIMER_STATUS_PAUSED;
-  timer_cancel_tick(timer);
+void timer_start(Timer* timer, TimerTimestamp reference) {
+  timer_reset(timer);
+  timer_resume(timer, reference);
+}
+
+void timer_pause(Timer* timer, TimerTimestamp reference) {
+  timer_transition_to(timer, reference, TIMER_STATUS_PAUSED);
   timer_cancel_wakeup(timer);
   timers_mark_updated();
 }
 
-void timer_resume(Timer* timer) {
-  timer->status = TIMER_STATUS_RUNNING;
-  timer_schedule_tick(timer);
+void timer_resume(Timer* timer, TimerTimestamp reference) {
+  timer_transition_to(timer, reference, TIMER_STATUS_RUNNING);
   timer_schedule_wakeup(timer, 0);
   timers_mark_updated();
 }
 
 void timer_reset(Timer* timer) {
-  timer_pause(timer);
-  switch (timer->type) {
-    case TIMER_TYPE_TIMER:
-      timer->current_time = timer->length;
-      break;
-    case TIMER_TYPE_STOPWATCH:
-      timer->current_time = 0;
-      break;
-  }
-  timer->status = TIMER_STATUS_STOPPED;
+  // Magic starts
+  timer_transition_to(timer, 0, TIMER_STATUS_STOPPED);
+  timer_set_running_time(timer, 0, 0);
+  // The next timer_transition_to(timer, reference, TIMER_STATUS_RUNNING)
+  // call on this timer will work correctly. This is because the reference
+  // time doesn't matter on a stop -> start transition.
+  // Magic ends
+  timer_cancel_wakeup(timer);
   timers_mark_updated();
 }
 
-void timer_restore(Timer* timer, uint16_t seconds_elapsed) {
-  timer->timer = NULL;
+void timer_restart(Timer* timer, TimerTimestamp reference) {
+  timer_transition_to(timer, reference, TIMER_STATUS_RUNNING);
+  uint32_t running_time = timer_get_running_time(timer, reference);
+  timer_set_running_time(timer, reference, running_time % timer->length);
+  timer_schedule_wakeup(timer, 0);
+  timers_mark_updated();
+}
+
+void timer_restore(Timer* timer, TimerTimestamp reference) {
+  timer_tick(timer, reference);
+
   if (timer->status == TIMER_STATUS_RUNNING) {
-    switch (timer->type) {
-      case TIMER_TYPE_STOPWATCH:
-        timer->current_time += seconds_elapsed;
-        break;
-      case TIMER_TYPE_TIMER: {
-        if (seconds_elapsed >= timer->current_time) {
-          timer->current_time = 0;
-          timer->status = TIMER_STATUS_DONE;
-        }
-        else {
-          timer->current_time -= seconds_elapsed;
-        }
-        break;
-      }
-    }
-  }
-  if (timer->status == TIMER_STATUS_RUNNING) {
-    timer_resume(timer);
+    timer_resume(timer, reference);
   }
 }
 
@@ -153,8 +184,8 @@ Timer* timer_create_timer(void) {
   timer->type = TIMER_TYPE_TIMER;
   timer->vibration = settings()->timers_vibration;
   timer->length = settings()->timers_duration;
+  timer->paused_offset = 0;
   timer->wakeup_id = -1;
-  timer->timer = NULL;
   timer->repeat = 0;
   timer->label[0] = 0;
   timer->status = TIMER_STATUS_STOPPED;
@@ -165,51 +196,37 @@ Timer* timer_create_timer(void) {
 Timer* timer_create_stopwatch(void) {
   Timer* stopwatch = malloc(sizeof(Timer));
   stopwatch->type = TIMER_TYPE_STOPWATCH;
-  stopwatch->length = stopwatch->current_time = 0;
+  stopwatch->length = 0;
+  stopwatch->paused_offset = 0;
   stopwatch->label[0] = 0;
   stopwatch->status = TIMER_STATUS_STOPPED;
   timer_set_id(stopwatch);
   return stopwatch;
 }
 
-static void timer_tick(void* context) {
-  Timer* timer = (Timer*)context;
-  timer->timer = NULL;
-  switch (timer->type) {
-    case TIMER_TYPE_STOPWATCH:
-      timer->current_time += 1;
-      break;
-    case TIMER_TYPE_TIMER:
-      timer->current_time -= 1;
-      if (timer->current_time <= 0) {
-        timer_finish(timer);
-      }
-      break;
+void timer_tick(Timer* timer, TimerTimestamp reference) {
+  if (TIMER_STATUS_RUNNING == timer->status &&
+      TIMER_TYPE_TIMER == timer->type &&
+      timer_has_finished(timer, reference)) {
+    timer_finish(timer, reference);
   }
-  if (timer->status == TIMER_STATUS_RUNNING) {
-    timer_schedule_tick(timer);
+  if (TIMER_STATUS_RUNNING == timer->status) {
+    timers_mark_updated();
   }
-  timers_mark_updated();
 }
 
-static void timer_finish(Timer* timer) {
-  timer->status = TIMER_STATUS_DONE;
+static bool timer_has_finished(Timer* timer, TimerTimestamp reference) {
+  return reference >= timer_get_end_timestamp(timer);
+}
+
+static void timer_finish(Timer* timer, TimerTimestamp reference) {
+  timer_transition_to(timer, reference, TIMER_STATUS_DONE);
+  if (timer->repeat == TIMER_REPEAT_INFINITE) {
+    timer_restart(timer, reference);
+  } else {
+    timer_set_running_time(timer, reference, timer->length);
+  }
   timer_completed_action(timer);
-}
-
-static void timer_schedule_tick(Timer* timer) {
-  timer_cancel_tick(timer);
-  timer->timer = app_timer_register(1000, timer_tick, (void*)timer);
-}
-
-static void timer_cancel_tick(Timer* timer) {
-  if (! timer) {
-    return;
-  }
-  if (timer->timer) {
-    app_timer_cancel(timer->timer);
-    timer->timer = NULL;
-  }
 }
 
 static void timer_schedule_wakeup(Timer* timer, uint16_t offset) {
@@ -220,8 +237,7 @@ static void timer_schedule_wakeup(Timer* timer, uint16_t offset) {
     return;
   }
   timer_cancel_wakeup(timer);
-  time_t wakeup_time = time(NULL);
-  wakeup_time += timer->current_time;
+  TimerTimestamp wakeup_time = timer_get_end_timestamp(timer);
   wakeup_time -= 2;
   wakeup_time -= offset;
   timer->wakeup_id = wakeup_schedule(wakeup_time, timer->id, false);
@@ -317,9 +333,6 @@ static void timer_completed_action(Timer* timer) {
       break;
     default:
       break;
-  }
-  if (timer->repeat == TIMER_REPEAT_INFINITE) {
-    timer_start(timer);
   }
   timers_highlight(timer);
 }

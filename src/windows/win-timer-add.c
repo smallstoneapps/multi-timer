@@ -209,6 +209,7 @@ static void menu_select_main(uint16_t row) {
 }
 
 static void menu_select_footer(void) {
+  TimerTimestamp timestamp = timers_current_timestamp();
   if (s_timer->length == 0) {
     vibes_short_pulse();
     menu_layer_set_selected_index(s_menu, (MenuIndex) { MENU_SECTION_MAIN, MENU_ROW_DURATION }, MenuRowAlignCenter, true);
@@ -228,7 +229,7 @@ static void menu_select_footer(void) {
     Timer* timer = timer_clone(s_timer);
     timer_reset(timer);
     if (settings()->timers_start_auto) {
-      timer_start(timer);
+      timer_start(timer, timestamp);
     }
     timers_add(timer);
     window_stack_pop(true);

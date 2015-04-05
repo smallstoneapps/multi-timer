@@ -110,7 +110,7 @@ static void window_unload(Window* window) {
 }
 
 static void layer_header_update(Layer* layer, GContext* ctx) {
-  timer_draw_row(s_timer, ctx);
+  timer_draw_row(s_timer, timers_current_timestamp(), ctx);
 }
 
 static uint16_t menu_num_sections(struct MenuLayer* menu, void* callback_context) {
@@ -155,18 +155,19 @@ static void menu_draw_row(GContext* ctx, const Layer* cell_layer, MenuIndex* cel
 }
 
 static void menu_select(struct MenuLayer* menu, MenuIndex* cell_index, void* callback_context) {
+  TimerTimestamp timestamp = timers_current_timestamp();
   switch (cell_index->row) {
     case MENU_ROW_PAUSE: {
       switch (s_timer->status) {
         case TIMER_STATUS_RUNNING:
-          timer_pause(s_timer);
+          timer_pause(s_timer, timestamp);
           break;
         case TIMER_STATUS_PAUSED:
-          timer_resume(s_timer);
+          timer_resume(s_timer, timestamp);
           break;
         case TIMER_STATUS_DONE:
         case TIMER_STATUS_STOPPED:
-          timer_start(s_timer);
+          timer_start(s_timer, timestamp);
           break;
       }
       break;
