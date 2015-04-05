@@ -34,7 +34,8 @@ src/timers.h
 
 #define TIMER_BLOCK_SIZE 4
 
-#define TIMERS_VERSION_CURRENT 3
+#define TIMERS_VERSION_CURRENT 4
+#define TIMERS_VERSION_V3 3
 #define TIMERS_VERSION_TINY 2
 
 typedef void (*TimersUpdatedHandler)(void);

@@ -80,6 +80,7 @@ void timer_resume(Timer* timer, TimerTimestamp reference);
 void timer_reset(Timer* timer);
 void timer_restart(Timer* timer, TimerTimestamp reference);
 void timer_restore(Timer* timer, TimerTimestamp reference);
+void timer_restore_legacy(Timer* timer, TimerTimestamp reference, uint32_t offset, uint32_t display_time);
 Timer* timer_clone(Timer* timer);
 char* timer_vibe_str(TimerVibration vibe, bool shortStr);
 Timer* timer_create_timer(void);

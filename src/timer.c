@@ -45,7 +45,9 @@ static void timer_transition_to_stop(Timer* timer, TimerTimestamp reference_time
 static void timer_transition_to_start(Timer* timer, TimerTimestamp reference_time);
 static void timer_transition_to(Timer* timer, TimerTimestamp reference_time, TimerStatus new_status);
 static void timer_set_running_time(Timer* timer, TimerTimestamp reference_time, int32_t running_time);
+static void timer_add_running_time(Timer* timer, int32_t add_seconds);
 static bool timer_has_finished(Timer* timer, TimerTimestamp reference);
+static uint32_t timer_display2running_time(Timer* timer, uint32_t display_time);
 
 TimerTimestamp timer_get_end_timestamp(Timer* timer) {
   switch (timer->type) {
@@ -91,6 +93,18 @@ int32_t timer_get_display_time(Timer* timer, TimerTimestamp reference_time) {
     case TIMER_TYPE_STOPWATCH: return timer_get_running_time(timer, reference_time);
     default: return 0;
  }
+}
+
+static uint32_t timer_display2running_time(Timer* timer, uint32_t display_time) {
+  switch (timer->type) {
+    case TIMER_TYPE_TIMER: return timer->length - display_time;
+    case TIMER_TYPE_STOPWATCH: return display_time;
+    default: return 0;
+  }
+}
+
+static void timer_add_running_time(Timer* timer, int32_t add_seconds) {
+  timer->paused_offset += add_seconds;
 }
 
 void timer_time_str(uint32_t timer_time, bool showHours, char* str, int str_len) {
@@ -153,6 +167,13 @@ void timer_restore(Timer* timer, TimerTimestamp reference) {
   if (timer->status == TIMER_STATUS_RUNNING) {
     timer_resume(timer, reference);
   }
+}
+
+void timer_restore_legacy(Timer* timer, TimerTimestamp reference, uint32_t offset, uint32_t display_time) {
+  uint32_t running_time = timer_display2running_time(timer, display_time);
+  timer_set_running_time(timer, reference, running_time);
+  timer_add_running_time(timer, offset);
+  timer_restore(timer, reference);
 }
 
 Timer* timer_clone(Timer* timer) {

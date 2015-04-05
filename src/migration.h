@@ -93,6 +93,27 @@ typedef struct {
   time_t save_time;
 } TimerBlockTiny;
 
+typedef struct TimerV3 {
+  uint16_t id;
+  TimerType type;
+  uint32_t length;
+  uint32_t current_time;
+  TimerStatus status;
+  TimerVibration vibration;
+  uint8_t repeat;
+  uint8_t repeat_count;
+  AppTimer* timer;
+  WakeupId wakeup_id;
+  char label[24];
+} TimerV3;
+
+typedef struct {
+  TimerV3 timers[TIMER_BLOCK_SIZE];
+  uint8_t total_timers;
+  time_t save_time;
+} TimerBlockV3;
+
+
 // Struct of the original settings.
 typedef struct {
   bool save_timers_auto; // Automatically save timers on exit and load them when the app restarts?

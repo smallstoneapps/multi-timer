@@ -48,6 +48,7 @@ typedef struct {
 static void timers_cleanup(void);
 static void timers_migrate_1(void);
 static void timers_migrate_2(void);
+static void timers_migrate_3(void);
 static TimerTimestamp new_timestamp(void);
 static void timers_fire_update_handlers(void);
 
@@ -273,9 +274,12 @@ void timers_restore(void) {
     return;
   }
 
-  timers_clear();
+  if (TIMERS_VERSION_V3 == persist_read_int(PERSIST_TIMERS_VERSION)) {
+    timers_migrate_3();
+    return;
+  }
 
-  TimerTimestamp now = timers_current_timestamp();
+  timers_clear();
 
   TimerBlock* block = NULL;
   if (persist_exists(PERSIST_TIMER_START)) {
@@ -291,7 +295,7 @@ void timers_restore(void) {
       }
       Timer* timer = timer_clone(&block->timers[t % TIMER_BLOCK_SIZE]);
       timers_add(timer);
-      timer_restore(timer, now);
+      timer_restore(timer, timers_current_timestamp());
       if (t % TIMER_BLOCK_SIZE == (TIMER_BLOCK_SIZE - 1)) {
         free(block);
         block = NULL;
@@ -310,8 +314,6 @@ static void timers_migrate_1(void) {
   if (! persist_exists(PERSIST_TIMER_START)) {
     return;
   }
-
-  TimerTimestamp now = timers_current_timestamp();
 
   int block = 0;
   OldTimerBlock* timerBlock = malloc(sizeof(OldTimerBlock));
@@ -333,10 +335,10 @@ static void timers_migrate_1(void) {
 
     OldTimer* old_timer = &timerBlock->timers[t % TIMER_BLOCK_SIZE];
 
+    int seconds_elapsed = time(NULL) - timerBlock->time;
+
     Timer* timer = malloc(sizeof(Timer));
     timer->id = old_timer->id;
-    //FIXME after implementing migrate_3
-    //timer->current_time = old_timer->time_left;
     timer->length = old_timer->length;
     timer->repeat = old_timer->repeat ? TIMER_REPEAT_INFINITE : 0;
     switch (old_timer->status) {
@@ -382,7 +384,7 @@ static void timers_migrate_1(void) {
         break;
     }
     timer->wakeup_id = -1;
-    timer_restore(timer, now);
+    timer_restore_legacy(timer, timers_current_timestamp(), seconds_elapsed, old_timer->time_left);
     timers_add(timer);
   }
   if (NULL != timerBlock) {
@@ -395,8 +397,6 @@ static void timers_migrate_2(void) {
   if (! persist_exists(PERSIST_TIMER_START)) {
     return;
   }
-
-  TimerTimestamp now = timers_current_timestamp();
 
   int block_number = 0;
   TimerBlockTiny* block = malloc(sizeof(TimerBlockTiny));
@@ -418,10 +418,10 @@ static void timers_migrate_2(void) {
 
     TimerTiny* timer_tiny = &block->timers[t % TIMER_BLOCK_SIZE];
 
+    int seconds_elapsed = time(NULL) - block->save_time;
+
     Timer* timer = malloc(sizeof(Timer));
     timer->id = timer_tiny->id;
-    //FIXME after implementing migrate_3
-    //timer->current_time = timer_tiny->current_time;
     timer->length = timer_tiny->length;
     timer->repeat = timer_tiny->repeat;
     timer->repeat_count = timer_tiny->repeat_count;
@@ -430,10 +430,62 @@ static void timers_migrate_2(void) {
     timer->type = timer_tiny->type;
     timer->wakeup_id = timer_tiny->wakeup_id;
     strcpy(timer->label, timer_tiny->label);
-    timer_restore(timer, now);
+    timer_restore_legacy(timer, timers_current_timestamp(), seconds_elapsed, timer_tiny->current_time);
     timers_add(timer);
   }
   if (NULL != block) {
     free(block);
+  }
+}
+
+static void timers_migrate_3(void) {
+
+  if (! persist_exists(PERSIST_TIMER_START)) {
+    return;
+  }
+
+  time_t now = time(NULL);
+  uint16_t seconds_elapsed = 0;
+
+  TimerBlockV3* block = NULL;
+  if (persist_exists(PERSIST_TIMER_START)) {
+    block = malloc(sizeof(TimerBlockV3));
+    persist_read_data(PERSIST_TIMER_START, block, sizeof(TimerBlockV3));
+    uint8_t num_timers = block->total_timers;
+    uint8_t block_offset = 0;
+    seconds_elapsed = now - block->save_time;
+
+    for (uint8_t t = 0; t < num_timers; t += 1) {
+      if (! block) {
+        block = malloc(sizeof(TimerBlockV3));
+        persist_read_data(PERSIST_TIMER_START + block_offset, block, sizeof(TimerBlockV3));
+      }
+      TimerV3* timer_v3 = &block->timers[t % TIMER_BLOCK_SIZE];
+      Timer* timer = malloc(sizeof(Timer));
+
+      timer->id = timer_v3->id;
+      timer->type = timer_v3->type;
+      timer->length = timer_v3->length;
+      //timer->paused_offset is set by timer_restore_legacy
+      //timer->start_timestamp is set by timer_restore_legacy
+      timer->status = timer_v3->status;
+      timer->vibration = timer_v3->vibration;
+      timer->repeat = timer_v3->repeat;
+      timer->repeat_count = timer_v3->repeat_count;
+      timer->wakeup_id = timer_v3->wakeup_id;
+      strncpy(timer->label, timer_v3->label, 24);
+      timer_restore_legacy(timer, timers_current_timestamp(), seconds_elapsed, timer_v3->current_time);
+      timers_add(timer);
+
+      if (t % TIMER_BLOCK_SIZE == (TIMER_BLOCK_SIZE - 1)) {
+        free(block);
+        block = NULL;
+        block_offset += 1;
+      }
+    }
+    if (block) {
+      free(block);
+      block = NULL;
+    }
   }
 }
