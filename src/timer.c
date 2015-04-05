@@ -172,7 +172,9 @@ void timer_restore(Timer* timer, TimerTimestamp reference) {
 void timer_restore_legacy(Timer* timer, TimerTimestamp reference, uint32_t offset, uint32_t display_time) {
   uint32_t running_time = timer_display2running_time(timer, display_time);
   timer_set_running_time(timer, reference, running_time);
-  timer_add_running_time(timer, offset);
+  if (TIMER_STATUS_RUNNING == timer->status) {
+    timer_add_running_time(timer, offset);
+  }
   timer_restore(timer, reference);
 }
 
