@@ -172,20 +172,21 @@ void timers_clear(void) {
 }
 
 void timers_mark_updated(void) {
-  if (queue_updates) {
-    update_marked = true;
-  } else {
+  update_marked = true;
+  if (!queue_updates) {
     timers_fire_update_handlers();
-    update_marked = false;
   }
 }
 
 void timers_fire_update_handlers(void) {
-  uint8_t handler_count = linked_list_count(update_handlers);
-  for (uint8_t h = 0; h < handler_count; h += 1) {
-    TimersUpdatedHandler handler = linked_list_get(update_handlers, h);
-    handler();
+  if (update_marked) {
+    uint8_t handler_count = linked_list_count(update_handlers);
+    for (uint8_t h = 0; h < handler_count; h += 1) {
+      TimersUpdatedHandler handler = linked_list_get(update_handlers, h);
+      handler();
+    }
   }
+  update_marked = false;
 }
 
 void timers_highlight(Timer* timer) {
@@ -216,10 +217,8 @@ void timers_update_timestamp(void) {
     Timer* timer = timers_get(t);
     timer_tick(timer, current_time);
   }
-  if (update_marked) {
-    timers_fire_update_handlers();
-    queue_updates = false;
-  }
+  queue_updates = false;
+  timers_fire_update_handlers();
 }
 
 TimerTimestamp timers_current_timestamp() {
