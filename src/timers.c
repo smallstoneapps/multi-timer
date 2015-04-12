@@ -211,7 +211,8 @@ static TimerTimestamp new_timestamp() {
 void timers_update_timestamp(void) {
   current_time = new_timestamp();
   queue_updates = true;
-  for (uint8_t t = 0; t < timers_count(); ++t) {
+  const uint8_t count = timers_count();
+  for (uint8_t t = 0; t < count; ++t) {
     Timer* timer = timers_get(t);
     timer_tick(timer, current_time);
   }
