@@ -42,7 +42,6 @@ src/timers.c
 typedef struct {
   Timer timers[TIMER_BLOCK_SIZE];
   uint8_t total_timers;
-  time_t save_time;
 } TimerBlock;
 
 static void timers_cleanup(void);
@@ -242,7 +241,6 @@ void timers_save(void) {
     if (NULL == block) {
       block = malloc(sizeof(TimerBlock));
       block->total_timers = timers_count();
-      block->save_time = time(NULL);
     }
 
     uint8_t timer_block_pos = b % TIMER_BLOCK_SIZE;
