@@ -1,3 +1,6 @@
+# WARNING: This wscript does not follow good practices and should not be copied
+# or reproduced in your own projects.
+#
 # Multi Timer v3.4
 # http://matthewtole.com/pebble/multi-timer/
 #
