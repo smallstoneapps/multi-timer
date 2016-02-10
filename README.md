@@ -1,3 +1,5 @@
+![](https://img.shields.io/badge/status-unmaintained-red.svg)
+
 ![Multi Timer Banner](https://raw.githubusercontent.com/smallstoneapps/multi-timer/master/marketing/banner_03.png)
 
 [![Tests Status](https://img.shields.io/travis/smallstoneapps/multi-timer.svg?style=flat-square&label=tests)][travis] [![Version 3.4](https://img.shields.io/badge/version-3.4-blue.svg?style=flat-square)][appstore]
