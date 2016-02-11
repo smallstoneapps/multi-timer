@@ -42,22 +42,31 @@ src/timers.c
 typedef struct {
   Timer timers[TIMER_BLOCK_SIZE];
   uint8_t total_timers;
-  time_t save_time;
 } TimerBlock;
 
 static void timers_cleanup(void);
 static void timers_migrate_1(void);
 static void timers_migrate_2(void);
+static void timers_migrate_3(void);
+static TimerTimestamp new_timestamp(void);
+static void timers_fire_update_handlers(void);
 
 LinkedRoot* timers = NULL;
 LinkedRoot* update_handlers = NULL;
 LinkedRoot* highlight_handlers = NULL;
+
+static TimerTimestamp current_time;
+static bool update_marked;
+static bool queue_updates;
 
 void timers_init(void) {
   timers_cleanup();
   timers = linked_list_create_root();
   update_handlers = linked_list_create_root();
   highlight_handlers = linked_list_create_root();
+  current_time = new_timestamp();
+  queue_updates = false;
+  update_marked = false;
 }
 
 uint8_t timers_count(void) {
@@ -103,7 +112,7 @@ bool timers_remove(uint8_t position) {
   if (NULL == timer) {
     return false;
   }
-  timer_pause(timer);
+  timer_reset(timer);
   linked_list_remove(timers, position);
   free(timer);
   timers_mark_updated();
@@ -112,6 +121,7 @@ bool timers_remove(uint8_t position) {
 
 Timer* timers_find_last_wakeup(void) {
   Timer* last = NULL;
+  uint32_t wakeup_time;
   uint16_t last_wakeup_time = 0;
   uint8_t count = timers_count();
   for (uint8_t c = 0; c < count; c += 1) {
@@ -119,9 +129,10 @@ Timer* timers_find_last_wakeup(void) {
     if (timer->wakeup_id < 0) {
       continue;
     }
-    if (timer->current_time > last_wakeup_time) {
+    wakeup_time = timer_get_end_timestamp(timer);
+    if (wakeup_time > last_wakeup_time) {
       last = timer;
-      last_wakeup_time = timer->current_time;
+      last_wakeup_time = wakeup_time;
     }
   }
   return last;
@@ -160,11 +171,21 @@ void timers_clear(void) {
 }
 
 void timers_mark_updated(void) {
-  uint8_t handler_count = linked_list_count(update_handlers);
-  for (uint8_t h = 0; h < handler_count; h += 1) {
-    TimersUpdatedHandler handler = linked_list_get(update_handlers, h);
-    handler();
+  update_marked = true;
+  if (!queue_updates) {
+    timers_fire_update_handlers();
   }
+}
+
+void timers_fire_update_handlers(void) {
+  if (update_marked) {
+    uint8_t handler_count = linked_list_count(update_handlers);
+    for (uint8_t h = 0; h < handler_count; h += 1) {
+      TimersUpdatedHandler handler = linked_list_get(update_handlers, h);
+      handler();
+    }
+  }
+  update_marked = false;
 }
 
 void timers_highlight(Timer* timer) {
@@ -181,6 +202,26 @@ void timers_register_update_handler(TimersUpdatedHandler handler) {
 
 void timers_register_highlight_handler(TimerHighlightHandler handler) {
   linked_list_append(highlight_handlers, handler);
+}
+
+static TimerTimestamp new_timestamp() {
+  return time(NULL);
+}
+
+void timers_update_timestamp(void) {
+  current_time = new_timestamp();
+  queue_updates = true;
+  const uint8_t count = timers_count();
+  for (uint8_t t = 0; t < count; ++t) {
+    Timer* timer = timers_get(t);
+    timer_tick(timer, current_time);
+  }
+  queue_updates = false;
+  timers_fire_update_handlers();
+}
+
+TimerTimestamp timers_current_timestamp() {
+  return current_time;
 }
 
 static void timers_cleanup(void) {
@@ -200,7 +241,6 @@ void timers_save(void) {
     if (NULL == block) {
       block = malloc(sizeof(TimerBlock));
       block->total_timers = timers_count();
-      block->save_time = time(NULL);
     }
 
     uint8_t timer_block_pos = b % TIMER_BLOCK_SIZE;
@@ -232,10 +272,12 @@ void timers_restore(void) {
     return;
   }
 
-  timers_clear();
+  if (TIMERS_VERSION_V3 == persist_read_int(PERSIST_TIMERS_VERSION)) {
+    timers_migrate_3();
+    return;
+  }
 
-  time_t now = time(NULL);
-  uint16_t seconds_elapsed = 0;
+  timers_clear();
 
   TimerBlock* block = NULL;
   if (persist_exists(PERSIST_TIMER_START)) {
@@ -243,7 +285,6 @@ void timers_restore(void) {
     persist_read_data(PERSIST_TIMER_START, block, sizeof(TimerBlock));
     uint8_t num_timers = block->total_timers;
     uint8_t block_offset = 0;
-    seconds_elapsed = now - block->save_time;
 
     for (uint8_t t = 0; t < num_timers; t += 1) {
       if (! block) {
@@ -252,7 +293,7 @@ void timers_restore(void) {
       }
       Timer* timer = timer_clone(&block->timers[t % TIMER_BLOCK_SIZE]);
       timers_add(timer);
-      timer_restore(timer, seconds_elapsed);
+      timer_restore(timer, timers_current_timestamp());
       if (t % TIMER_BLOCK_SIZE == (TIMER_BLOCK_SIZE - 1)) {
         free(block);
         block = NULL;
@@ -296,7 +337,6 @@ static void timers_migrate_1(void) {
 
     Timer* timer = malloc(sizeof(Timer));
     timer->id = old_timer->id;
-    timer->current_time = old_timer->time_left;
     timer->length = old_timer->length;
     timer->repeat = old_timer->repeat ? TIMER_REPEAT_INFINITE : 0;
     switch (old_timer->status) {
@@ -342,8 +382,7 @@ static void timers_migrate_1(void) {
         break;
     }
     timer->wakeup_id = -1;
-    timer->timer = NULL;
-    timer_restore(timer, seconds_elapsed);
+    timer_restore_legacy(timer, timers_current_timestamp(), seconds_elapsed, old_timer->time_left);
     timers_add(timer);
   }
   if (NULL != timerBlock) {
@@ -381,7 +420,6 @@ static void timers_migrate_2(void) {
 
     Timer* timer = malloc(sizeof(Timer));
     timer->id = timer_tiny->id;
-    timer->current_time = timer_tiny->current_time;
     timer->length = timer_tiny->length;
     timer->repeat = timer_tiny->repeat;
     timer->repeat_count = timer_tiny->repeat_count;
@@ -389,12 +427,63 @@ static void timers_migrate_2(void) {
     timer->vibration = timer_tiny->vibration;
     timer->type = timer_tiny->type;
     timer->wakeup_id = timer_tiny->wakeup_id;
-    timer->timer = NULL;
     strcpy(timer->label, timer_tiny->label);
-    timer_restore(timer, seconds_elapsed);
+    timer_restore_legacy(timer, timers_current_timestamp(), seconds_elapsed, timer_tiny->current_time);
     timers_add(timer);
   }
   if (NULL != block) {
     free(block);
+  }
+}
+
+static void timers_migrate_3(void) {
+
+  if (! persist_exists(PERSIST_TIMER_START)) {
+    return;
+  }
+
+  time_t now = time(NULL);
+  uint16_t seconds_elapsed = 0;
+
+  TimerBlockV3* block = NULL;
+  if (persist_exists(PERSIST_TIMER_START)) {
+    block = malloc(sizeof(TimerBlockV3));
+    persist_read_data(PERSIST_TIMER_START, block, sizeof(TimerBlockV3));
+    uint8_t num_timers = block->total_timers;
+    uint8_t block_offset = 0;
+    seconds_elapsed = now - block->save_time;
+
+    for (uint8_t t = 0; t < num_timers; t += 1) {
+      if (! block) {
+        block = malloc(sizeof(TimerBlockV3));
+        persist_read_data(PERSIST_TIMER_START + block_offset, block, sizeof(TimerBlockV3));
+      }
+      TimerV3* timer_v3 = &block->timers[t % TIMER_BLOCK_SIZE];
+      Timer* timer = malloc(sizeof(Timer));
+
+      timer->id = timer_v3->id;
+      timer->type = timer_v3->type;
+      timer->length = timer_v3->length;
+      //timer->paused_offset is set by timer_restore_legacy
+      //timer->start_timestamp is set by timer_restore_legacy
+      timer->status = timer_v3->status;
+      timer->vibration = timer_v3->vibration;
+      timer->repeat = timer_v3->repeat;
+      timer->repeat_count = timer_v3->repeat_count;
+      timer->wakeup_id = timer_v3->wakeup_id;
+      strncpy(timer->label, timer_v3->label, 24);
+      timer_restore_legacy(timer, timers_current_timestamp(), seconds_elapsed, timer_v3->current_time);
+      timers_add(timer);
+
+      if (t % TIMER_BLOCK_SIZE == (TIMER_BLOCK_SIZE - 1)) {
+        free(block);
+        block = NULL;
+        block_offset += 1;
+      }
+    }
+    if (block) {
+      free(block);
+      block = NULL;
+    }
   }
 }

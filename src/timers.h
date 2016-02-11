@@ -34,7 +34,8 @@ src/timers.h
 
 #define TIMER_BLOCK_SIZE 4
 
-#define TIMERS_VERSION_CURRENT 3
+#define TIMERS_VERSION_CURRENT 4
+#define TIMERS_VERSION_V3 3
 #define TIMERS_VERSION_TINY 2
 
 typedef void (*TimersUpdatedHandler)(void);
@@ -77,6 +78,9 @@ Timer* timers_find_wakeup_collision(Timer* timer);
 
 // Empty list the timers.
 void timers_clear(void);
+
+void timers_update_timestamp(void);
+TimerTimestamp timers_current_timestamp();
 
 void timers_mark_updated(void);
 void timers_highlight(Timer* timer);

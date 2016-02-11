@@ -47,9 +47,9 @@ graphics_draw_text(ctx, text,
     GTextAlignmentLeft, NULL);
 }
 
-void timer_draw_row(Timer* timer, GContext* ctx) {
+void timer_draw_row(Timer* timer, TimerTimestamp timestamp, GContext* ctx) {
   char* time_left = malloc(12);
-  timer_time_str(timer->current_time, settings()->timers_hours, time_left, 12);
+  timer_display_str(timer, timestamp, settings()->timers_hours, time_left, 12);
 
   graphics_context_set_text_color(ctx, GColorBlack);
   graphics_context_set_fill_color(ctx, GColorBlack);
@@ -95,7 +95,7 @@ void timer_draw_row(Timer* timer, GContext* ctx) {
   }
 
   if (timer->type == TIMER_TYPE_TIMER) {
-    uint8_t width = (144 * timer->current_time) / timer->length;
+    uint8_t width = (144 * timer_get_display_time(timer, timestamp)) / timer->length;
     graphics_fill_rect(ctx, GRect(0, 31, width, 2), 0, GCornerNone);
   }
 
